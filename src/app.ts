@@ -3,6 +3,7 @@ import router from './routes';
 import { defaultCacheOptions, LoggerFactory, LogLevel, WarpFactory } from 'warp-contracts';
 import { KoaContext } from './types';
 import { LmdbCache } from "warp-contracts-lmdb";
+import cors from '@koa/cors';
 
 const app = new Koa();
 
@@ -23,6 +24,7 @@ app.use(async (ctx: KoaContext, next: Next) => {
   return next();
 });
 
+app.use(cors());
 app.use(router.routes());
 
 // TODO: add error metrics
