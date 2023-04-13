@@ -1,6 +1,5 @@
 # pdns-service
 Koa microservice that facilities the PDNS Portal.
-___
 
 ## Getting Started
 
@@ -9,7 +8,7 @@ Requirements:
 - `yarn`
 - `docker`
 
-### Locally
+### Running Locally
 Starting the service:
 
 - `nvm use`
@@ -19,20 +18,28 @@ Starting the service:
 You can check the service is running by running the command:
 
 ```shell
-$ curl localhost:3000/healthcheck
+curl localhost:3000/healthcheck
 {"timestamp":"2023-04-13T13:33:38.299Z","status":200,"message":"Hello world."}
 ```
 
 ### Docker
 
-To build the container,
+Build and run the container:
 
 ```shell
-docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) . pdns-service
+docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) . -t pdns-service
 docker run -p 3000:3000 pdns-service
 ```
 
-___
+## Warp
+The service leverages `warp-sdk` to retrieve, evaluate and cache contract state. To request a contract state, run:
+```shell
+curl localhost:3000/contract/CONTRACT_ID
+```
+e.g.
+```shell
+curl localhost:3000/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
+```
 
 ## Configuration
 The service can be configured using environment variables. The following environment variables are supported:
@@ -43,4 +50,3 @@ The service can be configured using environment variables. The following environ
 
 - Build to interfaces
 - Integration tests take precedent over unit tests
-
