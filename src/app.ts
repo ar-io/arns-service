@@ -2,7 +2,7 @@ import Koa, { Next } from 'koa';
 import router from './routes';
 import { defaultCacheOptions, LoggerFactory, LogLevel, WarpFactory } from 'warp-contracts';
 import { KoaContext } from './types';
-import {LmdbCache} from "warp-contracts-lmdb";
+import { LmdbCache } from "warp-contracts-lmdb";
 
 const app = new Koa();
 
