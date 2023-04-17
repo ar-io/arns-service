@@ -9,7 +9,10 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   try {
     const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
-    ctx.body = state;
+    ctx.body = {
+      contract: id,
+      state
+    };
   } catch (error){
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}`
