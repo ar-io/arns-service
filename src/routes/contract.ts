@@ -93,7 +93,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next){
     if(!record){
       ctx.status = 404;
       ctx.message = 'Record not found'
-      return next();
+      return next;
     }
 
     ctx.body = {
