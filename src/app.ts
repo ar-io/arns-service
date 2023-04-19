@@ -5,7 +5,7 @@ import { loggerMiddleware, warpMiddleware, headersMiddleware } from './middlewar
 
 const app = new Koa();
 
-// attach middleware's
+// attach middlewares
 app.use(loggerMiddleware);
 app.use(warpMiddleware);
 app.use(headersMiddleware)
