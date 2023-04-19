@@ -3,7 +3,6 @@ import { Next } from "koa";
 import { KoaContext } from "../types";
 import { getContractState } from "../api/warp";
 
-
 export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger } = ctx.state;
   const { id } = ctx.params;
