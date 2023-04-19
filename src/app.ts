@@ -1,13 +1,11 @@
 import Koa from 'koa';
 import router from './routes';
 import cors from '@koa/cors';
-import loggerMiddleware from './middleware/logger';
-import warpMiddleware from './middleware/warp';
-import headersMiddleware from './middleware/headers';
+import { loggerMiddleware, warpMiddleware, headersMiddleware } from './middleware';
 
 const app = new Koa();
 
-// attach middlewares
+// attach middleware's
 app.use(loggerMiddleware);
 app.use(warpMiddleware);
 app.use(headersMiddleware)

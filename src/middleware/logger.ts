@@ -16,7 +16,7 @@ const logger = winston.createLogger({
     transports: new transports.Console(),
 });
 
-export default async function loggerMiddleware(ctx: KoaContext, next: Next){
+export async function loggerMiddleware(ctx: KoaContext, next: Next){
     const trace = crypto.randomUUID().substring(0, 6);
     const log = logger.child({trace, path: ctx.path, method: ctx.method, params: ctx.params})
     ctx.state.logger = log;
