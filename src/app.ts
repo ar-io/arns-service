@@ -1,29 +1,14 @@
-import Koa, { Next } from 'koa';
+import Koa from 'koa';
 import router from './routes';
-import { defaultCacheOptions, LoggerFactory, LogLevel, WarpFactory } from 'warp-contracts';
-import { KoaContext } from './types';
-import { LmdbCache } from "warp-contracts-lmdb";
 import cors from '@koa/cors';
+import { loggerMiddleware, warpMiddleware, headersMiddleware } from './middleware';
 
 const app = new Koa();
 
-// attach warp
-app.use(async (ctx: KoaContext, next: Next) => {
-
-  LoggerFactory.INST.logLevel(process.env.LOG_LEVEL as LogLevel ?? 'debug');
-  const warp = WarpFactory.forMainnet()
-  .useStateCache(
-    new LmdbCache({...defaultCacheOptions,})
-  ).useContractCache(
-    // Contract cache
-    new LmdbCache({...defaultCacheOptions}), 
-    // Source cache
-    new LmdbCache({...defaultCacheOptions})
-  );
-  ctx.state.warp = warp;
-  return next();
-});
-
+// attach middlewares
+app.use(loggerMiddleware);
+app.use(warpMiddleware);
+app.use(headersMiddleware)
 app.use(cors());
 app.use(router.routes());
 

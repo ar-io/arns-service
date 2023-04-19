@@ -5,8 +5,11 @@ import { getContractState } from "../api/warp";
 
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
+  const { logger } = ctx.state;
   const { id } = ctx.params;
+
   try {
+    logger.debug('Fetching contract state', { id })
     const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     ctx.body = {
@@ -14,6 +17,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
       state
     };
   } catch (error){
+    logger.error('Failed to fetch contract', { id })
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}`
   }
@@ -22,7 +26,9 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 
 export async function contractFieldHandler(ctx:KoaContext, next: Next){
   const { id, field } = ctx.params;
+  const { logger } = ctx.state;
   try {
+    logger.debug('Fetching contract field', { id, field })
     const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const contractField = state[field];
@@ -38,6 +44,7 @@ export async function contractFieldHandler(ctx:KoaContext, next: Next){
       [field]: contractField
     }
   } catch (error){
+    logger.error('Fetching contract field', { id, field, error })
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}`
   }
@@ -46,7 +53,9 @@ export async function contractFieldHandler(ctx:KoaContext, next: Next){
 
 export async function contractBalanceHandler(ctx: KoaContext, next: Next){
   const { id, address } = ctx.params;
+  const { logger } = ctx.state;
   try {
+    logger.debug('Fetching contract balance for wallet', { id, wallet: address })
     const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const balance = state["balances"][address];
@@ -64,6 +73,7 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next){
       balance
     };
   } catch (error){
+    logger.error('Failed to fetch balance.', { id, wallet: address, error })
     ctx.status = 503;
     ctx.body = `Failed to fetch balance.`
   }
@@ -72,7 +82,10 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next){
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next){
   const { id, name } = ctx.params;
+  const { logger } = ctx.state;
+
   try {
+    logger.debug('Fetching contract record', { id, record: name })
     const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const record = state['records'][name];
@@ -89,6 +102,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next){
       record: record
     };
   } catch (error: any){
+    logger.error('Failed to fetch contract record', { id, record: name, error })
     ctx.status = 503;
     ctx.body = `Failed to fetch record.`
   }
