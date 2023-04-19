@@ -11,7 +11,7 @@
   "license": "AGPL-3.0",
   "private": false,
   "scripts": {
-    "start:dev": "nodemon",
+    "start:dev": "LOG_LEVEL=debug LOG_FORMAT=simple nodemon",
     "start:prod": "yarn build && node dist/app.js",
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]"
@@ -23,7 +23,8 @@
     "koa-bodyparser": "^4.4.0",
     "koa-router": "^12.0.0",
     "warp-contracts": "1.2.53",
-    "warp-contracts-lmdb": "^1.1.9"
+    "warp-contracts-lmdb": "^1.1.9",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

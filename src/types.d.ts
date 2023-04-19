@@ -1,5 +1,13 @@
 import { DefaultState, ParameterizedContext } from 'koa';
-export type KoaContext = ParameterizedContext<DefaultState>;
+import { Warp } from 'warp-contracts';
+import winston from 'winston';
+
+export type KoaState = {
+    logger: winston.Logger,
+    warp: Warp
+} & DefaultState
+
+export type KoaContext = ParameterizedContext<KoaState>;
 
 export type PDNSRecordEntry = {
     endTimestamp: number,
