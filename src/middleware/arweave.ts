@@ -6,7 +6,7 @@ export function arweaveMiddleware(ctx: KoaContext, next: Next){
     const arweave = new Arweave({
       protocol: 'https',
       port: 443,
-      host: process.env.GATEWAY_HOST ?? 'ar-io.dev'
+      host: process.env.GATEWAY_HOST ?? 'arweave.net'
     }) 
     
     ctx.state.arweave = arweave;

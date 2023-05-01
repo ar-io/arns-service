@@ -6,7 +6,6 @@ import { LmdbCache } from "warp-contracts-lmdb";
 LoggerFactory.INST.logLevel(process.env.WARP_LOG_LEVEL as LogLevel ?? 'fatal');
 
 export function warpMiddleware(ctx: KoaContext, next: Next){
-    // TODO: could be added to koa context state
     const { arweave } = ctx.state;
     
     // TODO: setting useArweaveGw to true shows error
