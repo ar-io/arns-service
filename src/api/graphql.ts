@@ -15,32 +15,32 @@ export async function getDeployedContractsForWallet(arweave: Arweave, params: {a
                     tags:[
                         {
                             name:"Contract-Src",
-                            values:${JSON.stringify(sourceCodeTxIds.join(','))}
+                            values: ${JSON.stringify(sourceCodeTxIds)}
                         }
                     ],
                     sort: HEIGHT_DESC,
                     first: 100,
                     bundledIn: null,
-                    ${cursor ? `after: ${cursor}` : ''}
+                    ${cursor ? `after: "${cursor}"` : ''}
                 ) {
-                pageInfo {
-                    hasNextPage
-                }
-                edges {
-                    cursor
-                    node {
-                        id
-                        block {
-                            height
+                    pageInfo {
+                        hasNextPage
+                    }
+                    edges {
+                        cursor
+                        node {
+                            id
+                            block {
+                                height
+                            }
                         }
                     }
-                }
                 }
             }`
         }
 
-        const { status, ...response } = await arweave.api.post('/graphql', queryObject);
 
+        const { status, ...response } = await arweave.api.post('/graphql', queryObject);
         if (status !== 200){
             throw Error(`Failed to fetch contracts for wallet. Status code: ${status}`);
         }
@@ -50,7 +50,7 @@ export async function getDeployedContractsForWallet(arweave: Arweave, params: {a
                 .map((e: any) => ({
                 id: e.node.id,
                 cursor: e.cursor,
-                hasNextPage: !e.pageInfo?.hasNextPage,
+                hasNextPage: e.pageInfo?.hasNextPage,
                 }))
                 .forEach((c: {
                     id: string;

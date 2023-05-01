@@ -15,13 +15,13 @@ export async function walletContractHandler(ctx: KoaContext, next: Next){
             address,
             sourceCodeTxIds
         });
-        const { ids: contractIDs } = await getDeployedContractsForWallet(arweave, {
+        const { ids: contractIds } = await getDeployedContractsForWallet(arweave, {
             address,
             sourceCodeTxIds,
         });
         ctx.body = {
             address,
-            contractIDs,
+            contractIds,
         }
     } catch (error:any){
         logger.error('Failed to fetch contracts for wallet', { address })
