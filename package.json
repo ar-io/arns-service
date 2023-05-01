@@ -11,7 +11,7 @@
   "license": "AGPL-3.0",
   "private": false,
   "scripts": {
-    "start:dev": "LOG_LEVEL=debug LOG_FORMAT=simple nodemon",
+    "start:dev": "nodemon",
     "start:prod": "yarn build && node dist/app.js",
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]"
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
     "@types/node": "^18.15.11",

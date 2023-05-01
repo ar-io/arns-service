@@ -14,3 +14,7 @@ export type PDNSRecordEntry = {
     contractTxId: string,
     tier: string,
 }
+
+export type DeployedContractsRequestBody = {
+    sourceCodeTxIds: string[]
+}

@@ -4,12 +4,11 @@ import { KoaContext } from "../types";
 import { getContractState } from "../api/warp";
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
-  const { logger } = ctx.state;
+  const { logger, warp } = ctx.state;
   const { id } = ctx.params;
 
   try {
     logger.debug('Fetching contract state', { id })
-    const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     ctx.body = {
       contract: id,
@@ -25,10 +24,9 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 
 export async function contractFieldHandler(ctx:KoaContext, next: Next){
   const { id, field } = ctx.params;
-  const { logger } = ctx.state;
+  const { logger, warp } = ctx.state;
   try {
     logger.debug('Fetching contract field', { id, field })
-    const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const contractField = state[field];
 
@@ -52,10 +50,9 @@ export async function contractFieldHandler(ctx:KoaContext, next: Next){
 
 export async function contractBalanceHandler(ctx: KoaContext, next: Next){
   const { id, address } = ctx.params;
-  const { logger } = ctx.state;
+  const { logger, warp } = ctx.state;
   try {
     logger.debug('Fetching contract balance for wallet', { id, wallet: address })
-    const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const balance = state["balances"][address];
     
@@ -81,11 +78,10 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next){
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next){
   const { id, name } = ctx.params;
-  const { logger } = ctx.state;
+  const { logger, warp } = ctx.state;
 
   try {
     logger.debug('Fetching contract record', { id, record: name })
-    const warp = ctx.state.warp;
     const state = await getContractState(id, warp);
     const record = state['records'][name];
 
