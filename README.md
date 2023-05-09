@@ -1,14 +1,17 @@
 # pdns-service
+
 Koa microservice that facilities the PDNS Portal.
 
 ## Getting Started
 
 Requirements:
+
 - `nvm`
 - `yarn`
 - `docker`
 
 ### Running Locally
+
 Starting the service:
 
 - `nvm use`
@@ -32,16 +35,21 @@ docker run -p 3000:3000 pdns-service
 ```
 
 ## Warp
+
 The service leverages `warp-sdk` to retrieve, evaluate and cache contract state. To request a contract state, run:
+
 ```shell
 curl localhost:3000/contract/CONTRACT_ID
 ```
+
 e.g.
+
 ```shell
 curl localhost:3000/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
 ```
 
 ## Configuration
+
 The service can be configured using environment variables. The following environment variables are supported:
 
 `PORT`: The port on which the service should listen. Defaults to 3000 if not set.

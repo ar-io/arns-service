@@ -45,4 +45,3 @@ jobs:
           tags: |
             ghcr.io/ar-io/pdns-service:latest
             ghcr.io/ar-io/pdns-service:${{ github.sha }}
-
