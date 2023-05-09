@@ -1,4 +1,4 @@
-import { Warp } from "warp-contracts";
+import { SourceType, Warp } from "warp-contracts";
 
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
@@ -9,7 +9,10 @@ export async function getContractState(id: string, warp: Warp) {
     return await requestMap.get(id);
   }
 
-  const contract = warp.contract(id);
+  const contract = warp.contract(id).setEvaluationOptions({
+    // restrain to L1 tx's only
+    sourceType: SourceType.ARWEAVE,
+  });
   // set cached value for multiple requests during initial promise
   requestMap.set(id, contract.readState());
   // await the response
