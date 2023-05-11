@@ -1,6 +1,7 @@
 import Arweave from "arweave";
 import { ArNSInteraction } from "../types.js";
 
+export const MAX_REQUEST_SIZE = 100;
 export async function getDeployedContractsForWallet(
   arweave: Arweave,
   params: { address: string; sourceCodeTxIds: string[] }
@@ -22,7 +23,7 @@ export async function getDeployedContractsForWallet(
                         }
                     ],
                     sort: HEIGHT_DESC,
-                    first: 100,
+                    first: ${MAX_REQUEST_SIZE},
                     bundledIn: null,
                     ${cursor ? `after: "${cursor}"` : ""}
                 ) {
@@ -93,7 +94,7 @@ export async function getWalletInteractionsForContract(
                             }
                         ],
                         sort: HEIGHT_DESC,
-                        first: 100,
+                        first: ${MAX_REQUEST_SIZE},
                         bundledIn: null,
                         ${cursor ? `after: "${cursor}"` : ""}
                     ) {
@@ -132,38 +133,19 @@ export async function getWalletInteractionsForContract(
 
     if (response.data.data?.transactions?.edges?.length) {
       response.data.data.transactions.edges
-        .map((e: any) => {
+        .forEach((e: any) => {
           const interactionInput = e.node.tags.find(
             (t: { name: string; value: string }) => t.name === "Input"
           );
-          const parsedInput = JSON.parse(interactionInput.value);
-          return {
-            id: e.node.id,
-            input: parsedInput,
+          const parsedInput = interactionInput ? JSON.parse(interactionInput.value): undefined;
+          interactions.set(e.node.id, {
             height: e.node.block.height,
+            input: parsedInput,
             owner: e.node.owner.address,
-            cursor: e.cursor,
-            hasNextPage: e.pageInfo?.hasNextPage,
-          };
+          });
         })
-        .forEach(
-          (c: {
-            id: string;
-            owner: string;
-            cursor: string;
-            height: number;
-            input: any;
-            hasNextPage: boolean;
-          }) => {
-            interactions.set(c.id, {
-              height: c.height,
-              input: c.input,
-              owner: c.owner,
-            });
-            cursor = c.cursor;
-            hasNextPage = c.hasNextPage ?? false;
-          }
-        );
+        cursor = response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ?? undefined;
+        hasNextPage = response.data.data.transactions.pageInfo?.hasNextPage ?? false;
     }
   } while (hasNextPage);
   return {
