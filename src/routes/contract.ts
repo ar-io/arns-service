@@ -60,7 +60,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next){
   } catch (error: any) {
     logger.error("Failed to fetch contract interactions.", { id });
     ctx.status = 503;
-    ctx.body = `"Failed to fetch contract interactions for contract: ${id}`;
+    ctx.body = `Failed to fetch contract interactions for contract: ${id}`;
   }
   return next;
 }
