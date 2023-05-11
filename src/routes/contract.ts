@@ -1,7 +1,8 @@
 import { Next } from "koa";
 
-import { KoaContext } from "../types";
+import { ArNSContractInteractions, KoaContext } from "../types";
 import { getContractState } from "../api/warp";
+import { getWalletInteractionsForContract } from "../api/graphql";
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;
@@ -9,7 +10,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 
   try {
     logger.debug("Fetching contract state", { id });
-    const state = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp);
     ctx.body = {
       contract: id,
       state,
@@ -22,12 +23,54 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   return next;
 }
 
+export async function contractInteractionsHandler(ctx: KoaContext, next: Next){
+  const { arweave, logger, warp } = ctx.state;
+  const { id } = ctx.params;
+
+  try {
+    logger.debug("Fetching all contract interactions", { id });
+    const [cachedValue, { interactions }] = await Promise.all([
+      getContractState(id, warp),
+      getWalletInteractionsForContract(
+        arweave, 
+        {
+        address: undefined,
+        contractId: id,
+      })
+    ]);
+    const { validity, errorMessages } = cachedValue;
+    const mappedInteractions = [...interactions.keys()].reduce((newMap: ArNSContractInteractions, id: string) => {
+      const interaction = interactions.get(id);
+      if (interaction){
+        newMap[id] = {
+          ...interaction,
+          valid: validity[id] ?? false,
+          ...(errorMessages[id] ? { error: cachedValue.errorMessages[id] } : {})
+        }
+      }
+      return newMap;
+    }, {});
+
+    // TODO: maybe add a check here that gql and warp returned the same number of interactions
+    
+    ctx.body = {
+      contract: id,
+      interactions: mappedInteractions,
+    };
+  } catch (error: any) {
+    logger.error("Failed to fetch contract interactions.", { id, error });
+    ctx.status = 503;
+    ctx.body = `Error: ${error.message}`;
+  }
+  return next;
+}
+
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
   const { id, field } = ctx.params;
   const { logger, warp } = ctx.state;
   try {
     logger.debug("Fetching contract field", { id, field });
-    const state = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp);
     const contractField = state[field];
 
     if (!contractField) {
@@ -56,7 +99,7 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
       id,
       wallet: address,
     });
-    const state = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp);
     const balance = state["balances"][address];
 
     if (!balance) {
@@ -85,7 +128,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
 
   try {
     logger.debug("Fetching contract record", { id, record: name });
-    const state = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp);
     const record = state["records"][name];
 
     if (!record) {
