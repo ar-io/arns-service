@@ -4,13 +4,8 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-      checks: write
-      packages: write
-
+    outputs:
+      NODE_VERSION: ${{ steps.node_version.outputs.NODE_VERSION }}
     steps:
       - uses: actions/checkout@v3
       - name: Read .nvmrc
@@ -26,9 +21,19 @@ jobs:
       - run: yarn --immutable --immutable-cache
       - run: yarn build
 
+  push:
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
       # Build and push container image to GCR (only on main branch)
       - name: Log in to the GitHub Container Registry
-        if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
@@ -36,12 +41,35 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push container image to GitHub Container Registry
-        if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v4
         with:
           push: true
           build-args: |
-            NODE_VERSION=${{ steps.node_version.outputs.NODE_VERSION }}
+            NODE_VERSION=${{ needs.build.outputs.NODE_VERSION }}
           tags: |
             ghcr.io/ar-io/pdns-service:latest
             ghcr.io/ar-io/pdns-service:${{ github.sha }}
+  
+  # Deploy
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - build
+      - push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          role-skip-session-tagging: true
+          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/DeploymentRole
+          role-external-id: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/DeploymentRole
+          role-duration-seconds: 900
+
+      - name: Update Deployed image
+        run: |
+          aws ecs update-service --cluster ${{ secrets.AWS_CLUSTER }} --service ${{ secrets.AWS_SERVICE }} --force-new-deployment --region ${{ secrets.AWS_REGION }}
