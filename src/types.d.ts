@@ -27,8 +27,9 @@ export type PstInput = {
 
 export type ArNSInteraction = {
   valid: boolean,
-  input: PstInput,
+  input: PstInput | undefined,
   height: number,
+  owner: string,
   errorMessage?: string,
 }
 

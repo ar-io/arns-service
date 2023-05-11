@@ -8,7 +8,7 @@ import {
 } from "warp-contracts";
 
 LoggerFactory.INST.logLevel(
-  (process.env.WARP_LOG_LEVEL as LogLevel) ?? "debug"
+  (process.env.WARP_LOG_LEVEL as LogLevel) ?? "fatal"
 );
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
