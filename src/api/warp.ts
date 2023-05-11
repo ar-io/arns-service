@@ -17,5 +17,5 @@ export async function getContractState(id: string, warp: Warp) {
   // remove the cached value once it's been retrieved
   requestMap.delete(id);
 
-  return cachedValue.state;
+  return cachedValue;
 }

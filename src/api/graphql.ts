@@ -1,4 +1,5 @@
 import Arweave from "arweave";
+import { ArNSInteraction } from "../types.js";
 
 export async function getDeployedContractsForWallet(
   arweave: Arweave,
@@ -73,8 +74,8 @@ export async function getDeployedContractsForWallet(
 
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
-  params: { address: string; contractId: string }
-): Promise<{ interactions: Map<string, any> }> {
+  params: { address?: string; contractId: string }
+): Promise<{ interactions: Map<string, Omit<ArNSInteraction, 'valid' | 'errorMessage'>> }> {
   const { address, contractId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
@@ -84,7 +85,7 @@ export async function getWalletInteractionsForContract(
       query: `
                 { 
                     transactions (
-                        owners:["${address}"],
+                        owners: ${address ? `["${address}"]`: '[]'},
                         tags:[
                             {
                                 name:"Contract",
