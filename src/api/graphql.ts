@@ -79,7 +79,7 @@ export async function getWalletInteractionsForContract(
   const { address, contractId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
-  const interactions = new Map<string, any>();
+  const interactions = new Map<string, Omit<ArNSInteraction, 'valid' | 'errorMessage'>>();
   do {
     const queryObject = {
       query: `
@@ -104,6 +104,9 @@ export async function getWalletInteractionsForContract(
                             cursor
                             node {
                                 id
+                                owner {
+                                  address
+                                }
                                 tags {
                                     name
                                     value
@@ -138,6 +141,7 @@ export async function getWalletInteractionsForContract(
             id: e.node.id,
             input: parsedInput,
             height: e.node.block.height,
+            owner: e.node.owner.address,
             cursor: e.cursor,
             hasNextPage: e.pageInfo?.hasNextPage,
           };
@@ -145,6 +149,7 @@ export async function getWalletInteractionsForContract(
         .forEach(
           (c: {
             id: string;
+            owner: string;
             cursor: string;
             height: number;
             input: any;
@@ -153,6 +158,7 @@ export async function getWalletInteractionsForContract(
             interactions.set(c.id, {
               height: c.height,
               input: c.input,
+              owner: c.owner,
             });
             cursor = c.cursor;
             hasNextPage = c.hasNextPage ?? false;
