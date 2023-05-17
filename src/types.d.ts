@@ -14,25 +14,26 @@ export type DeployedContractsRequestBody = {
 };
 
 export type ArNSRecord = {
-  transactionId: string,
-  [x: string]: any
-}
+  transactionId: string;
+  [x: string]: any;
+};
 
-export type ArNSState = PstState & { records: { [x:string]: ArNSRecord } }
+export type ArNSState = PstState & { records: { [x: string]: ArNSRecord } };
 
 export type PstInput = {
-  function: string,
-  [x: string]: string
-}
+  function: string;
+  [x: string]: string;
+};
 
 export type ArNSInteraction = {
-  valid: boolean,
-  input: PstInput | undefined,
-  height: number,
-  owner: string,
-  errorMessage?: string,
-}
+  id: string;
+  valid: boolean;
+  input: PstInput | undefined;
+  height: number;
+  owner: string;
+  errorMessage?: string;
+};
 
 export type ArNSContractInteractions = {
-  [x: string]: ArNSInteraction
-}
+  [x: string]: ArNSInteraction;
+};

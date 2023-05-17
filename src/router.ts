@@ -27,7 +27,10 @@ router.get("/healthcheck", (ctx) => {
 });
 
 router.get(`/contract/:id${PDNS_CONTRACT_ID_REGEX}`, contractHandler);
-router.get(`/contract/:id${PDNS_CONTRACT_ID_REGEX}/interactions`, contractInteractionsHandler);
+router.get(
+  `/contract/:id${PDNS_CONTRACT_ID_REGEX}/interactions`,
+  contractInteractionsHandler
+);
 router.get(
   `/contract/:id${PDNS_CONTRACT_ID_REGEX}/:field${PDNS_CONTRACT_FIELD_REGEX}`,
   contractFieldHandler
