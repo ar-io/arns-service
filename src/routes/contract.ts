@@ -1,6 +1,6 @@
 import { Next } from "koa";
 
-import { ArNSContractInteractions, KoaContext } from "../types";
+import { KoaContext } from "../types";
 import { getContractState } from "../api/warp";
 import { getWalletInteractionsForContract } from "../api/graphql";
 
@@ -23,7 +23,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   return next;
 }
 
-export async function contractInteractionsHandler(ctx: KoaContext, next: Next){
+export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   const { arweave, logger, warp } = ctx.state;
   const { id } = ctx.params;
 
@@ -31,28 +31,29 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next){
     logger.debug("Fetching all contract interactions", { id });
     const [cachedValue, { interactions }] = await Promise.all([
       getContractState(id, warp),
-      getWalletInteractionsForContract(
-        arweave, 
-        {
+      getWalletInteractionsForContract(arweave, {
         address: undefined,
         contractId: id,
-      })
+      }),
     ]);
     const { validity, errorMessages } = cachedValue;
-    const mappedInteractions = [...interactions.keys()].reduce((newMap: ArNSContractInteractions, id: string) => {
+    const mappedInteractions = [...interactions.keys()].map((id: string) => {
       const interaction = interactions.get(id);
-      if (interaction){
-        newMap[id] = {
+      if (interaction) {
+        return {
           ...interaction,
           valid: validity[id] ?? false,
-          ...(errorMessages[id] ? { error: cachedValue.errorMessages[id] } : {})
-        }
+          ...(errorMessages[id]
+            ? { error: cachedValue.errorMessages[id] }
+            : {}),
+          id,
+        };
       }
-      return newMap;
-    }, {});
+      return;
+    });
 
     // TODO: maybe add a check here that gql and warp returned the same number of interactions
-    
+
     ctx.body = {
       contract: id,
       interactions: mappedInteractions,

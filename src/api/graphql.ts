@@ -76,17 +76,25 @@ export async function getDeployedContractsForWallet(
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
   params: { address?: string; contractId: string }
-): Promise<{ interactions: Map<string, Omit<ArNSInteraction, 'valid' | 'errorMessage'>> }> {
+): Promise<{
+  interactions: Map<
+    string,
+    Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
+  >;
+}> {
   const { address, contractId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
-  const interactions = new Map<string, Omit<ArNSInteraction, 'valid' | 'errorMessage'>>();
+  const interactions = new Map<
+    string,
+    Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
+  >();
   do {
     const queryObject = {
       query: `
                 { 
                     transactions (
-                        owners: ${address ? `["${address}"]`: '[]'},
+                        owners: ${address ? `["${address}"]` : "[]"},
                         tags:[
                             {
                                 name:"Contract",
@@ -132,20 +140,24 @@ export async function getWalletInteractionsForContract(
     }
 
     if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges
-        .forEach((e: any) => {
-          const interactionInput = e.node.tags.find(
-            (t: { name: string; value: string }) => t.name === "Input"
-          );
-          const parsedInput = interactionInput ? JSON.parse(interactionInput.value): undefined;
-          interactions.set(e.node.id, {
-            height: e.node.block.height,
-            input: parsedInput,
-            owner: e.node.owner.address,
-          });
-        })
-        cursor = response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ?? undefined;
-        hasNextPage = response.data.data.transactions.pageInfo?.hasNextPage ?? false;
+      response.data.data.transactions.edges.forEach((e: any) => {
+        const interactionInput = e.node.tags.find(
+          (t: { name: string; value: string }) => t.name === "Input"
+        );
+        const parsedInput = interactionInput
+          ? JSON.parse(interactionInput.value)
+          : undefined;
+        interactions.set(e.node.id, {
+          height: e.node.block.height,
+          input: parsedInput,
+          owner: e.node.owner.address,
+        });
+      });
+      cursor =
+        response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
+        undefined;
+      hasNextPage =
+        response.data.data.transactions.pageInfo?.hasNextPage ?? false;
     }
   } while (hasNextPage);
   return {
