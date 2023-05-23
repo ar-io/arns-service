@@ -5,11 +5,11 @@ export const MAX_REQUEST_SIZE = 100;
 export async function getDeployedContractsForWallet(
   arweave: Arweave,
   params: { address: string }
-) {
+): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
-  const ids = new Set();
+  const ids = new Set<string>();
   do {
     const queryObject = {
       query: `
