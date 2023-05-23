@@ -9,10 +9,6 @@ export type KoaState = {
 
 export type KoaContext = ParameterizedContext<KoaState>;
 
-export type DeployedContractsRequestBody = {
-  sourceCodeTxIds: string[];
-};
-
 export type ArNSRecord = {
   transactionId: string;
   [x: string]: any;

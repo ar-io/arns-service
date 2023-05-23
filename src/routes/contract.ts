@@ -29,23 +29,20 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
 
   try {
     logger.debug("Fetching all contract interactions", { id });
-    const [cachedValue, { interactions }] = await Promise.all([
+    const [{ validity, errorMessages }, { interactions }] = await Promise.all([
       getContractState(id, warp),
       getWalletInteractionsForContract(arweave, {
         address: undefined,
         contractId: id,
       }),
     ]);
-    const { validity, errorMessages } = cachedValue;
     const mappedInteractions = [...interactions.keys()].map((id: string) => {
       const interaction = interactions.get(id);
       if (interaction) {
         return {
           ...interaction,
           valid: validity[id] ?? false,
-          ...(errorMessages[id]
-            ? { error: cachedValue.errorMessages[id] }
-            : {}),
+          ...(errorMessages[id] ? { error: errorMessages[id] } : {}),
           id,
         };
       }
@@ -53,13 +50,12 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
     });
 
     // TODO: maybe add a check here that gql and warp returned the same number of interactions
-
     ctx.body = {
       contract: id,
       interactions: mappedInteractions,
     };
   } catch (error: any) {
-    logger.error("Failed to fetch contract interactions.", { id });
+    logger.error("Failed to fetch contract interactions.", { id, error });
     ctx.status = 503;
     ctx.body = `Failed to fetch contract interactions for contract: ${id}`;
   }

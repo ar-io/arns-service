@@ -4,9 +4,9 @@ import { ArNSInteraction } from "../types.js";
 export const MAX_REQUEST_SIZE = 100;
 export async function getDeployedContractsForWallet(
   arweave: Arweave,
-  params: { address: string; sourceCodeTxIds: string[] }
+  params: { address: string }
 ) {
-  const { address, sourceCodeTxIds } = params;
+  const { address } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const ids = new Set();
@@ -17,10 +17,10 @@ export async function getDeployedContractsForWallet(
                 transactions (
                     owners:["${address}"]
                     tags:[
-                        {
-                            name:"Contract-Src",
-                            values: ${JSON.stringify(sourceCodeTxIds)}
-                        }
+                      {
+                        name: "App-Name",
+                        values: ["SmartWeaveContract"]
+                      },
                     ],
                     sort: HEIGHT_DESC,
                     first: ${MAX_REQUEST_SIZE},

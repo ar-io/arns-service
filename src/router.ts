@@ -43,7 +43,7 @@ router.get(
   `/contract/:id${PDNS_CONTRACT_ID_REGEX}/records/:name${PDNS_NAME_REGEX}`,
   contractRecordHandler
 );
-router.post(
+router.get(
   `/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contracts`,
   walletContractHandler
 );
