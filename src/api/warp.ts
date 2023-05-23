@@ -6,7 +6,8 @@ const requestMap: Map<string, Promise<any> | undefined> = new Map();
 export async function getContractState(id: string, warp: Warp) {
   // validate request is new, if not return the existing promise (e.g. barrier synchronization)
   if (requestMap.get(id)) {
-    return await requestMap.get(id);
+    const { cachedValue } = await requestMap.get(id);
+    return cachedValue;
   }
 
   const contract = warp.contract(id).setEvaluationOptions({
