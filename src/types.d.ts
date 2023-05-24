@@ -1,6 +1,7 @@
 import { DefaultState, ParameterizedContext } from "koa";
 import { PstState, Warp } from "warp-contracts";
 import winston from "winston";
+import { allowedContractTypes } from "./constants.js";
 
 export type KoaState = {
   logger: winston.Logger;
@@ -33,3 +34,5 @@ export type ArNSInteraction = {
 export type ArNSContractInteractions = {
   [x: string]: ArNSInteraction;
 };
+
+export type ContractType = (typeof allowedContractTypes)[number];
