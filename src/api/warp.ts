@@ -1,10 +1,10 @@
 import { EvalStateResult, SourceType, Warp } from "warp-contracts";
-import { allowedContractTypes } from "../constants";
+import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
+import { EvaluationTimeoutError } from "../errors";
 
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
-const EVALUATION_TIMEOUT_MS = 5000;
 
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState(
@@ -40,14 +40,14 @@ export async function validateStateWithTimeout(
     validateState(id, warp, type),
     new Promise((_, reject) =>
       setTimeout(
-        () =>
-          reject(`State evaluation exceeded limit of ${EVALUATION_TIMEOUT_MS}`),
+        () => reject(new EvaluationTimeoutError()),
         EVALUATION_TIMEOUT_MS
       )
     ),
   ]);
 }
 
+// TODO: this could be come a generic and return the full state of contract once validated
 export async function validateState(
   id: string,
   warp: Warp,
@@ -61,6 +61,13 @@ export async function validateState(
   return false;
 }
 
-export function isValidContractType(type: string): type is ContractType {
-  return _.includes(allowedContractTypes, type);
+// validates that a provided query param is of a specific value
+export function isValidContractType(
+  type: string | string[] | undefined
+): type is ContractType {
+  if (type instanceof Array) {
+    return false;
+  }
+
+  return !type || (!!type && _.includes(allowedContractTypes, type));
 }
