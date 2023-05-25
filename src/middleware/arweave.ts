@@ -3,8 +3,8 @@ import { KoaContext } from "../types.js";
 import Arweave from "arweave";
 
 export const arweave = new Arweave({
-  protocol: "https",
-  port: 443,
+  protocol: process.env.GATEWAY_PROTOCOL ?? "https",
+  port: process.env.GATEWAY_PORT ?? 443,
   host: process.env.GATEWAY_HOST ?? "ar-io.dev",
 });
 

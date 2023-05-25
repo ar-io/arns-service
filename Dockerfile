@@ -2,6 +2,9 @@ ARG  NODE_VERSION
 
 FROM node:${NODE_VERSION}-bullseye-slim AS builder
 
+# Needed for some dev deps
+RUN apt-get update && apt-get install -y git
+
 # Build
 WORKDIR /usr/src/app
 COPY . .

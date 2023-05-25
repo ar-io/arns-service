@@ -17,9 +17,11 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
   try {
     // validate type is empty or valid
     if (!isValidContractType(type)) {
-      throw Error(
-        `Invalid type. Must be one of ${allowedContractTypes.join(",")}.`
-      );
+      ctx.body = `Invalid type. Must be one of ${allowedContractTypes.join(
+        ","
+      )}.`;
+      ctx.status = 400;
+      return next;
     }
 
     logger.debug("Fetching deployed contracts for wallet.", {
