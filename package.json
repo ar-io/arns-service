@@ -15,6 +15,9 @@
     "start:prod": "yarn build && node dist/app.js",
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]",
+    "test:integration": "mocha --spec=tests/integration/**.test.ts",
+    "docker:run": "docker compose up pdns-service",
+    "docker:integration": "docker compose up --exit-code-from test-runner",
     "format": "yarn prettier --write ."
   },
   "dependencies": {
@@ -32,15 +35,21 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
+    "@types/chai": "^4.3.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
     "@types/lodash": "^4.14.194",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
+    "axios": "^1.4.0",
+    "chai": "^4.3.7",
     "dotenv": "^16.0.3",
+    "mocha": "^10.2.0",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.8",
     "rimraf": "^5.0.0",
+    "sinon": "^15.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   }

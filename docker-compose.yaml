@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  arlocal:
+    image: textury/arlocal:v1.1.35
+
+  pdns-service:
+    build:
+      context: .
+      args:
+        NODE_VERSION: ${NODE_VERSION:-16.16.0}
+    environment:
+      NODE_ENV: ${NODE_ENV:-dev}
+      GATEWAY_HOST: ${GATEWAY_HOST:-ar-io.dev}
+    ports:
+      - "3000:3000"
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: tests/integration/Dockerfile.integration
+      args:
+        NODE_VERSION: ${NODE_VERSION:-16.16.0}
+    environment:
+      HOST: pdns-service
+      PORT: 3000
+    depends_on:
+      - arlocal
+      - pdns-service
