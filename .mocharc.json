@@ -1,0 +1,6 @@
+{
+  "extensions": ["ts"],
+  "require": "ts-node/register",
+  "parallel": false,
+  "recursive": true
+}

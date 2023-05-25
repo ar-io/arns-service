@@ -53,6 +53,22 @@ curl localhost:3000/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
 The service can be configured using environment variables. The following environment variables are supported:
 
 `PORT`: The port on which the service should listen. Defaults to 3000 if not set.
+`GATEWAY_HOST`: The gateway used to evaluate Smartcontract state.
+
+## Integration Tests
+
+Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
+
+```shell
+yarn docker:run
+yarn test:integration
+```
+
+or entirely via docker compose:
+
+```shell
+yarn docker:integration
+```
 
 ## Contributing
 
