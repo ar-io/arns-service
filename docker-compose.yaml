@@ -28,6 +28,9 @@ services:
     environment:
       HOST: pdns-service
       PORT: 3000
+      GATEWAY_HOST: arlocal
+      GATEWAY_PORT: 1984
+      GATEWAY_PROTOCOL: http
     depends_on:
       - arlocal
       - pdns-service
