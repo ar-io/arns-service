@@ -132,15 +132,6 @@ describe("PDNS Service Integration tests", () => {
   });
 
   describe("/wallet", () => {
-    let id: string | undefined;
-    let wallet: string | undefined;
-    before(() => {
-      id = process.env.DEPLOYED_CONTRACT_TX_ID;
-      wallet = process.env.PRIMARY_WALLET_ADDRESS;
-      expect(id).to.not.be.undefined;
-      expect(id!.length).to.equal(43);
-    });
-
     describe("/:address/contracts", () => {
       it("should return the full list of deployed contracts", async () => {
         const { status, data } = await axios.get(

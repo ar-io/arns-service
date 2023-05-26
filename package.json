@@ -16,8 +16,8 @@
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
-    "docker:run": "docker compose up pdns-service",
-    "docker:integration": "docker compose up --exit-code-from test-runner",
+    "docker:run": "docker compose up pdns-service --build",
+    "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format": "yarn prettier --write ."
   },
   "dependencies": {

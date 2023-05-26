@@ -5,6 +5,7 @@ import path from "path";
 import { LoggerFactory, WarpFactory } from "warp-contracts";
 import { DeployPlugin } from "warp-contracts-plugin-deploy";
 
+
 const ARWEAVE_PORT = process.env.ARWEAVE_PORT ?? 1984;
 const ARWEAVE_HOST = process.env.ARWEAVE_HOST ?? "127.0.0.1";
 // Arweave
@@ -14,14 +15,14 @@ export const arweave = Arweave.init({
   protocol: "http",
 });
 // Warp
+LoggerFactory.INST.logLevel("info");
 export const warp = WarpFactory.forLocal(+ARWEAVE_PORT, arweave).use(
   new DeployPlugin()
 );
-LoggerFactory.INST.logLevel("info");
 
 // start arlocal
-console.log("Setting up Warp, Arlocal and Arweave clients!");
 export async function mochaGlobalSetup() {
+console.log("Setting up Warp, Arlocal and Arweave clients!");
   // create directories used for tests
   ["./wallets", "./contracts"].forEach((dir) =>
     fs.mkdirSync(path.join(__dirname, dir))

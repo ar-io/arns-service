@@ -1,6 +1,6 @@
 {
   "extensions": ["ts"],
-  "require": "ts-node/register",
+  "require": ["ts-node/register", "tests/integration/setup.test.ts"],
   "parallel": false,
   "recursive": true
 }
