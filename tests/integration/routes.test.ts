@@ -1,10 +1,14 @@
 import { describe } from "mocha";
 import { expect } from "chai";
-import axios from "axios";
+import axiosPackage from "axios";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
 const PORT = process.env.PORT ?? 3000;
 const serviceURL = `http://${HOST}:${+PORT}`;
+const axios = axiosPackage.create({
+  baseURL: serviceURL,
+  validateStatus: () => true, // don't throw errors
+});
 describe("PDNS Service Integration tests", () => {
   let id: string | undefined;
   let wallet: string | undefined;
@@ -17,13 +21,13 @@ describe("PDNS Service Integration tests", () => {
 
   describe("general routes", () => {
     it("should return 200 from healthcheck", async () => {
-      const { status, data } = await axios.get(`${serviceURL}/healthcheck`);
+      const { status, data } = await axios.get(`/healthcheck`);
       expect(status).to.equal(200);
       expect(data).to.not.be.undefined;
     });
 
     it("should return 200 prometheus", async () => {
-      const { status, data } = await axios.get(`${serviceURL}/metrics`);
+      const { status, data } = await axios.get(`/metrics`);
       expect(status).to.equal(200);
       expect(data).to.not.be.undefined;
     });
@@ -31,10 +35,9 @@ describe("PDNS Service Integration tests", () => {
 
   describe("/contract", () => {
     describe("/:id", () => {
-      it("should return the full list of deployed contracts", async () => {
-        const { status, data } = await axios.get(
-          `${serviceURL}/contract/${id}`
-        );
+      // TODO: once write interactions are added, add more tests to validate the state values
+      it("should return the contract state and id", async () => {
+        const { status, data } = await axios.get(`/contract/${id}`);
         expect(status).to.equal(200);
         expect(data).to.not.be.undefined;
         const { contract, state } = data;
@@ -52,20 +55,16 @@ describe("PDNS Service Integration tests", () => {
       });
 
       it("should return a 404 for an invalid id", async () => {
-        const { status } = await axios.get(
-          `${serviceURL}/contract/non-matching-regex`,
-          {
-            validateStatus: () => true, // don't throw
-          }
-        );
+        const { status } = await axios.get(`/contract/non-matching-regex`);
         expect(status).to.equal(404);
       });
     });
 
     describe("/:id/interactions", () => {
+      // TODO: once write interactions are added, add additional tests that confirm the interactions are provided by this endpoint
       it("should return the contract interactions", async () => {
         const { status, data } = await axios.get(
-          `${serviceURL}/contract/${id}/interactions`
+          `/contract/${id}/interactions`
         );
         expect(status).to.equal(200);
         expect(data).to.not.be.undefined;
@@ -85,6 +84,7 @@ describe("PDNS Service Integration tests", () => {
         "owner",
         "controller",
       ]) {
+        // TODO: once write interactions are added, add more tests to validate the state is what's expected
         it(`should return the correct state value for ${field}`, async () => {
           const { status, data } = await axios.get(
             `${serviceURL}/contract/${id}/${field}`
@@ -96,13 +96,19 @@ describe("PDNS Service Integration tests", () => {
           expect(data[field]).to.not.be.undefined; // we haven't created any interactions
         });
       }
+
+      it("should return a 404 for an invalid field", async () => {
+        const { status } = await axios.get(
+          `${serviceURL}/contract/${id}/invalid-field`
+        );
+        expect(status).to.equal(404);
+      });
     });
 
     describe("/:id", () => {
-      it("should return the full contract state", async () => {
-        const { status, data } = await axios.get(
-          `${serviceURL}/contract/${id}`
-        );
+      // TODO: once write interactions are added, add more tests to validate the state is what's expected
+      it("should return the contract state and id", async () => {
+        const { status, data } = await axios.get(`/contract/${id}`);
         expect(status).to.equal(200);
         expect(data).to.not.be.undefined;
         const { contract, state } = data;
@@ -120,12 +126,7 @@ describe("PDNS Service Integration tests", () => {
       });
 
       it("should return a 404 for an invalid id", async () => {
-        const { status } = await axios.get(
-          `${serviceURL}/contract/non-matching-regex`,
-          {
-            validateStatus: () => true, // don't throw
-          }
-        );
+        const { status } = await axios.get(`/contract/non-matching-regex`);
         expect(status).to.equal(404);
       });
     });
@@ -134,9 +135,7 @@ describe("PDNS Service Integration tests", () => {
   describe("/wallet", () => {
     describe("/:address/contracts", () => {
       it("should return the full list of deployed contracts", async () => {
-        const { status, data } = await axios.get(
-          `${serviceURL}/wallet/${wallet}/contracts`
-        );
+        const { status, data } = await axios.get(`/wallet/${wallet}/contracts`);
         expect(status).to.equal(200);
         expect(data).to.not.be.undefined;
         const { address, contractIds } = data;
@@ -160,10 +159,7 @@ describe("PDNS Service Integration tests", () => {
 
         it("should return return a 400 when an invalid type is provided", async () => {
           const { status, data } = await axios.get(
-            `${serviceURL}/wallet/${wallet}/contracts?type=invalid`,
-            {
-              validateStatus: () => true, // don't throw
-            }
+            `${serviceURL}/wallet/${wallet}/contracts?type=invalid`
           );
           expect(status).to.equal(400);
           expect(data).to.contain("Invalid type.");
@@ -172,10 +168,7 @@ describe("PDNS Service Integration tests", () => {
 
       it("should return a 404 for an invalid wallet address", async () => {
         const { status } = await axios.get(
-          `${serviceURL}/wallet/non-matching-regex/contracts`,
-          {
-            validateStatus: () => true, // don't throw
-          }
+          `/wallet/non-matching-regex/contracts`
         );
         expect(status).to.equal(404);
       });
@@ -184,7 +177,7 @@ describe("PDNS Service Integration tests", () => {
     describe("/:address/contracts/:id/interactions", () => {
       it("should return the all the wallets contract interactions", async () => {
         const { status, data } = await axios.get(
-          `${serviceURL}/wallet/${wallet}/contract/${id}`
+          `/wallet/${wallet}/contract/${id}`
         );
         expect(status).to.equal(200);
         expect(data).to.not.be.undefined;
