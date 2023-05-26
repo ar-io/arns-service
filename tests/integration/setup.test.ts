@@ -24,9 +24,7 @@ export const warp = WarpFactory.forLocal(+GATEWAY_PORT, arweave).use(
 export async function mochaGlobalSetup() {
   console.log("Setting up Warp, Arlocal and Arweave clients!");
   // create directories used for tests
-  ["./wallets", "./contracts"].forEach((dir) =>
-    fs.mkdirSync(path.join(__dirname, dir))
-  );
+  createDirectories();
 
   // create a wallet and add some funds
   const { wallet, address } = await createLocalWallet(arweave);
@@ -71,16 +69,25 @@ export async function mochaGlobalSetup() {
   );
 }
 
-// can be async or not
-export async function mochaGlobalTeardown() {
+export function mochaGlobalTeardown() {
   removeDirectories();
   console.log("Test finished!");
 }
 
 function removeDirectories() {
-  ["./wallets", "./contracts"].forEach((dir) =>
-    fs.rmSync(path.join(__dirname, dir), { recursive: true })
-  );
+  ["./wallets", "./contracts"].forEach((dir) => {
+    if (fs.existsSync(dir)) {
+      fs.rmSync(path.join(__dirname, dir), { recursive: true });
+    }
+  });
+}
+
+function createDirectories() {
+  ["./wallets", "./contracts"].forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(path.join(__dirname, dir));
+    }
+  });
 }
 
 async function createLocalWallet(
