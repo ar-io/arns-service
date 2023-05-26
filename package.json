@@ -16,8 +16,8 @@
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
-    "docker:run": "docker compose up pdns-service",
-    "docker:integration": "docker compose up --exit-code-from test-runner",
+    "docker:run": "docker compose up pdns-service --build",
+    "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format": "yarn prettier --write ."
   },
   "dependencies": {
@@ -29,7 +29,7 @@
     "koa-router": "^12.0.0",
     "lodash": "^4.17.21",
     "prom-client": "^14.2.0",
-    "warp-contracts": "1.2.53",
+    "warp-contracts": "^1.4.8",
     "warp-contracts-lmdb": "^1.1.9",
     "winston": "^3.8.2"
   },
@@ -51,6 +51,7 @@
     "rimraf": "^5.0.0",
     "sinon": "^15.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "warp-contracts-plugin-deploy": "^1.0.8"
   }
 }

@@ -60,7 +60,7 @@ The service can be configured using environment variables. The following environ
 Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
 
 ```shell
-yarn docker:run
+docker compose up pdns-service arlocal --build
 yarn test:integration
 ```
 
