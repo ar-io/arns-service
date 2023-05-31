@@ -26,6 +26,7 @@ router.get("/healthcheck", (ctx) => {
   };
 });
 
+// TODO: deprecate this in favor of versioned endpoints once portal is migrated
 router.get(`/contract/:id${PDNS_CONTRACT_ID_REGEX}`, contractHandler);
 router.get(
   `/contract/:id${PDNS_CONTRACT_ID_REGEX}/interactions`,
@@ -51,6 +52,35 @@ router.get(
   `/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contract/:id${PDNS_CONTRACT_ID_REGEX}`,
   walletInteractionHandler
 );
+
+// V1 endpoints
+router.get(`/v1/contract/:id${PDNS_CONTRACT_ID_REGEX}`, contractHandler);
+router.get(
+  `/v1/contract/:id${PDNS_CONTRACT_ID_REGEX}/interactions`,
+  contractInteractionsHandler
+);
+router.get(
+  `/v1/contract/:id${PDNS_CONTRACT_ID_REGEX}/:field${PDNS_CONTRACT_FIELD_REGEX}`,
+  contractFieldHandler
+);
+router.get(
+  `/v1/contract/:id${PDNS_CONTRACT_ID_REGEX}/balances/:address${PDNS_CONTRACT_ID_REGEX}`,
+  contractBalanceHandler
+);
+router.get(
+  `/v1/contract/:id${PDNS_CONTRACT_ID_REGEX}/records/:name${PDNS_NAME_REGEX}`,
+  contractRecordHandler
+);
+router.get(
+  `/v1/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contracts`,
+  walletContractHandler
+);
+router.get(
+  `/v1/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contract/:id${PDNS_CONTRACT_ID_REGEX}`,
+  walletInteractionHandler
+);
+
+// prometheus
 router.get("/arns_metrics", prometheusHandler);
 
 export default router;
