@@ -1,4 +1,5 @@
-ARG  NODE_VERSION
+ARG NODE_VERSION=18.16.0
+ARG NODE_VERSION_SHORT=18
 
 FROM node:${NODE_VERSION}-bullseye-slim AS builder
 
@@ -11,7 +12,7 @@ COPY . .
 RUN yarn && yarn build
 
 # Extract dist
-FROM gcr.io/distroless/nodejs:16
+FROM gcr.io/distroless/nodejs:${NODE_VERSION_SHORT}
 WORKDIR /usr/src/app
 
 # Add shell
