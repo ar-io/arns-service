@@ -30,7 +30,7 @@ curl localhost:3000/healthcheck
 Build and run the container:
 
 ```shell
-docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) . -t pdns-service
+docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) --build-arg NODE_VERSION_SHORT=$(cat .nvmrc |cut -c2-3) . -t pdns-service
 docker run -p 3000:3000 pdns-service
 ```
 

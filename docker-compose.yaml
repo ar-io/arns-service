@@ -10,7 +10,8 @@ services:
     build:
       context: .
       args:
-        NODE_VERSION: ${NODE_VERSION:-16.16.0}
+        NODE_VERSION: ${NODE_VERSION:-18.16.0}
+        NODE_VERSION_SHORT: ${NODE_VERSION_SHORT:-18}
     environment:
       NODE_ENV: ${NODE_ENV:-dev}
       GATEWAY_HOST: arlocal
@@ -24,7 +25,7 @@ services:
       context: .
       dockerfile: tests/integration/Dockerfile.integration
       args:
-        NODE_VERSION: ${NODE_VERSION:-16.16.0}
+        NODE_VERSION: ${NODE_VERSION:-18.16.0}
     environment:
       HOST: pdns-service
       PORT: 3000
