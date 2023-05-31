@@ -27,7 +27,7 @@ describe("PDNS Service Integration tests", () => {
     });
 
     it("should return 200 prometheus", async () => {
-      const { status, data } = await axios.get(`/metrics`);
+      const { status, data } = await axios.get(`/arns_metrics`);
       expect(status).to.equal(200);
       expect(data).to.not.be.undefined;
     });

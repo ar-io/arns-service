@@ -51,6 +51,6 @@ router.get(
   `/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contract/:id${PDNS_CONTRACT_ID_REGEX}`,
   walletInteractionHandler
 );
-router.get("/metrics", prometheusHandler);
+router.get("/arns_metrics", prometheusHandler);
 
 export default router;
