@@ -1,5 +1,5 @@
 import { EvalStateResult, SourceType, Warp } from "warp-contracts";
-import { allowedContractTypes } from "../constants";
+import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
 import { EvaluationTimeoutError } from "../errors";
@@ -39,7 +39,7 @@ export async function validateStateWithTimeout(
   return Promise.race([
     validateStateAndOwnership(id, warp, type, address),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new EvaluationTimeoutError()), 500_000_000)
+      setTimeout(() => reject(new EvaluationTimeoutError()), EVALUATION_TIMEOUT_MS)
     ),
   ]);
 }
