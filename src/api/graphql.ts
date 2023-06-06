@@ -91,11 +91,12 @@ export async function getWalletInteractionsForContract(
     Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
   >();
   do {
+    const ownerFilter = address ? `owners: ["${address}"]` : "";
     const queryObject = {
       query: `
         { 
             transactions (
-                owners: ${address ? `["${address}"]` : "[]"},
+                ${ownerFilter}
                 tags:[
                     {
                         name:"Contract",

@@ -19,7 +19,7 @@ export type ArNSState = PstState & { records: { [x: string]: ArNSRecord } };
 
 export type PstInput = {
   function: string;
-  [x: string]: string;
+  [x: string]: string | number;
 };
 
 export type ArNSInteraction = {

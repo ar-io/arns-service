@@ -16,7 +16,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
       state,
     };
   } catch (error) {
-    logger.error("Failed to fetch contract", { id });
+    logger.error("Failed to fetch contract", { id, error });
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}`;
   }
@@ -25,14 +25,14 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   const { arweave, logger, warp } = ctx.state;
-  const { id } = ctx.params;
+  const { id, address } = ctx.params;
 
   try {
     logger.debug("Fetching all contract interactions", { id });
     const [{ validity, errorMessages }, { interactions }] = await Promise.all([
       getContractState(id, warp),
       getWalletInteractionsForContract(arweave, {
-        address: undefined,
+        address: address,
         contractId: id,
       }),
     ]);
@@ -53,6 +53,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
     ctx.body = {
       contract: id,
       interactions: mappedInteractions,
+      ...(address ? { address } : {}), // only include address if it was provided
     };
   } catch (error: any) {
     logger.error("Failed to fetch contract interactions.", { id, error });

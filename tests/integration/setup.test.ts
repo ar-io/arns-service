@@ -1,5 +1,5 @@
 import Arweave from "arweave";
-import { JWKInterface } from "arweave/node/lib/wallet.js";
+import { JWKInterface } from "arweave/node/lib/wallet";
 import * as fs from "fs";
 import path from "path";
 import { LoggerFactory, WarpFactory } from "warp-contracts";
@@ -15,7 +15,7 @@ export const arweave = new Arweave({
   host: GATEWAY_HOST,
 });
 // Warp
-LoggerFactory.INST.logLevel("info");
+LoggerFactory.INST.logLevel("fatal");
 export const warp = WarpFactory.forLocal(+GATEWAY_PORT, arweave).use(
   new DeployPlugin()
 );
@@ -29,7 +29,7 @@ export async function mochaGlobalSetup() {
   // create a wallet and add some funds
   const { wallet, address } = await createLocalWallet(arweave);
 
-  // TODO: set env var to wallet address
+  // Used in tests
   process.env.PRIMARY_WALLET_ADDRESS = address;
 
   const contractSrcJs = fs.readFileSync(
@@ -76,7 +76,7 @@ export function mochaGlobalTeardown() {
 
 function removeDirectories() {
   ["./wallets", "./contracts"].forEach((dir) => {
-    if (fs.existsSync(dir)) {
+    if (fs.existsSync(path.join(__dirname, dir))) {
       fs.rmSync(path.join(__dirname, dir), { recursive: true });
     }
   });
@@ -84,21 +84,26 @@ function removeDirectories() {
 
 function createDirectories() {
   ["./wallets", "./contracts"].forEach((dir) => {
-    if (!fs.existsSync(dir)) {
+    if (!fs.existsSync(path.join(__dirname, dir))) {
       fs.mkdirSync(path.join(__dirname, dir));
     }
   });
 }
 
-async function createLocalWallet(
+export async function createLocalWallet(
   arweave: Arweave,
-  amount: number = 10_000_000_000_000
+  amount: number = 10_000_000_000_000_000
 ): Promise<{ wallet: JWKInterface; address: string }> {
   // ~~ Generate wallet and add funds ~~
   const wallet = await arweave.wallets.generate();
   const address = await arweave.wallets.jwkToAddress(wallet);
   // mint some tokens
   await arweave.api.get(`/mint/${address}/${amount}`);
+  // save it to local directory
+  fs.writeFileSync(
+    path.join(__dirname, `./wallets/${address}.json`),
+    JSON.stringify(wallet)
+  );
   return {
     wallet,
     address,

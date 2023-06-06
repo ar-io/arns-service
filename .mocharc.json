@@ -2,5 +2,6 @@
   "extensions": ["ts"],
   "require": ["ts-node/register", "tests/integration/setup.test.ts"],
   "parallel": false,
-  "recursive": true
+  "recursive": true,
+  "timeout": 5000
 }
