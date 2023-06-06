@@ -1,11 +1,10 @@
 import { EvalStateResult, SourceType, Warp } from "warp-contracts";
-import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
+import { allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
 import { EvaluationTimeoutError } from "../errors";
 
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
-
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState(
   id: string,
@@ -34,31 +33,34 @@ export async function getContractState(
 export async function validateStateWithTimeout(
   id: string,
   warp: Warp,
-  type: ContractType
+  type?: ContractType,
+  address?: string
 ): Promise<unknown> {
   return Promise.race([
-    validateState(id, warp, type),
+    validateStateAndOwnership(id, warp, type, address),
     new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new EvaluationTimeoutError()),
-        EVALUATION_TIMEOUT_MS
-      )
+      setTimeout(() => reject(new EvaluationTimeoutError()), 500_000_000)
     ),
   ]);
 }
 
 // TODO: this could be come a generic and return the full state of contract once validated
-export async function validateState(
+export async function validateStateAndOwnership(
   id: string,
   warp: Warp,
-  type: ContractType
+  type?: ContractType,
+  address?: string
 ): Promise<boolean> {
   const { state } = await getContractState(id, warp);
-  if (type === "ant" && state["records"] && state["records"]["@"]) {
-    // TODO: use json schema validation schema logic. For now, these are just raw checks.
-    return true;
-  }
-  return false;
+  // TODO: use json schema validation schema logic. For now, these are just raw checks.
+  const validateType =
+    !type ||
+    (type && type === "ant" && state["records"] && state["records"]["@"]);
+  const validateOwnership =
+    !address ||
+    (address && state["owner"] === address) ||
+    state["controller"] === address;
+  return validateType && validateOwnership;
 }
 
 // validates that a provided query param is of a specific value

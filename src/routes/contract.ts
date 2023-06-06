@@ -99,17 +99,10 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
     const { state } = await getContractState(id, warp);
     const balance = state["balances"][address];
 
-    if (!balance) {
-      ctx.body = 404;
-      ctx.status = 404;
-      ctx.body = "Wallet address not found";
-      return next;
-    }
-
     ctx.body = {
       contract: id,
       address,
-      balance,
+      balance: balance ?? 0,
     };
   } catch (error) {
     logger.error("Failed to fetch balance.", { id, wallet: address, error });
