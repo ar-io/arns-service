@@ -188,14 +188,53 @@ export async function getContractsTransferredToOrControlledByWallet(
                     {
                       name: "Input",
                       values: ${JSON.stringify([
+                        // duplicated because the order of the input matters when querying gql
                         {
                           function: "setController",
                           target: address,
                         },
                         {
+                          target: address,
+                          function: "setController",
+                        },
+                        {
                           function: "transfer",
                           target: address,
                           qty: 1,
+                        },
+                        {
+                          function: "transfer",
+                          qty: 1,
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: "transfer",
+                          qty: 1,
+                        },
+                        {
+                          target: address,
+                          qty: 1,
+                          function: "transfer",
+                        },
+                        {
+                          qty: 1,
+                          target: address,
+                          function: "transfer",
+                        },
+                        {
+                          qty: 1,
+                          function: "transfer",
+                          target: address,
+                        },
+                        // removing qty just for coverage
+                        {
+                          function: "transfer",
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: "transfer",
                         },
                       ])
                         .replace(/"/g, '\\"')
