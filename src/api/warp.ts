@@ -39,7 +39,10 @@ export async function validateStateWithTimeout(
   return Promise.race([
     validateStateAndOwnership(id, warp, type, address),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new EvaluationTimeoutError()), EVALUATION_TIMEOUT_MS)
+      setTimeout(
+        () => reject(new EvaluationTimeoutError()),
+        EVALUATION_TIMEOUT_MS
+      )
     ),
   ]);
 }

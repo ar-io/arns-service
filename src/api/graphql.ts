@@ -54,19 +54,20 @@ export async function getDeployedContractsByWallet(
       );
     }
 
-    if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges
-        .map((e: any) => ({
-          id: e.node.id,
-          cursor: e.cursor,
-          hasNextPage: e.pageInfo?.hasNextPage,
-        }))
-        .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
-          ids.add(c.id);
-          cursor = c.cursor;
-          hasNextPage = c.hasNextPage ?? false;
-        });
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
     }
+    response.data.data.transactions.edges
+      .map((e: any) => ({
+        id: e.node.id,
+        cursor: e.cursor,
+        hasNextPage: e.pageInfo?.hasNextPage,
+      }))
+      .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
+        ids.add(c.id);
+        cursor = c.cursor;
+        hasNextPage = c.hasNextPage ?? false;
+      });
   } while (hasNextPage);
 
   return {
@@ -141,26 +142,27 @@ export async function getWalletInteractionsForContract(
       );
     }
 
-    if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges.forEach((e: any) => {
-        const interactionInput = e.node.tags.find(
-          (t: { name: string; value: string }) => t.name === "Input"
-        );
-        const parsedInput = interactionInput
-          ? JSON.parse(interactionInput.value)
-          : undefined;
-        interactions.set(e.node.id, {
-          height: e.node.block.height,
-          input: parsedInput,
-          owner: e.node.owner.address,
-        });
-      });
-      cursor =
-        response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
-        undefined;
-      hasNextPage =
-        response.data.data.transactions.pageInfo?.hasNextPage ?? false;
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
     }
+    response.data.data.transactions.edges.forEach((e: any) => {
+      const interactionInput = e.node.tags.find(
+        (t: { name: string; value: string }) => t.name === "Input"
+      );
+      const parsedInput = interactionInput
+        ? JSON.parse(interactionInput.value)
+        : undefined;
+      interactions.set(e.node.id, {
+        height: e.node.block.height,
+        input: parsedInput,
+        owner: e.node.owner.address,
+      });
+    });
+    cursor =
+      response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
+      undefined;
+    hasNextPage =
+      response.data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
   return {
     interactions,
@@ -277,35 +279,28 @@ export async function getContractsTransferredToOrControlledByWallet(
       );
     }
 
-    const ignoreNextInteractionContracts: string[] = [];
-
-    if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges
-        .map((e: any) => {
-          // get the contract id of the interaction
-          const contractTag = e.node.tags.find(
-            (t: { name: string; value: string }) => t.name === "Contract"
-          );
-
-          // we don't care about older interactions, only the most recent one and the query is ordered based an ascending value
-          // there is likely a faster way to do this
-          if (ignoreNextInteractionContracts.includes(contractTag)) {
-            return null;
-          }
-          // add it to the contract interactions to ignore list
-          ignoreNextInteractionContracts.push(contractTag.value);
-          return {
-            id: contractTag.value,
-            cursor: e.cursor,
-            hasNextPage: e.pageInfo?.hasNextPage,
-          };
-        })
-        .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
-          ids.add(c.id);
-          cursor = c.cursor;
-          hasNextPage = c.hasNextPage ?? false;
-        });
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
     }
+
+    response.data.data.transactions.edges
+      .map((e: any) => {
+        // get the contract id of the interaction
+        const contractTag = e.node.tags.find(
+          (t: { name: string; value: string }) => t.name === "Contract"
+        );
+        // we want to preserve the cursor here, so add even if a duplicate and the set will handle removing the contract if its a duplicate
+        return {
+          id: contractTag.value,
+          cursor: e.cursor,
+          hasNextPage: e.pageInfo?.hasNextPage,
+        };
+      })
+      .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
+        ids.add(c.id);
+        cursor = c.cursor;
+        hasNextPage = c.hasNextPage ?? false;
+      });
   } while (hasNextPage);
 
   return {

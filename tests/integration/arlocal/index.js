@@ -71,6 +71,6 @@ export function handle(state, action) {
   }
 
   throw new ContractError(
-    `No function supplied or function not recognised: "${input.function}"`
+    `No function supplied or function not recognized: "${input.function}"`
   );
 }

@@ -19,11 +19,11 @@ describe("PDNS Service Integration tests", () => {
   let walletAddress: string;
   let transferToAddress: string;
   let walletJWK: JWKInterface;
-  let contractInteractions: ArNSInteraction[] = [];
+  const contractInteractions: ArNSInteraction[] = [];
 
-  before(async function (){
+  before(async function () {
     // set a large timeout to 10 secs
-    this.timeout(10_000)
+    this.timeout(10_000);
     id = process.env.DEPLOYED_CONTRACT_TX_ID!;
     walletAddress = process.env.PRIMARY_WALLET_ADDRESS!;
 
