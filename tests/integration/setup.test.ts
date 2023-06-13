@@ -92,7 +92,7 @@ function createDirectories() {
 
 export async function createLocalWallet(
   arweave: Arweave,
-  amount = 10_000_000_000_000_000
+  amount = 10_000_000_000_000
 ): Promise<{ wallet: JWKInterface; address: string }> {
   // ~~ Generate wallet and add funds ~~
   const wallet = await arweave.wallets.generate();
