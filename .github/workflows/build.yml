@@ -20,6 +20,7 @@ jobs:
       # Build Typescript
       - run: yarn --immutable --immutable-cache
       - run: yarn build
+      - run: yarn lint
 
   test:
     runs-on: ubuntu-latest
