@@ -2,7 +2,8 @@ import Arweave from "arweave";
 import { ArNSInteraction } from "../types.js";
 
 export const MAX_REQUEST_SIZE = 100;
-export async function getDeployedContractsForWallet(
+
+export async function getDeployedContractsByWallet(
   arweave: Arweave,
   params: { address: string }
 ): Promise<{ ids: string[] }> {
@@ -13,34 +14,34 @@ export async function getDeployedContractsForWallet(
   do {
     const queryObject = {
       query: `
-            { 
-                transactions (
-                    owners:["${address}"]
-                    tags:[
-                      {
-                        name: "App-Name",
-                        values: ["SmartWeaveContract"]
-                      },
-                    ],
-                    sort: HEIGHT_DESC,
-                    first: ${MAX_REQUEST_SIZE},
-                    bundledIn: null,
-                    ${cursor ? `after: "${cursor}"` : ""}
-                ) {
-                    pageInfo {
-                        hasNextPage
-                    }
-                    edges {
-                        cursor
-                        node {
-                            id
-                            block {
-                                height
-                            }
-                        }
-                    }
-                }
-            }`,
+      { 
+          transactions (
+              owners:["${address}"]
+              tags:[
+                {
+                  name: "App-Name",
+                  values: ["SmartWeaveContract"]
+                },
+              ],
+              sort: HEIGHT_DESC,
+              first: ${MAX_REQUEST_SIZE},
+              bundledIn: null,
+              ${cursor ? `after: "${cursor}"` : ""}
+          ) {
+              pageInfo {
+                  hasNextPage
+              }
+              edges {
+                  cursor
+                  node {
+                      id
+                      block {
+                          height
+                      }
+                  }
+              }
+          }
+      }`,
     };
 
     const { status, ...response } = await arweave.api.post(
@@ -53,19 +54,20 @@ export async function getDeployedContractsForWallet(
       );
     }
 
-    if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges
-        .map((e: any) => ({
-          id: e.node.id,
-          cursor: e.cursor,
-          hasNextPage: e.pageInfo?.hasNextPage,
-        }))
-        .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
-          ids.add(c.id);
-          cursor = c.cursor;
-          hasNextPage = c.hasNextPage ?? false;
-        });
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
     }
+    response.data.data.transactions.edges
+      .map((e: any) => ({
+        id: e.node.id,
+        cursor: e.cursor,
+        hasNextPage: e.pageInfo?.hasNextPage,
+      }))
+      .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
+        ids.add(c.id);
+        cursor = c.cursor;
+        hasNextPage = c.hasNextPage ?? false;
+      });
   } while (hasNextPage);
 
   return {
@@ -90,43 +92,44 @@ export async function getWalletInteractionsForContract(
     Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
   >();
   do {
+    const ownerFilter = address ? `owners: ["${address}"]` : "";
     const queryObject = {
       query: `
-                { 
-                    transactions (
-                        owners: ${address ? `["${address}"]` : "[]"},
-                        tags:[
-                            {
-                                name:"Contract",
-                                values:["${contractId}"]
-                            }
-                        ],
-                        sort: HEIGHT_DESC,
-                        first: ${MAX_REQUEST_SIZE},
-                        bundledIn: null,
-                        ${cursor ? `after: "${cursor}"` : ""}
-                    ) {
-                        pageInfo {
-                            hasNextPage
+        { 
+            transactions (
+                ${ownerFilter}
+                tags:[
+                    {
+                        name:"Contract",
+                        values:["${contractId}"]
+                    }
+                ],
+                sort: HEIGHT_DESC,
+                first: ${MAX_REQUEST_SIZE},
+                bundledIn: null,
+                ${cursor ? `after: "${cursor}"` : ""}
+            ) {
+                pageInfo {
+                    hasNextPage
+                }
+                edges {
+                    cursor
+                    node {
+                        id
+                        owner {
+                          address
                         }
-                        edges {
-                            cursor
-                            node {
-                                id
-                                owner {
-                                  address
-                                }
-                                tags {
-                                    name
-                                    value
-                                }
-                                block {
-                                    height
-                                }
-                            }
+                        tags {
+                            name
+                            value
+                        }
+                        block {
+                            height
                         }
                     }
-                }`,
+                }
+            }
+        }`,
     };
 
     const { status, ...response } = await arweave.api.post(
@@ -139,28 +142,168 @@ export async function getWalletInteractionsForContract(
       );
     }
 
-    if (response.data.data?.transactions?.edges?.length) {
-      response.data.data.transactions.edges.forEach((e: any) => {
-        const interactionInput = e.node.tags.find(
-          (t: { name: string; value: string }) => t.name === "Input"
-        );
-        const parsedInput = interactionInput
-          ? JSON.parse(interactionInput.value)
-          : undefined;
-        interactions.set(e.node.id, {
-          height: e.node.block.height,
-          input: parsedInput,
-          owner: e.node.owner.address,
-        });
-      });
-      cursor =
-        response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
-        undefined;
-      hasNextPage =
-        response.data.data.transactions.pageInfo?.hasNextPage ?? false;
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
     }
+    response.data.data.transactions.edges.forEach((e: any) => {
+      const interactionInput = e.node.tags.find(
+        (t: { name: string; value: string }) => t.name === "Input"
+      );
+      const parsedInput = interactionInput
+        ? JSON.parse(interactionInput.value)
+        : undefined;
+      interactions.set(e.node.id, {
+        height: e.node.block.height,
+        input: parsedInput,
+        owner: e.node.owner.address,
+      });
+    });
+    cursor =
+      response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
+      undefined;
+    hasNextPage =
+      response.data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
   return {
     interactions,
+  };
+}
+
+export async function getContractsTransferredToOrControlledByWallet(
+  arweave: Arweave,
+  params: { address: string }
+): Promise<{ ids: string[] }> {
+  const { address } = params;
+  let hasNextPage = false;
+  let cursor: string | undefined;
+  const ids = new Set<string>();
+  do {
+    const queryObject = {
+      query: `
+          { 
+              transactions (
+                  tags:[
+                    {
+                      name: "App-Name",
+                      values: ["SmartWeaveAction"]
+                    },
+                    {
+                      name: "Input",
+                      values: ${JSON.stringify([
+                        // duplicated because the order of the input matters when querying gql
+                        {
+                          function: "setController",
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: "setController",
+                        },
+                        {
+                          function: "transfer",
+                          target: address,
+                          qty: 1,
+                        },
+                        {
+                          function: "transfer",
+                          qty: 1,
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: "transfer",
+                          qty: 1,
+                        },
+                        {
+                          target: address,
+                          qty: 1,
+                          function: "transfer",
+                        },
+                        {
+                          qty: 1,
+                          target: address,
+                          function: "transfer",
+                        },
+                        {
+                          qty: 1,
+                          function: "transfer",
+                          target: address,
+                        },
+                        // removing qty just for coverage
+                        {
+                          function: "transfer",
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: "transfer",
+                        },
+                      ])
+                        .replace(/"/g, '\\"')
+                        .replace(/\{/g, '"{')
+                        .replace(/\}/g, '}"')}
+                   }
+                  ],
+                  sort: HEIGHT_DESC,
+                  first: ${MAX_REQUEST_SIZE},
+                  bundledIn: null,
+                  ${cursor ? `after: "${cursor}"` : ""}
+              ) {
+                  pageInfo {
+                      hasNextPage
+                  }
+                  edges {
+                      cursor
+                      node {
+                          id
+                          tags {
+                            name
+                            value
+                          }
+                          block {
+                              height
+                          }
+                      }
+                  }
+              }
+          }`,
+    };
+
+    const { status, ...response } = await arweave.api.post(
+      "/graphql",
+      queryObject
+    );
+    if (status !== 200) {
+      throw Error(
+        `Failed to fetch contracts for wallet. Status code: ${status}`
+      );
+    }
+
+    if (!response.data.data?.transactions?.edges?.length) {
+      continue;
+    }
+
+    response.data.data.transactions.edges
+      .map((e: any) => {
+        // get the contract id of the interaction
+        const contractTag = e.node.tags.find(
+          (t: { name: string; value: string }) => t.name === "Contract"
+        );
+        // we want to preserve the cursor here, so add even if a duplicate and the set will handle removing the contract if its a duplicate
+        return {
+          id: contractTag.value,
+          cursor: e.cursor,
+          hasNextPage: e.pageInfo?.hasNextPage,
+        };
+      })
+      .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
+        ids.add(c.id);
+        cursor = c.cursor;
+        hasNextPage = c.hasNextPage ?? false;
+      });
+  } while (hasNextPage);
+
+  return {
+    ids: [...ids],
   };
 }

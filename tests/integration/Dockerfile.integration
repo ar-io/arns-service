@@ -5,5 +5,6 @@ WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y git
 COPY package.json yarn.lock tsconfig.json .mocharc.json ./
 COPY tests/integration tests/integration
+COPY src/types.d.ts src/types.d.ts
 RUN yarn 
 CMD yarn test:integration

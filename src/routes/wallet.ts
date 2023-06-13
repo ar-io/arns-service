@@ -1,8 +1,8 @@
 import { Next } from "koa";
 import { KoaContext } from "../types";
 import {
-  getDeployedContractsForWallet,
-  getWalletInteractionsForContract,
+  getContractsTransferredToOrControlledByWallet,
+  getDeployedContractsByWallet,
 } from "../api/graphql";
 import { isValidContractType, validateStateWithTimeout } from "../api/warp";
 import { allowedContractTypes } from "../constants";
@@ -28,23 +28,27 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       address,
     });
 
-    const { ids: contractIds } = await getDeployedContractsForWallet(arweave, {
-      address,
-    });
+    const [{ ids: deployedContractIds }, { ids: controlledOrOwnedIds }] =
+      await Promise.all([
+        getDeployedContractsByWallet(arweave, { address }),
+        getContractsTransferredToOrControlledByWallet(arweave, { address }),
+      ]);
 
-    // return all contract IDs without evaluating state
-    if (!type) {
-      ctx.body = {
-        address,
-        contractIds,
-      };
-      return next;
-    }
+    // merge them
+    const deployedOrOwned = new Set([
+      ...deployedContractIds,
+      ...controlledOrOwnedIds,
+    ]);
 
     // validate the schema based on the type
-    logger.info("Filtering contracts state that match provided type.", {
-      type,
-    });
+    logger.info(
+      "Filtering contracts state that match provided type and are owned or controlled by provided wallet.",
+      {
+        type,
+        contractIds: deployedOrOwned,
+        address,
+      }
+    );
 
     // NOTE: this may take a long time since it must evaluate all contract states.
     // We use a wrapper to limit the amount of time evaluating each contract.
@@ -53,8 +57,8 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     const startTime = Date.now();
     const validContractsOfType = (
       await Promise.allSettled(
-        contractIds.map(async (id) =>
-          (await validateStateWithTimeout(id, warp, type)) ? id : null
+        [...deployedOrOwned].map(async (id: string) =>
+          (await validateStateWithTimeout(id, warp, type, address)) ? id : null
         )
       )
     ).map((i) => (i.status === "fulfilled" ? i.value : null));
@@ -71,36 +75,6 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     logger.error("Failed to fetch contracts for wallet", { address, error });
     ctx.status = 503;
     ctx.body = error.message ?? "Failed to fetch contracts for wallet.";
-  }
-  return next;
-}
-
-export async function walletInteractionHandler(ctx: KoaContext, next: Next) {
-  const { address, id } = ctx.params;
-  const { logger, arweave } = ctx.state;
-
-  try {
-    logger.debug("Fetching wallet interactions for contract.", {
-      address,
-      contractId: id,
-    });
-    const { interactions } = await getWalletInteractionsForContract(arweave, {
-      address,
-      contractId: id,
-    });
-    ctx.body = {
-      address,
-      contractId: id,
-      interactions: Object.fromEntries(interactions),
-    };
-  } catch (error) {
-    logger.error("Failed to fetch interactions on contract for wallet", {
-      address,
-      contractId: id,
-      error,
-    });
-    ctx.status = 503;
-    ctx.body = "Failed to fetch interactions on contract for wallet.";
   }
   return next;
 }

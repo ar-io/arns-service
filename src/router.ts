@@ -12,7 +12,6 @@ import {
   contractRecordHandler,
   prometheusHandler,
   walletContractHandler,
-  walletInteractionHandler,
 } from "./routes";
 
 const router = new Router();
@@ -50,7 +49,7 @@ router.get(
 );
 router.get(
   `/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contract/:id${PDNS_CONTRACT_ID_REGEX}`,
-  walletInteractionHandler
+  contractInteractionsHandler
 );
 
 // V1 endpoints
@@ -77,7 +76,7 @@ router.get(
 );
 router.get(
   `/v1/wallet/:address${PDNS_CONTRACT_ID_REGEX}/contract/:id${PDNS_CONTRACT_ID_REGEX}`,
-  walletInteractionHandler
+  contractInteractionsHandler
 );
 
 // prometheus
