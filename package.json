@@ -18,7 +18,10 @@
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
     "docker:run": "docker compose up pdns-service --build",
     "docker:integration": "docker compose up --exit-code-from test-runner --build",
-    "format": "yarn prettier --write ."
+    "format:fix": "yarn prettier --write .",
+    "format:check": "yarn prettier . --check",
+    "lint:fix": "yarn eslint . --fix",
+    "lint:check": "yarn eslint ."
   },
   "dependencies": {
     "@koa/cors": "^4.0.0",
@@ -42,9 +45,12 @@
     "@types/lodash": "^4.14.194",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
+    "@typescript-eslint/parser": "^5.59.11",
     "axios": "^1.4.0",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
+    "eslint": "^8.42.0",
     "mocha": "^10.2.0",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.8",

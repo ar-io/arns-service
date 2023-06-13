@@ -2,7 +2,7 @@ name: Node.js CI
 
 on: [push]
 jobs:
-  build:
+  node_version:
     runs-on: ubuntu-latest
     outputs:
       NODE_VERSION: ${{ steps.node_version.outputs.NODE_VERSION }}
@@ -12,23 +12,37 @@ jobs:
         id: node_version
         run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc |cut -c2-8)
 
-      - name: Use Node.js ${{ steps.node_version.outputs.NODE_VERSION }}
+  build:
+    needs: [node_version]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        step: ["lint:check", "format:check", "build"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Read .nvmrc
+        id: node_version
+        run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc |cut -c2-8)
+
+      - name: Use Node.js ${{ needs.node_version.outputs.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ steps.node_version.outputs.NODE_VERSION }}
+          node-version: ${{ needs.node_version.outputs.NODE_VERSION }}
 
       # Build Typescript
       - run: yarn --immutable --immutable-cache
-      - run: yarn build
+      - run: yarn
+      - run: yarn ${{ matrix.step }}
 
   test:
     runs-on: ubuntu-latest
+    needs: [node_version, build]
     steps:
       - uses: actions/checkout@v3
       - run: yarn docker:integration
 
   push:
-    needs: [build, test]
+    needs: [node_version, build, test]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
@@ -51,7 +65,7 @@ jobs:
         with:
           push: true
           build-args: |
-            NODE_VERSION=${{ needs.build.outputs.NODE_VERSION }}
+            NODE_VERSION=${{ needs.node_version.outputs.NODE_VERSION }}
           tags: |
             ghcr.io/ar-io/pdns-service:latest
             ghcr.io/ar-io/pdns-service:${{ github.sha }}
