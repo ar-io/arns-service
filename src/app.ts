@@ -36,8 +36,8 @@ app.on("error", (err) => {
 
 const serverConfigs = {
   port: +(process.env.PORT || 3000),
-  keepAliveTimeout: 120_000 // two minute timeout for connections
-}
+  keepAliveTimeout: 120_000, // two minute timeout for connections
+};
 
 app.listen(serverConfigs, () => {
   logger.info("Server is listening...", serverConfigs);

@@ -12,7 +12,7 @@ export type KoaContext = ParameterizedContext<KoaState>;
 
 export type ArNSRecord = {
   transactionId: string;
-  [x: string]: any;
+  [x: string]: string | number;
 };
 
 export type ArNSState = PstState & { records: { [x: string]: ArNSRecord } };

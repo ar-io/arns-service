@@ -27,11 +27,7 @@ LoggerFactory.INST.logLevel(
           new LmdbCache(defaultCacheOptions)
       );
 */
-const warp = WarpFactory.forMainnet(
-  defaultCacheOptions,
-  true,
-  arweave
-);
+const warp = WarpFactory.forMainnet(defaultCacheOptions, true, arweave);
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
