@@ -5671,10 +5671,15 @@ tslib@^1.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.1.0, tslib@^2.4.0:
+tslib@^2.1.0:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.2.tgz#1b6f07185c881557b0ffa84b111a0106989e8338"
   integrity sha512-5svOrSA2w3iGFDs1HibEVBGbDrAY82bFQ3HZ3ixB+88nsbsWQoKqDRb5UBYAUPEzbBn6dAp5gRNXglySbx1MlA==
+
+tslib@^2.4.0:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.3.tgz#24944ba2d990940e6e982c4bea147aba80209913"
+  integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
 
 tsscmp@1.0.6:
   version "1.0.6"
@@ -5857,7 +5862,7 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.2.tgz#78641c488b8e6ca91a75f511e7a3b32a86e5dda0"
   integrity sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
 
-warp-contracts-lmdb@^1.1.9:
+warp-contracts-lmdb@^1.1.10:
   version "1.1.10"
   resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.1.10.tgz#f81f85c36bc7c5afdfa7aab897187051acf7479f"
   integrity sha512-Ak6/FAtzImpBtXppOwxq2SYUbn0ekLH2O2EoKU2jVicuTPEz/vVaZRd3uYiUg2sJCid9iCzoDXM6XPUc8/AsUA==
@@ -5873,10 +5878,10 @@ warp-contracts-plugin-deploy@^1.0.8:
     arlocal "^1.1.59"
     node-stdlib-browser "^1.2.0"
 
-warp-contracts@^1.4.8:
-  version "1.4.8"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.8.tgz#33a049b321f1769011ee1aa5214015f0e8458420"
-  integrity sha512-FzSVIp4rp7BboC3F7ir1KRhtpMDlCjHqJLIRTOnu6z3d2F1jaapmi+BHcuJ1soMww4tRFuoVz3qzY800o4k/Sw==
+warp-contracts@^1.4.12:
+  version "1.4.12"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.12.tgz#b1681fc0b81e9128c272d7ce8f417319ce5fb969"
+  integrity sha512-DjmxN4U26jzYhlumTj1QgxH1GPmjN2oAkTXDGBvXSpdLYvf0n3aGJLBVYddfH9P/IQlxcQJ6KaXS4Ihlq9FrAw==
   dependencies:
     archiver "^5.3.0"
     arweave "1.13.7"

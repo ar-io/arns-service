@@ -28,10 +28,7 @@ LoggerFactory.INST.logLevel(
       );
 */
 const warp = WarpFactory.forMainnet(
-  {
-    ...defaultCacheOptions,
-    inMemory: true,
-  },
+  defaultCacheOptions,
   true,
   arweave
 );

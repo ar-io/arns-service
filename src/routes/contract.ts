@@ -15,10 +15,11 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
       contract: id,
       state,
     };
-  } catch (error) {
-    logger.error("Failed to fetch contract", { id, error });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error."
+    logger.error("Failed to fetch contract", { id, error: message });
     ctx.status = 503;
-    ctx.body = `Failed to fetch contract: ${id}`;
+    ctx.body = `Failed to fetch contract: ${id}. ${message}`;
   }
   return next;
 }
@@ -55,10 +56,11 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
       interactions: mappedInteractions,
       ...(address ? { address } : {}), // only include address if it was provided
     };
-  } catch (error: any) {
-    logger.error("Failed to fetch contract interactions.", { id, error });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error."
+    logger.error("Failed to fetch contract interactions.", { id, error: message });
     ctx.status = 503;
-    ctx.body = `Failed to fetch contract interactions for contract: ${id}`;
+    ctx.body = `Failed to fetch contract interactions for contract: ${id}. ${message}`;
   }
   return next;
 }
@@ -105,10 +107,11 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
       address,
       balance: balance ?? 0,
     };
-  } catch (error) {
-    logger.error("Failed to fetch balance.", { id, wallet: address, error });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error."
+    logger.error("Failed to fetch balance.", { id, wallet: address, error: message });
     ctx.status = 503;
-    ctx.body = `Failed to fetch balance.`;
+    ctx.body = `Failed to fetch balance for wallet ${address}. ${message}`;
   }
   return next;
 }
@@ -133,14 +136,15 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
       name,
       record: record,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error."
     logger.error("Failed to fetch contract record", {
       id,
       record: name,
-      error,
+      error: message,
     });
     ctx.status = 503;
-    ctx.body = `Failed to fetch record.`;
+    ctx.body = `Failed to fetch record. ${message}`;
   }
   return next;
 }

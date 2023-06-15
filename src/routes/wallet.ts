@@ -71,10 +71,11 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       contractIds: _.compact(validContractsOfType),
       type,
     };
-  } catch (error: any) {
-    logger.error("Failed to fetch contracts for wallet", { address, error });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error.'
+    logger.error("Failed to fetch contracts for wallet", { address, error: message });
     ctx.status = 503;
-    ctx.body = error.message ?? "Failed to fetch contracts for wallet.";
+    ctx.body = `Failed to fetch contracts for wallet. ${message}`;
   }
   return next;
 }
