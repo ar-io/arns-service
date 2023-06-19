@@ -19,7 +19,14 @@ export async function getContractState(
   const contract = warp.contract(id).setEvaluationOptions({
     // restrain to L1 tx's only
     sourceType: SourceType.ARWEAVE,
+    // TODO: these will need to match the contract or be provided as params
+    unsafeClient: "skip",
+    internalWrites: true,
+    maxCallDepth: 3,
+    waitForConfirmation: true,
+    updateCacheForEachInteraction: true,
   });
+
   // set cached value for multiple requests during initial promise
   requestMap.set(id, contract.readState());
   // await the response
