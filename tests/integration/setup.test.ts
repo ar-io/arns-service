@@ -44,14 +44,44 @@ export async function mochaGlobalSetup() {
     )
   );
 
-  // deploy contract to arlocal
+  // deploy example any contract
+  const { contractTxId: antContractTxId } = await warp.deploy(
+    {
+      wallet,
+      initState: JSON.stringify({
+        ...initState,
+        ticker: "ANT-TEST",
+        owner: address,
+        controller: address,
+        records: {
+          "@": {
+            transactionId: "a-fake-transaction-id",
+          },
+        },
+        balances: {
+          [address]: 1,
+        },
+      }),
+      src: contractSrcJs,
+    },
+    true // disable bundling
+  );
+
+  // deploy registry contract to arlocal
   const { contractTxId } = await warp.deploy(
     {
       wallet,
       initState: JSON.stringify({
         ...initState,
+        ticker: "ArNS-REGISTRY-TEST",
         owner: address,
         controller: address,
+        records: {
+          example: {
+            contractTxId: antContractTxId,
+          },
+          "no-owner": "no-owner",
+        },
         balances: {
           [address]: 1,
         },
@@ -62,7 +92,9 @@ export async function mochaGlobalSetup() {
   );
 
   // set in the environment
-  process.env.DEPLOYED_CONTRACT_TX_ID = contractTxId;
+  process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID = contractTxId;
+  process.env.DEPLOYED_ANT_CONTRACT_TX_ID = antContractTxId;
+  console.log(antContractTxId);
   console.log(
     "Successfully setup ArLocal and deployed contract.",
     contractTxId

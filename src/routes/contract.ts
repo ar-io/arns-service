@@ -13,7 +13,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     const { state } = await getContractState(id, warp);
     ctx.body = {
       contract: id,
-      state
+      state,
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error.";
@@ -125,10 +125,14 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next) {
   const { id, name } = ctx.params;
-  const { logger, warp } = ctx.state;
+  const { warp } = ctx.state;
+  const logger = ctx.state.logger.child({
+    id,
+    record: name,
+  });
 
   try {
-    logger.debug("Fetching contract record", { id, record: name });
+    logger.debug("Fetching contract record");
     const { state } = await getContractState(id, warp);
     const record = state["records"][name];
 
@@ -141,13 +145,19 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     const response: ContractRecordResponse = {
       contract: id,
       name,
-      record
-    }
+      record,
+    };
 
     // get record details and contract state if it's from the source contract
     if (record.contractTxId) {
-      const { state: antContract } = await getContractState(record.contractTxId, warp);
-      response['owner'] = antContract?.owners;
+      logger.info("Fetching owner of record name", {
+        contractTxId: record.contractTxId,
+      });
+      const { state: antContract } = await getContractState(
+        record.contractTxId,
+        warp
+      );
+      response["owner"] = antContract?.owner;
     }
 
     ctx.body = response;
