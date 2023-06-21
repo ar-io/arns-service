@@ -1,6 +1,6 @@
 import { Next } from "koa";
 
-import { KoaContext } from "../types";
+import { ContractRecordResponse, KoaContext } from "../types";
 import { getContractState } from "../api/warp";
 import { getWalletInteractionsForContract } from "../api/graphql";
 
@@ -13,7 +13,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     const { state } = await getContractState(id, warp);
     ctx.body = {
       contract: id,
-      state,
+      state
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error.";
@@ -138,11 +138,19 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
       return next;
     }
 
-    ctx.body = {
+    const response: ContractRecordResponse = {
       contract: id,
       name,
-      record: record,
-    };
+      record
+    }
+
+    // get record details and contract state if it's from the source contract
+    if (record.contractTxId) {
+      const { state: antContract } = await getContractState(record.contractTxId, warp);
+      response['owner'] = antContract?.owners;
+    }
+
+    ctx.body = response;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error.";
     logger.error("Failed to fetch contract record", {
