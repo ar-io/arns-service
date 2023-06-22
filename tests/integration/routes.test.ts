@@ -15,6 +15,7 @@ const axios = axiosPackage.create({
   validateStatus: () => true, // don't throw errors
 });
 describe("PDNS Service Integration tests", () => {
+  let ids: string[] = [];
   let id: string;
   let walletAddress: string;
   let transferToAddress: string;
@@ -24,7 +25,11 @@ describe("PDNS Service Integration tests", () => {
   before(async function () {
     // set a large timeout to 10 secs
     this.timeout(10_000);
-    id = process.env.DEPLOYED_CONTRACT_TX_ID!;
+    ids = [
+      process.env.DEPLOYED_ANT_CONTRACT_TX_ID!,
+      process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID!,
+    ];
+    id = process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID!;
     walletAddress = process.env.PRIMARY_WALLET_ADDRESS!;
 
     // get the wallet
@@ -149,6 +154,41 @@ describe("PDNS Service Integration tests", () => {
           );
           expect(status).to.equal(404);
         });
+        describe("/records/:name", () => {
+          it("should return the owner of record name when available", async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records/example`
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contract, owner, record } = data;
+            expect(contract).to.equal(id);
+            expect(record).to.deep.equal({
+              contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
+            });
+            expect(owner).to.not.be.undefined;
+            expect(owner).to.equal(walletAddress);
+          });
+
+          it("should not return the owner of a record name if the contractTxId does not exist on the record", async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records/no-owner`
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contract, owner, record } = data;
+            expect(contract).to.equal(id);
+            expect(record).to.not.be.undefined;
+            expect(owner).to.be.undefined;
+          });
+
+          it("should return a 404 when the record name does not exist", async () => {
+            const { status } = await axios.get(
+              `/v1/contract/${id}/records/fake-name`
+            );
+            expect(status).to.equal(404);
+          });
+        });
       });
 
       describe("/:id", () => {
@@ -189,7 +229,7 @@ describe("PDNS Service Integration tests", () => {
             const { address, contractIds } = data;
             expect(address).to.equal(walletAddress);
             expect(contractIds).to.not.be.undefined;
-            expect(contractIds).to.deep.equal([id]);
+            expect(contractIds).to.deep.equal(ids);
           });
           it("should return a 404 for an invalid wallet address", async () => {
             const { status } = await axios.get(
@@ -208,7 +248,7 @@ describe("PDNS Service Integration tests", () => {
               const { address, contractIds } = data;
               expect(address).to.equal(walletAddress);
               expect(contractIds).to.not.be.undefined;
-              expect(contractIds).to.deep.equal([id]);
+              expect(contractIds).to.deep.equal(ids);
             });
 
             it("should return the transferred contract for the new owner", async () => {
@@ -220,7 +260,9 @@ describe("PDNS Service Integration tests", () => {
               const { address, contractIds } = data;
               expect(address).to.equal(transferToAddress);
               expect(contractIds).to.not.be.undefined;
-              expect(contractIds).to.deep.equal([id]);
+              expect(contractIds).to.deep.equal([
+                process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID,
+              ]);
             });
           });
         });
@@ -235,7 +277,9 @@ describe("PDNS Service Integration tests", () => {
             const { address, contractIds } = data;
             expect(address).to.equal(walletAddress);
             expect(contractIds).to.not.be.undefined;
-            expect(contractIds).to.deep.equal([]); // our initial contract doesn't have an '@' record
+            expect(contractIds).to.deep.equal([
+              process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
+            ]);
           });
 
           it("should return return a 400 when an invalid type is provided", async () => {
