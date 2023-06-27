@@ -85,6 +85,8 @@ export async function mochaGlobalSetup() {
         balances: {
           [address]: 1,
         },
+        auctions: {},
+        reserved: {},
       }),
       src: contractSrcJs,
     },
@@ -94,10 +96,8 @@ export async function mochaGlobalSetup() {
   // set in the environment
   process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID = contractTxId;
   process.env.DEPLOYED_ANT_CONTRACT_TX_ID = antContractTxId;
-  console.log(antContractTxId);
   console.log(
-    "Successfully setup ArLocal and deployed contract.",
-    contractTxId
+    `Successfully setup ArLocal and deployed contracts.\nRegistry: ${contractTxId}\nANT: ${antContractTxId}`
   );
 }
 
