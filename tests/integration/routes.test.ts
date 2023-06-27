@@ -134,6 +134,8 @@ describe("PDNS Service Integration tests", () => {
           "ticker",
           "owner",
           "controller",
+          "auctions",
+          "reserved",
         ]) {
           // TODO: once write interactions are added, add more tests to validate the state is what's expected
           it(`should return the correct state value for ${field}`, async () => {
