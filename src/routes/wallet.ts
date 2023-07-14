@@ -21,7 +21,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
         ","
       )}.`;
       ctx.status = 400;
-      return next;
+      return next();
     }
 
     logger.debug("Fetching deployed contracts for wallet.", {
@@ -80,5 +80,5 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch contracts for wallet. ${message}`;
   }
-  return next;
+  return next();
 }
