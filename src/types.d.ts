@@ -1,5 +1,5 @@
 import { DefaultState, ParameterizedContext } from "koa";
-import { PstState, Warp } from "warp-contracts";
+import { EvaluationOptions, PstState, Warp } from "warp-contracts";
 import winston from "winston";
 import { allowedContractTypes } from "./constants.js";
 
@@ -41,4 +41,5 @@ export type ContractRecordResponse = {
   record: unknown;
   owner?: string;
   name: string;
+  evaluationOptions?: Partial<EvaluationOptions>;
 };

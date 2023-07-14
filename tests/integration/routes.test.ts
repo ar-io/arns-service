@@ -88,12 +88,13 @@ describe("PDNS Service Integration tests", () => {
   describe("/v1", () => {
     describe("/contract", () => {
       describe("/:id", () => {
-        it("should return the contract state and id", async () => {
-          const { status, data } = await axios.get(`/v1/contract/${id}`);
+        it.only("should return the contract state and id using default evaluation options", async () => {
+          const { status, data } = await axios.get(`/v1/contract/${id}?`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contract, state } = data;
+          const { contract, state, evaluationOptions } = data;
           expect(contract).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
           expect(state).to.include.keys([
             "balances",
             "owner",
@@ -109,13 +110,20 @@ describe("PDNS Service Integration tests", () => {
           const { status } = await axios.get(`/v1/contract/non-matching-regex`);
           expect(status).to.equal(404);
         });
+
+        it("should return an error when evaluation options do not match the contract", async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}?internalWrites=false`
+          );
+          expect(status).to.equal(400);
+          expect(data).contains("Cannot proceed with contract evaluation");
+        });
       });
 
       describe("/:id/interactions", () => {
-        // TODO: once write interactions are added, add additional tests that confirm the interactions are provided by this endpoint
         it("should return the contract interactions", async () => {
           const { status, data } = await axios.get(
-            `/contract/${id}/interactions`
+            `/v1/contract/${id}/interactions?`
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -137,10 +145,9 @@ describe("PDNS Service Integration tests", () => {
           "auctions",
           "reserved",
         ]) {
-          // TODO: once write interactions are added, add more tests to validate the state is what's expected
           it(`should return the correct state value for ${field}`, async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/${field}`
+              `/v1/contract/${id}/${field}?`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -152,14 +159,14 @@ describe("PDNS Service Integration tests", () => {
 
         it("should return a 404 for an invalid field", async () => {
           const { status } = await axios.get(
-            `/v1/contract/${id}/invalid-field`
+            `/v1/contract/${id}/invalid-field?`
           );
           expect(status).to.equal(404);
         });
         describe("/records/:name", () => {
           it("should return the owner of record name when available", async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/records/example`
+              `/v1/contract/${id}/records/example?`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -174,7 +181,7 @@ describe("PDNS Service Integration tests", () => {
 
           it("should not return the owner of a record name if the contractTxId does not exist on the record", async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/records/no-owner`
+              `/v1/contract/${id}/records/no-owner?`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -186,35 +193,10 @@ describe("PDNS Service Integration tests", () => {
 
           it("should return a 404 when the record name does not exist", async () => {
             const { status } = await axios.get(
-              `/v1/contract/${id}/records/fake-name`
+              `/v1/contract/${id}/records/fake-name?`
             );
             expect(status).to.equal(404);
           });
-        });
-      });
-
-      describe("/:id", () => {
-        // TODO: once write interactions are added, add more tests to validate the state is what's expected
-        it("should return the contract state and id", async () => {
-          const { status, data } = await axios.get(`/v1/contract/${id}`);
-          expect(status).to.equal(200);
-          expect(data).to.not.be.undefined;
-          const { contract, state } = data;
-          expect(contract).to.equal(id);
-          expect(state).to.include.keys([
-            "balances",
-            "owner",
-            "name",
-            "records",
-            "ticker",
-            "owner",
-            "controller",
-          ]);
-        });
-
-        it("should return a 404 for an invalid id", async () => {
-          const { status } = await axios.get(`/v1/contract/non-matching-regex`);
-          expect(status).to.equal(404);
         });
       });
     });

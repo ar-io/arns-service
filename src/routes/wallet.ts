@@ -4,15 +4,18 @@ import {
   getContractsTransferredToOrControlledByWallet,
   getDeployedContractsByWallet,
 } from "../api/graphql";
-import { isValidContractType, validateStateWithTimeout } from "../api/warp";
+import {
+  DEFAULT_EVALUATION_OPTIONS,
+  isValidContractType,
+  validateStateWithTimeout,
+} from "../api/warp";
 import { allowedContractTypes } from "../constants";
 import * as _ from "lodash";
 
 export async function walletContractHandler(ctx: KoaContext, next: Next) {
   const { address } = ctx.params;
   const { logger, arweave, warp } = ctx.state;
-  const { query } = ctx.request;
-  const { type } = query;
+  const { type } = ctx.request.query;
 
   try {
     // validate type is empty or valid
@@ -58,7 +61,16 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     const validContractsOfType = (
       await Promise.allSettled(
         [...deployedOrOwned].map(async (id: string) =>
-          (await validateStateWithTimeout(id, warp, type, address)) ? id : null
+          // TODO: these contracts likely have their own evaluation rules, use defaults for now
+          (await validateStateWithTimeout(
+            id,
+            warp,
+            type,
+            address,
+            DEFAULT_EVALUATION_OPTIONS
+          ))
+            ? id
+            : null
         )
       )
     ).map((i) => (i.status === "fulfilled" ? i.value : null));
