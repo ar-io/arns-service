@@ -5,7 +5,8 @@ import { getContractState } from "../api/warp";
 import { getWalletInteractionsForContract } from "../api/graphql";
 import { EvaluationOptions } from "warp-contracts";
 
-export function decodeEvaluationOptionQueryParams(evalOptions: any): Partial<EvaluationOptions>{
+// Small util to parse evaluation options query params - we may want to use a library to help with this for other types
+export function decodeQueryParams(evalOptions: any): Partial<EvaluationOptions>{
   return Object.entries(evalOptions).reduce((decodedEvalOptions: any, [key, value]: [string, any]) => {
     if(value === "true" || value === "false"){
       decodedEvalOptions[key] = value === "true";
@@ -21,14 +22,15 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;
   const { id } = ctx.params;
   // query params can be set for contracts with various eval options
-  const evalOptions = decodeEvaluationOptionQueryParams(ctx.request.query);
+  const evaluationOptions = ctx.request.query ? decodeQueryParams(ctx.request.query) : undefined;
 
   try {
-    logger.debug("Fetching contract state", { id, evalOptions});
-    const { state } = await getContractState(id, warp, evalOptions);
+    logger.debug("Fetching contract state", { id, evaluationOptions});
+    const { state } = await getContractState(id, warp, evaluationOptions);
     ctx.body = {
       contract: id,
       state,
+      evaluationOptions
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error.";
@@ -42,11 +44,12 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   const { arweave, logger, warp } = ctx.state;
   const { id, address } = ctx.params;
+  const evaluationOptions = ctx.request.query ? decodeQueryParams(ctx.request.query) : undefined;
 
   try {
     logger.debug("Fetching all contract interactions", { id });
     const [{ validity, errorMessages }, { interactions }] = await Promise.all([
-      getContractState(id, warp),
+      getContractState(id, warp, evaluationOptions),
       getWalletInteractionsForContract(arweave, {
         address: address,
         contractId: id,
@@ -86,9 +89,10 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
   const { id, field } = ctx.params;
   const { logger, warp } = ctx.state;
+  const evaluationOptions = ctx.request.query ? decodeQueryParams(ctx.request.query) : undefined;
   try {
     logger.debug("Fetching contract field", { id, field });
-    const { state } = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp, evaluationOptions);
     const contractField = state[field];
 
     if (!contractField) {
@@ -112,12 +116,14 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
 export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
   const { id, address } = ctx.params;
   const { logger, warp } = ctx.state;
+  // query params can be set for contracts with various eval options
+  const evaluationOptions = ctx.request.query ? decodeQueryParams(ctx.request.query) : undefined;
   try {
     logger.debug("Fetching contract balance for wallet", {
       id,
       wallet: address,
     });
-    const { state } = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp, evaluationOptions);
     const balance = state["balances"][address];
 
     ctx.body = {
@@ -145,10 +151,11 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     id,
     record: name,
   });
+  const evaluationOptions = ctx.request.query ? decodeQueryParams(ctx.request.query) : undefined;
 
   try {
     logger.debug("Fetching contract record");
-    const { state } = await getContractState(id, warp);
+    const { state } = await getContractState(id, warp, evaluationOptions);
     const record = state["records"][name];
 
     if (!record) {
@@ -170,7 +177,9 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
       });
       const { state: antContract } = await getContractState(
         record.contractTxId,
-        warp
+        warp,
+        // TODO: ant contracts likely have different evaluation options - for now set to empty
+        {}
       );
       response["owner"] = antContract?.owner;
     }

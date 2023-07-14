@@ -35,10 +35,8 @@ export async function getContractState(
     const { cachedValue } = await requestMap.get(cacheId);
     return cachedValue;
   }
-
   // use provided evaluation options
   const contract = warp.contract(id).setEvaluationOptions(evalOptions);
-
   // set cached value for multiple requests during initial promise
   requestMap.set(cacheId, contract.readState());
   // await the response
@@ -71,9 +69,10 @@ export async function validateStateAndOwnership(
   id: string,
   warp: Warp,
   type?: ContractType,
-  address?: string
+  address?: string,
+  evaluationOptions?: Partial<EvaluationOptions>
 ): Promise<boolean> {
-  const { state } = await getContractState(id, warp);
+  const { state } = await getContractState(id, warp, evaluationOptions);
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =
     !type ||
