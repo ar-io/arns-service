@@ -7,5 +7,5 @@ promClient.collectDefaultMetrics({ register: metricsRegistry });
 
 export async function prometheusHandler(ctx: KoaContext, next: Next) {
   ctx.body = await metricsRegistry.metrics();
-  return next;
+  return next();
 }
