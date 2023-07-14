@@ -1,22 +1,23 @@
-import { EvalStateResult, SourceType, Warp } from "warp-contracts";
+import { EvalStateResult, EvaluationOptions, SourceType, Warp } from "warp-contracts";
 import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
 import { EvaluationTimeoutError } from "../errors";
-
+import { createHash } from 'crypto';
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
+
+function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
+  // Function to calculate the hash of a string
+  const hash = createHash('sha256');
+  hash.update(evalOptions.toString());
+  return hash.digest('hex');
+}
+
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState(
   id: string,
-  warp: Warp
-): Promise<EvalStateResult<any>> {
-  // validate request is new, if not return the existing promise (e.g. barrier synchronization)
-  if (requestMap.get(id)) {
-    const { cachedValue } = await requestMap.get(id);
-    return cachedValue;
-  }
-
-  const contract = warp.contract(id).setEvaluationOptions({
+  warp: Warp,
+  evalOptions: Partial<EvaluationOptions> = {
     // restrain to L1 tx's only
     sourceType: SourceType.ARWEAVE,
     // TODO: these will need to match the contract or be provided as params
@@ -25,14 +26,25 @@ export async function getContractState(
     maxCallDepth: 3,
     waitForConfirmation: true,
     updateCacheForEachInteraction: true,
-  });
+  }
+): Promise<EvalStateResult<any>> {
+  const evalHash = createQueryParamHash(evalOptions);
+  const cacheId = `${id}-${evalHash}`;
+  // validate request is new, if not return the existing promise (e.g. barrier synchronization)
+  if (requestMap.get(cacheId)) {
+    const { cachedValue } = await requestMap.get(cacheId);
+    return cachedValue;
+  }
+
+  // use provided evaluation options
+  const contract = warp.contract(id).setEvaluationOptions(evalOptions);
 
   // set cached value for multiple requests during initial promise
-  requestMap.set(id, contract.readState());
+  requestMap.set(cacheId, contract.readState());
   // await the response
-  const { cachedValue } = await requestMap.get(id);
+  const { cachedValue } = await requestMap.get(cacheId);
   // remove the cached value once it's been retrieved
-  requestMap.delete(id);
+  requestMap.delete(cacheId);
 
   return cachedValue;
 }
