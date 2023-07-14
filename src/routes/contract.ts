@@ -3,14 +3,29 @@ import { Next } from "koa";
 import { ContractRecordResponse, KoaContext } from "../types";
 import { getContractState } from "../api/warp";
 import { getWalletInteractionsForContract } from "../api/graphql";
+import { EvaluationOptions } from "warp-contracts";
+
+export function decodeEvaluationOptionQueryParams(evalOptions: any): Partial<EvaluationOptions>{
+  return Object.entries(evalOptions).reduce((decodedEvalOptions: any, [key, value]: [string, any]) => {
+    if(value === "true" || value === "false"){
+      decodedEvalOptions[key] = value === "true";
+      return decodedEvalOptions;
+    }
+    // TODO: we may need to convert other types of values
+    decodedEvalOptions[key] = value;
+    return decodedEvalOptions;
+  }, {});
+}
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;
   const { id } = ctx.params;
+  // query params can be set for contracts with various eval options
+  const evalOptions = decodeEvaluationOptionQueryParams(ctx.request.query);
 
   try {
-    logger.debug("Fetching contract state", { id });
-    const { state } = await getContractState(id, warp);
+    logger.debug("Fetching contract state", { id, evalOptions});
+    const { state } = await getContractState(id, warp, evalOptions);
     ctx.body = {
       contract: id,
       state,
@@ -21,7 +36,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}. ${message}`;
   }
-  return next;
+  return next();
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
@@ -65,7 +80,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch contract interactions for contract: ${id}. ${message}`;
   }
-  return next;
+  return next();
 }
 
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
@@ -79,7 +94,7 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     if (!contractField) {
       ctx.status = 404;
       ctx.body = "Contract field not found";
-      return next;
+      return next();
     }
 
     ctx.body = {
@@ -91,7 +106,7 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch contract: ${id}`;
   }
-  return next;
+  return next();
 }
 
 export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
@@ -120,7 +135,7 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch balance for wallet ${address}. ${message}`;
   }
-  return next;
+  return next();
 }
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next) {
@@ -139,7 +154,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     if (!record) {
       ctx.status = 404;
       ctx.message = "Record not found";
-      return next;
+      return next();
     }
 
     const response: ContractRecordResponse = {
@@ -171,5 +186,5 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     ctx.status = 503;
     ctx.body = `Failed to fetch record. ${message}`;
   }
-  return next;
+  return next();
 }
