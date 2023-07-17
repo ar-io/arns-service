@@ -8,13 +8,16 @@ import {
 } from "../api/warp";
 import { getWalletInteractionsForContract } from "../api/graphql";
 import { EvaluationOptions } from "warp-contracts";
+import { ParsedUrlQuery } from "querystring";
 
 // Small util to parse evaluation options query params - we may want to use a library to help with this for other types
 export function decodeQueryParams(
-  evalOptions: any
-): Partial<EvaluationOptions> & any {
+  evalOptions: ParsedUrlQuery
+): Partial<EvaluationOptions> & unknown {
   return Object.entries(evalOptions).reduce(
-    (decodedEvalOptions: any, [key, value]: [string, any]) => {
+    (decodedEvalOptions: {
+      [key: string]: string | boolean;
+    }, [key, value]: [string, any]) => {
       let parsedValue;
       // take only the first value if provided an array
       if (Array.isArray(value)) {
