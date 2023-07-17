@@ -1,7 +1,6 @@
 import {
   EvalStateResult,
   EvaluationOptions,
-  SourceType,
   Warp,
 } from "warp-contracts";
 import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
@@ -11,9 +10,7 @@ import { EvaluationTimeoutError } from "../errors";
 import { createHash } from "crypto";
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
-export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {
-  sourceType: SourceType.ARWEAVE,
-};
+export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {};
 
 function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   // Function to calculate the hash of a string
@@ -22,7 +19,11 @@ function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   return hash.digest("hex");
 }
 
-export class EvaluationError extends Error {}
+export class EvaluationError extends Error {
+  constructor(message?: string) {
+    super(message); 
+  }
+}
 
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState({
@@ -41,6 +42,7 @@ export async function getContractState({
     const { cachedValue } = await requestMap.get(cacheId);
     return cachedValue;
   }
+
   // use provided evaluation options
   const contract = warp.contract(id).setEvaluationOptions(evaluationOptions);
   // set cached value for multiple requests during initial promise
@@ -55,7 +57,8 @@ export async function getContractState({
     // throw an eval here so we can properly return correct status code
     if (
       error instanceof Error &&
-      error.message.includes("Cannot proceed with contract evaluation")
+      // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
+      (error.message.includes("Cannot proceed with contract evaluation") || error.message.includes("Use contract.setEvaluationOptions"))
     ) {
       throw new EvaluationError(error.message);
     }
@@ -68,7 +71,7 @@ export async function validateStateWithTimeout(
   warp: Warp,
   type?: ContractType,
   address?: string,
-  evaluationOptions?: Partial<EvaluationOptions>
+  evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS
 ): Promise<unknown> {
   return Promise.race([
     validateStateAndOwnership(id, warp, type, address, evaluationOptions),
@@ -87,7 +90,7 @@ export async function validateStateAndOwnership(
   warp: Warp,
   type?: ContractType,
   address?: string,
-  evaluationOptions?: Partial<EvaluationOptions>
+  evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS
 ): Promise<boolean> {
   const { state } = await getContractState({ id, warp, evaluationOptions });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.

@@ -2,7 +2,7 @@ import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import * as fs from "fs";
 import path from "path";
-import { LoggerFactory, SourceType, WarpFactory } from "warp-contracts";
+import { LoggerFactory, WarpFactory } from "warp-contracts";
 import { DeployPlugin } from "warp-contracts-plugin-deploy";
 
 const GATEWAY_PORT = process.env.GATEWAY_PORT ?? 1984;
@@ -63,12 +63,6 @@ export async function mochaGlobalSetup() {
         },
       }),
       src: contractSrcJs,
-      evaluationManifest: {
-        evaluationOptions: {
-          sourceType: SourceType.ARWEAVE,
-          internalWrites: true,
-        },
-      },
     },
     true // disable bundling
   );
@@ -95,6 +89,12 @@ export async function mochaGlobalSetup() {
         reserved: {},
       }),
       src: contractSrcJs,
+      evaluationManifest: {
+        evaluationOptions: {
+          // used for testing query params
+          internalWrites: true,
+        }
+      }
     },
     true // disable bundling
   );

@@ -13,6 +13,9 @@ const serviceURL = `http://${HOST}:${+PORT}`;
 const axios = axiosPackage.create({
   baseURL: serviceURL,
   validateStatus: () => true, // don't throw errors
+  params: {
+    internalWrites: true,
+  }
 });
 describe("PDNS Service Integration tests", () => {
   let ids: string[] = [];
@@ -89,7 +92,7 @@ describe("PDNS Service Integration tests", () => {
     describe("/contract", () => {
       describe("/:id", () => {
         it("should return the contract state and id using default evaluation options", async () => {
-          const { status, data } = await axios.get(`/v1/contract/${id}?`);
+          const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
           const { contract, state, evaluationOptions } = data;
@@ -123,7 +126,7 @@ describe("PDNS Service Integration tests", () => {
       describe("/:id/interactions", () => {
         it("should return the contract interactions", async () => {
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/interactions?`
+            `/v1/contract/${id}/interactions`
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -147,7 +150,7 @@ describe("PDNS Service Integration tests", () => {
         ]) {
           it(`should return the correct state value for ${field}`, async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/${field}?`
+              `/v1/contract/${id}/${field}`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -159,14 +162,14 @@ describe("PDNS Service Integration tests", () => {
 
         it("should return a 404 for an invalid field", async () => {
           const { status } = await axios.get(
-            `/v1/contract/${id}/invalid-field?`
+            `/v1/contract/${id}/invalid-field`
           );
           expect(status).to.equal(404);
         });
         describe("/records/:name", () => {
           it("should return the owner of record name when available", async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/records/example?`
+              `/v1/contract/${id}/records/example`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -181,7 +184,7 @@ describe("PDNS Service Integration tests", () => {
 
           it("should not return the owner of a record name if the contractTxId does not exist on the record", async () => {
             const { status, data } = await axios.get(
-              `/v1/contract/${id}/records/no-owner?`
+              `/v1/contract/${id}/records/no-owner`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
@@ -193,7 +196,7 @@ describe("PDNS Service Integration tests", () => {
 
           it("should return a 404 when the record name does not exist", async () => {
             const { status } = await axios.get(
-              `/v1/contract/${id}/records/fake-name?`
+              `/v1/contract/${id}/records/fake-name`
             );
             expect(status).to.equal(404);
           });
@@ -254,7 +257,7 @@ describe("PDNS Service Integration tests", () => {
         describe("?type=", () => {
           it("should return the list of contracts owned or controlled by a wallet and of a specific ant type", async () => {
             const { status, data } = await axios.get(
-              `/v1/wallet/${walletAddress}/contracts?type=ant`
+              `/v1/wallet/${walletAddress}/contracts?type=ant&internalWrites=true`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
