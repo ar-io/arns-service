@@ -88,7 +88,7 @@ describe("PDNS Service Integration tests", () => {
   describe("/v1", () => {
     describe("/contract", () => {
       describe("/:id", () => {
-        it.only("should return the contract state and id using default evaluation options", async () => {
+        it("should return the contract state and id using default evaluation options", async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}?`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
