@@ -20,7 +20,7 @@ export function decodeQueryParams(
       if (Array.isArray(value)) {
         parsedValue = value[0];
       }
-      if(parsedValue === "true" || parsedValue === "false" ){
+      if (parsedValue === "true" || parsedValue === "false") {
         parsedValue = parsedValue === "true";
       }
       decodedEvalOptions[key] = parsedValue;
@@ -182,11 +182,11 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
 
-    const logger = _logger.child({
-      id,
-      record: name,
-      evaluationOptions,
-    });
+  const logger = _logger.child({
+    id,
+    record: name,
+    evaluationOptions,
+  });
 
   try {
     logger.debug("Fetching contract record");

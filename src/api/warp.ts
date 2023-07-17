@@ -1,8 +1,4 @@
-import {
-  EvalStateResult,
-  EvaluationOptions,
-  Warp,
-} from "warp-contracts";
+import { EvalStateResult, EvaluationOptions, Warp } from "warp-contracts";
 import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
@@ -21,7 +17,7 @@ function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
 
 export class EvaluationError extends Error {
   constructor(message?: string) {
-    super(message); 
+    super(message);
   }
 }
 
@@ -58,7 +54,8 @@ export async function getContractState({
     if (
       error instanceof Error &&
       // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
-      (error.message.includes("Cannot proceed with contract evaluation") || error.message.includes("Use contract.setEvaluationOptions"))
+      (error.message.includes("Cannot proceed with contract evaluation") ||
+        error.message.includes("Use contract.setEvaluationOptions"))
     ) {
       throw new EvaluationError(error.message);
     }

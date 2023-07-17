@@ -93,8 +93,8 @@ export async function mochaGlobalSetup() {
         evaluationOptions: {
           // used for testing query params
           internalWrites: true,
-        }
-      }
+        },
+      },
     },
     true // disable bundling
   );

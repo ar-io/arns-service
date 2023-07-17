@@ -15,7 +15,7 @@ const axios = axiosPackage.create({
   validateStatus: () => true, // don't throw errors
   params: {
     internalWrites: true,
-  }
+  },
 });
 describe("PDNS Service Integration tests", () => {
   let ids: string[] = [];
