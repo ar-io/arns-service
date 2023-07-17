@@ -1,12 +1,12 @@
 {
-  "name": "pdns-service",
+  "name": "arns-service",
   "version": "1.0.0",
   "description": "Service that supports PDNS Portal",
   "main": "./dist/app.js",
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ar-io/pdns-service.git"
+    "url": "git@github.com:ar-io/arns-service.git"
   },
   "license": "AGPL-3.0",
   "private": false,
@@ -16,7 +16,7 @@
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
-    "docker:run": "docker compose up pdns-service --build",
+    "docker:run": "docker compose up arns-service --build",
     "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format:fix": "yarn prettier --write .",
     "format:check": "yarn prettier . --check",

@@ -6,7 +6,7 @@ services:
     ports:
       - "1984:1984"
 
-  pdns-service:
+  arns-service:
     build:
       context: .
       args:
@@ -27,11 +27,11 @@ services:
       args:
         NODE_VERSION: ${NODE_VERSION:-18.16.0}
     environment:
-      HOST: pdns-service
+      HOST: arns-service
       PORT: 3000
       GATEWAY_HOST: arlocal
       GATEWAY_PORT: 1984
       GATEWAY_PROTOCOL: http
     depends_on:
       - arlocal
-      - pdns-service
+      - arns-service
