@@ -15,9 +15,12 @@ export function decodeQueryParams(
   evalOptions: ParsedUrlQuery
 ): Partial<EvaluationOptions> & unknown {
   return Object.entries(evalOptions).reduce(
-    (decodedEvalOptions: {
-      [key: string]: string | boolean;
-    }, [key, value]: [string, any]) => {
+    (
+      decodedEvalOptions: {
+        [key: string]: string | boolean;
+      },
+      [key, value]: [string, any]
+    ) => {
       let parsedValue;
       // take only the first value if provided an array
       if (Array.isArray(value)) {
