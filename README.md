@@ -1,4 +1,4 @@
-# pdns-service
+# arns-service
 
 Koa microservice that facilities the PDNS Portal.
 
@@ -30,8 +30,8 @@ curl localhost:3000/healthcheck
 Build and run the container:
 
 ```shell
-docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) --build-arg NODE_VERSION_SHORT=$(cat .nvmrc |cut -c2-3) . -t pdns-service
-docker run -p 3000:3000 pdns-service
+docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) --build-arg NODE_VERSION_SHORT=$(cat .nvmrc |cut -c2-3) . -t arns-service
+docker run -p 3000:3000 arns-service
 ```
 
 ## Warp
@@ -60,7 +60,7 @@ The service can be configured using environment variables. The following environ
 Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
 
 ```shell
-docker compose up pdns-service arlocal --build
+docker compose up arns-service arlocal --build
 yarn test:integration
 ```
 
