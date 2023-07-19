@@ -13,9 +13,6 @@ const serviceURL = `http://${HOST}:${+PORT}`;
 const axios = axiosPackage.create({
   baseURL: serviceURL,
   validateStatus: () => true, // don't throw errors
-  params: {
-    internalWrites: true,
-  },
 });
 describe("PDNS Service Integration tests", () => {
   let ids: string[] = [];
@@ -91,7 +88,7 @@ describe("PDNS Service Integration tests", () => {
   describe("/v1", () => {
     describe("/contract", () => {
       describe("/:id", () => {
-        it("should return the contract state and id using default evaluation options", async () => {
+        it("should return the contract state and id without any evaluation options provided", async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -114,12 +111,11 @@ describe("PDNS Service Integration tests", () => {
           expect(status).to.equal(404);
         });
 
-        it("should return an error when evaluation options do not match the contract", async () => {
-          const { status, data } = await axios.get(
-            `/v1/contract/${id}?internalWrites=false`
+        it("should return an error when evaluation option is less restrictive then the contract-manifest", async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}?throwOnInternalWriteError=false`
           );
           expect(status).to.equal(400);
-          expect(data).contains("Cannot proceed with contract evaluation");
         });
       });
 
@@ -257,7 +253,7 @@ describe("PDNS Service Integration tests", () => {
         describe("?type=", () => {
           it("should return the list of contracts owned or controlled by a wallet and of a specific ant type", async () => {
             const { status, data } = await axios.get(
-              `/v1/wallet/${walletAddress}/contracts?type=ant&internalWrites=true`
+              `/v1/wallet/${walletAddress}/contracts?type=ant`
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;

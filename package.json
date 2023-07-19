@@ -16,6 +16,7 @@
     "build": "yarn clean && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [node_modules dist]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
+    "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $* ; docker compose down",
     "docker:run": "docker compose up arns-service --build",
     "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format:fix": "yarn prettier --write .",

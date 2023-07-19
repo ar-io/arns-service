@@ -28,6 +28,8 @@ export function decodeQueryParams(
       }
       if (parsedValue === "true" || parsedValue === "false") {
         parsedValue = parsedValue === "true";
+      } else {
+        parsedValue = value;
       }
       decodedEvalOptions[key] = parsedValue;
       return decodedEvalOptions;

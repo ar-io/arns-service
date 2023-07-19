@@ -1,9 +1,15 @@
-import { EvalStateResult, EvaluationOptions, Warp } from "warp-contracts";
+import {
+  EvalStateResult,
+  EvaluationManifest,
+  EvaluationOptions,
+  Warp,
+} from "warp-contracts";
 import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from "../constants";
 import { ContractType } from "../types";
 import * as _ from "lodash";
 import { EvaluationTimeoutError } from "../errors";
 import { createHash } from "crypto";
+import Arweave from "arweave";
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
 export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {};
@@ -31,19 +37,28 @@ export async function getContractState({
   warp: Warp;
   evaluationOptions?: Partial<EvaluationOptions>;
 }): Promise<EvalStateResult<any>> {
-  const evalHash = createQueryParamHash(evaluationOptions);
-  const cacheId = `${id}-${evalHash}`;
-  // validate request is new, if not return the existing promise (e.g. barrier synchronization)
-  if (requestMap.get(cacheId)) {
-    const { cachedValue } = await requestMap.get(cacheId);
-    return cachedValue;
-  }
-
-  // use provided evaluation options
-  const contract = warp.contract(id).setEvaluationOptions(evaluationOptions);
-  // set cached value for multiple requests during initial promise
-  requestMap.set(cacheId, contract.readState());
   try {
+    // get the contract manifest eval options by default
+    const { evaluationOptions: contractDefinedEvalOptions } =
+      await getContractManifest({ id, arweave: warp.arweave });
+    // override any contract manifest eval options with eval options provided
+    const combinedEvalOptions = {
+      ...contractDefinedEvalOptions,
+      ...evaluationOptions,
+    };
+    const evaluationOptionsHash = createQueryParamHash(combinedEvalOptions);
+    const cacheId = `${id}-${evaluationOptionsHash}`;
+    // validate request is new, if not return the existing promise (e.g. barrier synchronization)
+    if (requestMap.get(cacheId)) {
+      const { cachedValue } = await requestMap.get(cacheId);
+      return cachedValue;
+    }
+    // use the combined evaluation options
+    const contract = warp
+      .contract(id)
+      .setEvaluationOptions(combinedEvalOptions);
+    // set cached value for multiple requests during initial promise
+    requestMap.set(cacheId, contract.readState());
     // await the response
     const { cachedValue } = await requestMap.get(cacheId);
     // remove the cached value once it's been retrieved
@@ -61,6 +76,34 @@ export async function getContractState({
     }
     throw error;
   }
+}
+
+export async function getContractManifest({
+  id,
+  arweave,
+}: {
+  id: string;
+  arweave: Arweave;
+  evaluationOptions?: Partial<EvaluationOptions>;
+}): Promise<EvaluationManifest> {
+  const { data: encodedTags } = await arweave.api.get(`/tx/${id}/tags`);
+  const decodedTags = tagsToObject(encodedTags);
+  // this may not exist, so provided empty json object string as default
+  const contractManifestString = decodedTags["Contract-Manifest"] ?? '{}';
+  const contractManifest = JSON.parse(contractManifestString);
+  return contractManifest;
+}
+
+export function tagsToObject(tags: { name: string; value: string }[]): {
+  [x: string]: string;
+} {
+  return tags.reduce(
+    (newTags, tag) => ({
+      ...newTags,
+      [fromB64Url(tag.name)]: fromB64Url(tag.value),
+    }),
+    {}
+  );
 }
 
 export async function validateStateWithTimeout(
@@ -110,4 +153,9 @@ export function isValidContractType(
   }
 
   return !type || (!!type && _.includes(allowedContractTypes, type));
+}
+
+export function fromB64Url(input: string): string {
+  const decodedBuffer = Buffer.from(input, "base64");
+  return decodedBuffer.toString();
 }

@@ -92,7 +92,7 @@ export async function mochaGlobalSetup() {
       evaluationManifest: {
         evaluationOptions: {
           // used for testing query params
-          internalWrites: true,
+          throwOnInternalWriteError: true,
         },
       },
     },
