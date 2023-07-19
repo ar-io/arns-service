@@ -5,7 +5,6 @@ import {
   getDeployedContractsByWallet,
 } from "../api/graphql";
 import {
-  DEFAULT_EVALUATION_OPTIONS,
   EvaluationError,
   isValidContractType,
   validateStateWithTimeout,
@@ -63,14 +62,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       await Promise.allSettled(
         [...deployedOrOwned].map(async (id: string) =>
           // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
-          (await validateStateWithTimeout(
-            id,
-            warp,
-            type,
-            address,
-          ))
-            ? id
-            : null
+          (await validateStateWithTimeout(id, warp, type, address)) ? id : null
         )
       )
     ).map((i) => (i.status === "fulfilled" ? i.value : null));
