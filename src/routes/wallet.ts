@@ -12,17 +12,11 @@ import {
 } from "../api/warp";
 import { allowedContractTypes } from "../constants";
 import * as _ from "lodash";
-import { decodeQueryParams } from "./contract";
 
 export async function walletContractHandler(ctx: KoaContext, next: Next) {
   const { address } = ctx.params;
   const { logger, arweave, warp } = ctx.state;
   const { type } = ctx.request.query;
-
-  // TODO: how do we handle this? should we just use the default evaluation options? the most restrictive deployed contract will needed to be provided
-  const evaluationOptions = ctx.request.querystring
-    ? decodeQueryParams(ctx.request.query)
-    : DEFAULT_EVALUATION_OPTIONS;
 
   try {
     // validate type is empty or valid
@@ -68,13 +62,12 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     const validContractsOfType = (
       await Promise.allSettled(
         [...deployedOrOwned].map(async (id: string) =>
-          // TODO: these contracts likely have their own evaluation rules, use what's provided for now
+          // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
           (await validateStateWithTimeout(
             id,
             warp,
             type,
             address,
-            evaluationOptions
           ))
             ? id
             : null
