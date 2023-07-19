@@ -1,7 +1,7 @@
-import { DefaultState, ParameterizedContext } from "koa";
-import { EvaluationOptions, PstState, Warp } from "warp-contracts";
-import winston from "winston";
-import { allowedContractTypes } from "./constants.js";
+import { DefaultState, ParameterizedContext } from 'koa';
+import { EvaluationOptions, PstState, Warp } from 'warp-contracts';
+import winston from 'winston';
+import { allowedContractTypes } from './constants';
 
 export type KoaState = {
   logger: winston.Logger;

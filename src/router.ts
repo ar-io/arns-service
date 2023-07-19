@@ -1,9 +1,9 @@
-import Router from "@koa/router";
+import Router from '@koa/router';
 import {
   ARNS_CONTRACT_FIELD_REGEX,
   ARNS_CONTRACT_ID_REGEX,
   ARNS_NAME_REGEX,
-} from "./constants";
+} from './constants';
 import {
   contractBalanceHandler,
   contractFieldHandler,
@@ -12,16 +12,16 @@ import {
   contractRecordHandler,
   prometheusHandler,
   walletContractHandler,
-} from "./routes";
+} from './routes';
 
 const router = new Router();
 
 // healthcheck
-router.get("/healthcheck", (ctx) => {
+router.get('/healthcheck', (ctx) => {
   ctx.body = {
     timestamp: new Date(),
     status: 200,
-    message: "Hello world.",
+    message: 'Hello world.',
   };
 });
 
@@ -29,57 +29,57 @@ router.get("/healthcheck", (ctx) => {
 router.get(`/contract/:id${ARNS_CONTRACT_ID_REGEX}`, contractHandler);
 router.get(
   `/contract/:id${ARNS_CONTRACT_ID_REGEX}/interactions`,
-  contractInteractionsHandler
+  contractInteractionsHandler,
 );
 router.get(
   `/contract/:id${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
-  contractFieldHandler
+  contractFieldHandler,
 );
 router.get(
   `/contract/:id${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
-  contractBalanceHandler
+  contractBalanceHandler,
 );
 router.get(
   `/contract/:id${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
-  contractRecordHandler
+  contractRecordHandler,
 );
 router.get(
   `/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,
-  walletContractHandler
+  walletContractHandler,
 );
 router.get(
   `/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contract/:id${ARNS_CONTRACT_ID_REGEX}`,
-  contractInteractionsHandler
+  contractInteractionsHandler,
 );
 
 // V1 endpoints
 router.get(`/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}`, contractHandler);
 router.get(
   `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/interactions`,
-  contractInteractionsHandler
+  contractInteractionsHandler,
 );
 router.get(
   `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
-  contractFieldHandler
+  contractFieldHandler,
 );
 router.get(
   `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
-  contractBalanceHandler
+  contractBalanceHandler,
 );
 router.get(
   `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
-  contractRecordHandler
+  contractRecordHandler,
 );
 router.get(
   `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,
-  walletContractHandler
+  walletContractHandler,
 );
 router.get(
   `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contract/:id${ARNS_CONTRACT_ID_REGEX}`,
-  contractInteractionsHandler
+  contractInteractionsHandler,
 );
 
 // prometheus
-router.get("/arns_metrics", prometheusHandler);
+router.get('/arns_metrics', prometheusHandler);
 
 export default router;

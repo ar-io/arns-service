@@ -1,11 +1,11 @@
-import Arweave from "arweave";
-import { ArNSInteraction } from "../types.js";
+import Arweave from 'arweave';
+import { ArNSInteraction } from '../types.js';
 
 export const MAX_REQUEST_SIZE = 100;
 
 export async function getDeployedContractsByWallet(
   arweave: Arweave,
-  params: { address: string }
+  params: { address: string },
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
@@ -26,7 +26,7 @@ export async function getDeployedContractsByWallet(
               sort: HEIGHT_DESC,
               first: ${MAX_REQUEST_SIZE},
               bundledIn: null,
-              ${cursor ? `after: "${cursor}"` : ""}
+              ${cursor ? `after: "${cursor}"` : ''}
           ) {
               pageInfo {
                   hasNextPage
@@ -45,12 +45,12 @@ export async function getDeployedContractsByWallet(
     };
 
     const { status, ...response } = await arweave.api.post(
-      "/graphql",
-      queryObject
+      '/graphql',
+      queryObject,
     );
     if (status !== 200) {
       throw Error(
-        `Failed to fetch contracts for wallet. Status code: ${status}`
+        `Failed to fetch contracts for wallet. Status code: ${status}`,
       );
     }
 
@@ -67,7 +67,7 @@ export async function getDeployedContractsByWallet(
           id: e.node.id,
           cursor: e.cursor,
           hasNextPage: e.pageInfo?.hasNextPage,
-        })
+        }),
       )
       .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
         ids.add(c.id);
@@ -83,11 +83,11 @@ export async function getDeployedContractsByWallet(
 
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
-  params: { address?: string; contractId: string }
+  params: { address?: string; contractId: string },
 ): Promise<{
   interactions: Map<
     string,
-    Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
+    Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>
   >;
 }> {
   const { address, contractId } = params;
@@ -95,10 +95,10 @@ export async function getWalletInteractionsForContract(
   let cursor: string | undefined;
   const interactions = new Map<
     string,
-    Omit<ArNSInteraction, "valid" | "errorMessage" | "id">
+    Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>
   >();
   do {
-    const ownerFilter = address ? `owners: ["${address}"]` : "";
+    const ownerFilter = address ? `owners: ["${address}"]` : '';
     const queryObject = {
       query: `
         { 
@@ -113,7 +113,7 @@ export async function getWalletInteractionsForContract(
                 sort: HEIGHT_DESC,
                 first: ${MAX_REQUEST_SIZE},
                 bundledIn: null,
-                ${cursor ? `after: "${cursor}"` : ""}
+                ${cursor ? `after: "${cursor}"` : ''}
             ) {
                 pageInfo {
                     hasNextPage
@@ -139,12 +139,12 @@ export async function getWalletInteractionsForContract(
     };
 
     const { status, ...response } = await arweave.api.post(
-      "/graphql",
-      queryObject
+      '/graphql',
+      queryObject,
     );
     if (status !== 200) {
       throw Error(
-        `Failed to fetch contracts for wallet. Status code: ${status}`
+        `Failed to fetch contracts for wallet. Status code: ${status}`,
       );
     }
 
@@ -163,7 +163,7 @@ export async function getWalletInteractionsForContract(
         pageInfo?: { hasNextPage: boolean };
       }) => {
         const interactionInput = e.node.tags.find(
-          (t: { name: string; value: string }) => t.name === "Input"
+          (t: { name: string; value: string }) => t.name === 'Input',
         );
         const parsedInput = interactionInput
           ? JSON.parse(interactionInput.value)
@@ -173,7 +173,7 @@ export async function getWalletInteractionsForContract(
           input: parsedInput,
           owner: e.node.owner.address,
         });
-      }
+      },
     );
     cursor =
       response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
@@ -188,7 +188,7 @@ export async function getWalletInteractionsForContract(
 
 export async function getContractsTransferredToOrControlledByWallet(
   arweave: Arweave,
-  params: { address: string }
+  params: { address: string },
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
@@ -209,51 +209,51 @@ export async function getContractsTransferredToOrControlledByWallet(
                       values: ${JSON.stringify([
                         // duplicated because the order of the input matters when querying gql
                         {
-                          function: "setController",
+                          function: 'setController',
                           target: address,
                         },
                         {
                           target: address,
-                          function: "setController",
+                          function: 'setController',
                         },
                         {
-                          function: "transfer",
+                          function: 'transfer',
                           target: address,
+                          qty: 1,
+                        },
+                        {
+                          function: 'transfer',
+                          qty: 1,
+                          target: address,
+                        },
+                        {
+                          target: address,
+                          function: 'transfer',
                           qty: 1,
                         },
                         {
-                          function: "transfer",
-                          qty: 1,
-                          target: address,
-                        },
-                        {
-                          target: address,
-                          function: "transfer",
-                          qty: 1,
-                        },
-                        {
                           target: address,
                           qty: 1,
-                          function: "transfer",
+                          function: 'transfer',
                         },
                         {
                           qty: 1,
                           target: address,
-                          function: "transfer",
+                          function: 'transfer',
                         },
                         {
                           qty: 1,
-                          function: "transfer",
+                          function: 'transfer',
                           target: address,
                         },
                         // removing qty just for coverage
                         {
-                          function: "transfer",
+                          function: 'transfer',
                           target: address,
                         },
                         {
                           target: address,
-                          function: "transfer",
+                          function: 'transfer',
                         },
                       ])
                         .replace(/"/g, '\\"')
@@ -264,7 +264,7 @@ export async function getContractsTransferredToOrControlledByWallet(
                   sort: HEIGHT_DESC,
                   first: ${MAX_REQUEST_SIZE},
                   bundledIn: null,
-                  ${cursor ? `after: "${cursor}"` : ""}
+                  ${cursor ? `after: "${cursor}"` : ''}
               ) {
                   pageInfo {
                       hasNextPage
@@ -287,12 +287,12 @@ export async function getContractsTransferredToOrControlledByWallet(
     };
 
     const { status, ...response } = await arweave.api.post(
-      "/graphql",
-      queryObject
+      '/graphql',
+      queryObject,
     );
     if (status !== 200) {
       throw Error(
-        `Failed to fetch contracts for wallet. Status code: ${status}`
+        `Failed to fetch contracts for wallet. Status code: ${status}`,
       );
     }
 
@@ -309,7 +309,7 @@ export async function getContractsTransferredToOrControlledByWallet(
         }) => {
           // get the contract id of the interaction
           const contractTag = e.node.tags.find(
-            (t: { name: string; value: string }) => t.name === "Contract"
+            (t: { name: string; value: string }) => t.name === 'Contract',
           );
           // we want to preserve the cursor here, so add even if a duplicate and the set will handle removing the contract if its a duplicate
           return {
@@ -317,7 +317,7 @@ export async function getContractsTransferredToOrControlledByWallet(
             cursor: e.cursor,
             hasNextPage: e.pageInfo?.hasNextPage,
           };
-        }
+        },
       )
       .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
         ids.add(c.id);

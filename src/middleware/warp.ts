@@ -1,15 +1,15 @@
-import { Next } from "koa";
-import { KoaContext } from "../types.js";
+import { Next } from 'koa';
+import { KoaContext } from '../types.js';
 import {
   LogLevel,
   LoggerFactory,
   WarpFactory,
   defaultCacheOptions,
-} from "warp-contracts";
-import { arweave } from "./arweave";
+} from 'warp-contracts';
+import { arweave } from './arweave';
 
 LoggerFactory.INST.logLevel(
-  (process.env.WARP_LOG_LEVEL as LogLevel) ?? "fatal"
+  (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
 );
 
 /**
@@ -33,7 +33,7 @@ const warp = WarpFactory.forMainnet(
     inMemory: true,
   },
   true,
-  arweave
+  arweave,
 );
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
