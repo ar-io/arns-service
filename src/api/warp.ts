@@ -89,7 +89,7 @@ export async function getContractManifest({
   const { data: encodedTags } = await arweave.api.get(`/tx/${id}/tags`);
   const decodedTags = tagsToObject(encodedTags);
   // this may not exist, so provided empty json object string as default
-  const contractManifestString = decodedTags["Contract-Manifest"] ?? '{}';
+  const contractManifestString = decodedTags["Contract-Manifest"] ?? "{}";
   const contractManifest = JSON.parse(contractManifestString);
   return contractManifest;
 }
