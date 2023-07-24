@@ -21,15 +21,13 @@ export function decodeQueryParams(
       },
       [key, value]: [string, any]
     ) => {
-      let parsedValue;
+      let parsedValue = value;
       // take only the first value if provided an array
       if (Array.isArray(value)) {
-        parsedValue = value[0];
+        parsedValue = value[0]; // take the first one
       }
-      if (parsedValue === "true" || parsedValue === "false") {
-        parsedValue = parsedValue === "true";
-      } else {
-        parsedValue = value;
+      if (parsedValue === 'true' || parsedValue === 'false') {
+        parsedValue = parsedValue === 'true'; // convert it to a boolean type
       }
       decodedEvalOptions[key] = parsedValue;
       return decodedEvalOptions;
