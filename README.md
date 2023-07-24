@@ -64,7 +64,7 @@ Examples:
    - Will evaluate the contact with `internalWrites` set to `false`.
 
 2. Invalid evaluation param provided
-   A query param that is loooser than the contract's own evaluation options:
+   A query param that is looser than the contract's own evaluation options:
 
    ```shell
    curl http://localhost:3000/contract/GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY?waitForConfirmation=false
