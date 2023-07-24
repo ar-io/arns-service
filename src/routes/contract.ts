@@ -19,15 +19,15 @@ export function decodeQueryParams(
       decodedEvalOptions: {
         [key: string]: string | boolean;
       },
-      [key, value]: [string, any]
+      [key, value]: [string, any] // eslint-disable-line
     ) => {
       let parsedValue = value;
       // take only the first value if provided an array
       if (Array.isArray(value)) {
         parsedValue = value[0]; // take the first one
       }
-      if (parsedValue === 'true' || parsedValue === 'false') {
-        parsedValue = parsedValue === 'true'; // convert it to a boolean type
+      if (parsedValue === "true" || parsedValue === "false") {
+        parsedValue = parsedValue === "true"; // convert it to a boolean type
       }
       decodedEvalOptions[key] = parsedValue;
       return decodedEvalOptions;
