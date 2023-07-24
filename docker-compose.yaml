@@ -1,10 +1,10 @@
-version: "3"
+version: '3'
 
 services:
   arlocal:
     image: textury/arlocal:v1.1.35
     ports:
-      - "1984:1984"
+      - '1984:1984'
 
   arns-service:
     build:
@@ -18,7 +18,7 @@ services:
       GATEWAY_PORT: 1984
       GATEWAY_PROTOCOL: http
     ports:
-      - "3000:3000"
+      - '3000:3000'
 
   test-runner:
     build:

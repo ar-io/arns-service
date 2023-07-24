@@ -5,7 +5,7 @@ export function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
-  if (input.function === "transfer") {
+  if (input.function === 'transfer') {
     const target = input.target;
     const qty = input.qty;
 
@@ -14,16 +14,16 @@ export function handle(state, action) {
     }
 
     if (!target) {
-      throw new ContractError("No target specified");
+      throw new ContractError('No target specified');
     }
 
     if (qty <= 0 || caller === target) {
-      throw new ContractError("Invalid token transfer");
+      throw new ContractError('Invalid token transfer');
     }
 
     if (balances[caller] < qty) {
       throw new ContractError(
-        `Caller balance not high enough to send ${qty} token(s)!`
+        `Caller balance not high enough to send ${qty} token(s)!`,
       );
     }
 
@@ -45,24 +45,24 @@ export function handle(state, action) {
     return { state };
   }
 
-  if (input.function === "balance") {
+  if (input.function === 'balance') {
     const target = input.target;
     const ticker = state.ticker;
 
-    if (typeof target !== "string") {
-      throw new ContractError("Must specify target to get balance for");
+    if (typeof target !== 'string') {
+      throw new ContractError('Must specify target to get balance for');
     }
 
-    if (typeof balances[target] !== "number") {
-      throw new ContractError("Cannot get balance, target does not exist");
+    if (typeof balances[target] !== 'number') {
+      throw new ContractError('Cannot get balance, target does not exist');
     }
 
     return { result: { target, ticker, balance: balances[target] } };
   }
 
-  if (input.function === "evolve" && canEvolve) {
+  if (input.function === 'evolve' && canEvolve) {
     if (state.owner !== caller) {
-      throw new ContractError("Only the owner can evolve a contract.");
+      throw new ContractError('Only the owner can evolve a contract.');
     }
 
     state.evolve = input.value;
@@ -71,6 +71,6 @@ export function handle(state, action) {
   }
 
   throw new ContractError(
-    `No function supplied or function not recognized: "${input.function}"`
+    `No function supplied or function not recognized: "${input.function}"`,
   );
 }

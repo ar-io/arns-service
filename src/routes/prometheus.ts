@@ -1,6 +1,6 @@
-import { Next } from "koa";
-import { KoaContext } from "../types.js";
-import * as promClient from "prom-client";
+import { Next } from 'koa';
+import { KoaContext } from '../types.js';
+import * as promClient from 'prom-client';
 
 const metricsRegistry = promClient.register;
 promClient.collectDefaultMetrics({ register: metricsRegistry });
