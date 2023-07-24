@@ -13,8 +13,8 @@
   "scripts": {
     "start:dev": "nodemon",
     "start:prod": "yarn build && node dist/app.js",
-    "build": "yarn clean && npx tsc --project ./tsconfig.json",
-    "clean": "rimraf [node_modules dist]",
+    "build": "yarn clean && yarn && npx tsc --project ./tsconfig.json",
+    "clean": "rimraf [ node_modules dist cache ]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
     "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $* ; docker compose down",
     "docker:run": "docker compose up arns-service --build",
