@@ -4,15 +4,18 @@ import {
   getContractsTransferredToOrControlledByWallet,
   getDeployedContractsByWallet,
 } from "../api/graphql";
-import { isValidContractType, validateStateWithTimeout } from "../api/warp";
+import {
+  EvaluationError,
+  isValidContractType,
+  validateStateWithTimeout,
+} from "../api/warp";
 import { allowedContractTypes } from "../constants";
 import * as _ from "lodash";
 
 export async function walletContractHandler(ctx: KoaContext, next: Next) {
   const { address } = ctx.params;
   const { logger, arweave, warp } = ctx.state;
-  const { query } = ctx.request;
-  const { type } = query;
+  const { type } = ctx.request.query;
 
   try {
     // validate type is empty or valid
@@ -58,6 +61,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     const validContractsOfType = (
       await Promise.allSettled(
         [...deployedOrOwned].map(async (id: string) =>
+          // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
           (await validateStateWithTimeout(id, warp, type, address)) ? id : null
         )
       )
@@ -77,7 +81,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       address,
       error: message,
     });
-    ctx.status = 503;
+    ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to fetch contracts for wallet. ${message}`;
   }
   return next();

@@ -88,12 +88,13 @@ describe("PDNS Service Integration tests", () => {
   describe("/v1", () => {
     describe("/contract", () => {
       describe("/:id", () => {
-        it("should return the contract state and id", async () => {
+        it("should return the contract state and id without any evaluation options provided", async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contract, state } = data;
+          const { contract, state, evaluationOptions } = data;
           expect(contract).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
           expect(state).to.include.keys([
             "balances",
             "owner",
@@ -109,13 +110,19 @@ describe("PDNS Service Integration tests", () => {
           const { status } = await axios.get(`/v1/contract/non-matching-regex`);
           expect(status).to.equal(404);
         });
+
+        it("should return an error when evaluation option is less restrictive then the contract-manifest", async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}?throwOnInternalWriteError=false`
+          );
+          expect(status).to.equal(400);
+        });
       });
 
       describe("/:id/interactions", () => {
-        // TODO: once write interactions are added, add additional tests that confirm the interactions are provided by this endpoint
         it("should return the contract interactions", async () => {
           const { status, data } = await axios.get(
-            `/contract/${id}/interactions`
+            `/v1/contract/${id}/interactions`
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -137,7 +144,6 @@ describe("PDNS Service Integration tests", () => {
           "auctions",
           "reserved",
         ]) {
-          // TODO: once write interactions are added, add more tests to validate the state is what's expected
           it(`should return the correct state value for ${field}`, async () => {
             const { status, data } = await axios.get(
               `/v1/contract/${id}/${field}`
@@ -190,31 +196,6 @@ describe("PDNS Service Integration tests", () => {
             );
             expect(status).to.equal(404);
           });
-        });
-      });
-
-      describe("/:id", () => {
-        // TODO: once write interactions are added, add more tests to validate the state is what's expected
-        it("should return the contract state and id", async () => {
-          const { status, data } = await axios.get(`/v1/contract/${id}`);
-          expect(status).to.equal(200);
-          expect(data).to.not.be.undefined;
-          const { contract, state } = data;
-          expect(contract).to.equal(id);
-          expect(state).to.include.keys([
-            "balances",
-            "owner",
-            "name",
-            "records",
-            "ticker",
-            "owner",
-            "controller",
-          ]);
-        });
-
-        it("should return a 404 for an invalid id", async () => {
-          const { status } = await axios.get(`/v1/contract/non-matching-regex`);
-          expect(status).to.equal(404);
         });
       });
     });

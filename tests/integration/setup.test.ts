@@ -89,6 +89,12 @@ export async function mochaGlobalSetup() {
         reserved: {},
       }),
       src: contractSrcJs,
+      evaluationManifest: {
+        evaluationOptions: {
+          // used for testing query params
+          throwOnInternalWriteError: true,
+        },
+      },
     },
     true // disable bundling
   );
