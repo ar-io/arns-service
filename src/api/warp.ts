@@ -97,7 +97,6 @@ export async function getContractManifest({
 }: {
   contractTxId: string;
   arweave: Arweave;
-  evaluationOptions?: Partial<EvaluationOptions>;
 }): Promise<EvaluationManifest> {
   const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
   const decodedTags = tagsToObject(encodedTags);
