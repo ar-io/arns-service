@@ -43,7 +43,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   try {
     logger.debug('Fetching contract state', {
       contractTxId,
-      query: evaluationOptionOverrides,
+      evaluationOptionOverrides,
     });
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
@@ -60,7 +60,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     logger.error('Failed to fetch contract', {
       contractTxId,
       error: message,
-      query: evaluationOptionOverrides,
+      evaluationOptionOverrides,
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to fetch contract: ${contractTxId}. ${message}`;
@@ -79,7 +79,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   try {
     logger.debug('Fetching all contract interactions', {
       contractTxId,
-      query: evaluationOptionOverrides,
+      evaluationOptionOverrides,
     });
     const [{ validity, errorMessages, evaluationOptions }, { interactions }] =
       await Promise.all([
@@ -135,7 +135,7 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     logger.debug('Fetching contract field', {
       contractTxId,
       field,
-      query: evaluationOptionOverrides,
+      evaluationOptionOverrides,
     });
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
