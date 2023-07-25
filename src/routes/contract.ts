@@ -38,28 +38,35 @@ export function decodeQueryParams(
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;
-  const { id } = ctx.params;
+  const { contractTxId } = ctx.params;
   // query params can be set for contracts with various eval options
   const evaluationOptions = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
   try {
-    logger.debug('Fetching contract state', { id, evaluationOptions });
-    const { state } = await getContractState({ id, warp, evaluationOptions });
+    logger.debug('Fetching contract state', {
+      contractTxId,
+      evaluationOptions,
+    });
+    const { state } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptions,
+    });
     ctx.body = {
-      contract: id,
+      contractTxId,
       state,
       evaluationOptions,
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error.';
     logger.error('Failed to fetch contract', {
-      id,
+      contractTxId,
       error: message,
       evaluationOptions,
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
-    ctx.body = `Failed to fetch contract: ${id}. ${message}`;
+    ctx.body = `Failed to fetch contract: ${contractTxId}. ${message}`;
   }
 
   return next();
@@ -67,21 +74,21 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   const { arweave, logger, warp } = ctx.state;
-  const { id, address } = ctx.params;
+  const { contractTxId, address } = ctx.params;
   const evaluationOptions = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
 
   try {
     logger.debug('Fetching all contract interactions', {
-      id,
+      contractTxId,
       evaluationOptions,
     });
     const [{ validity, errorMessages }, { interactions }] = await Promise.all([
-      getContractState({ id, warp, evaluationOptions }),
+      getContractState({ contractTxId, warp, evaluationOptions }),
       getWalletInteractionsForContract(arweave, {
-        address: address,
-        contractId: id,
+        address,
+        contractTxId,
       }),
     ]);
     const mappedInteractions = [...interactions.keys()].map((id: string) => {
@@ -99,7 +106,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
 
     // TODO: maybe add a check here that gql and warp returned the same number of interactions
     ctx.body = {
-      contract: id,
+      contractTxId,
       interactions: mappedInteractions,
       ...(address ? { address } : {}), // only include address if it was provided
       evaluationOptions,
@@ -107,24 +114,32 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error.';
     logger.error('Failed to fetch contract interactions.', {
-      id,
+      contractTxId,
       error: message,
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
-    ctx.body = `Failed to fetch contract interactions for contract: ${id}. ${message}`;
+    ctx.body = `Failed to fetch contract interactions for contract: ${contractTxId}. ${message}`;
   }
   return next();
 }
 
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
-  const { id, field } = ctx.params;
+  const { contractTxId, field } = ctx.params;
   const { logger, warp } = ctx.state;
   const evaluationOptions = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
   try {
-    logger.debug('Fetching contract field', { id, field, evaluationOptions });
-    const { state } = await getContractState({ id, warp, evaluationOptions });
+    logger.debug('Fetching contract field', {
+      contractTxId,
+      field,
+      evaluationOptions,
+    });
+    const { state } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptions,
+    });
     const contractField = state[field];
 
     if (!contractField) {
@@ -134,21 +149,25 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     }
 
     ctx.body = {
-      contract: id,
+      contractTxId,
       [field]: contractField,
       evaluationOptions,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error.';
-    logger.error('Fetching contract field', { id, field, error: message });
+    logger.error('Fetching contract field', {
+      contractTxId,
+      field,
+      error: message,
+    });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
-    ctx.body = `Failed to fetch contract: ${id}`;
+    ctx.body = `Failed to fetch contract: ${contractTxId}`;
   }
   return next();
 }
 
 export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
-  const { id, address } = ctx.params;
+  const { contractTxId, address } = ctx.params;
   const { logger, warp } = ctx.state;
   // query params can be set for contracts with various eval options
   const evaluationOptions = ctx.request.querystring
@@ -156,15 +175,19 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
     : DEFAULT_EVALUATION_OPTIONS;
   try {
     logger.debug('Fetching contract balance for wallet', {
-      id,
+      contractTxId,
       wallet: address,
       evaluationOptions,
     });
-    const { state } = await getContractState({ id, warp, evaluationOptions });
+    const { state } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptions,
+    });
     const balance = state['balances'][address];
 
     ctx.body = {
-      contract: id,
+      contractTxId,
       address,
       balance: balance ?? 0,
       evaluationOptions,
@@ -172,7 +195,7 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error.';
     logger.error('Failed to fetch balance.', {
-      id,
+      contractTxId,
       wallet: address,
       error: message,
     });
@@ -184,21 +207,25 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
 }
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next) {
-  const { id, name } = ctx.params;
+  const { contractTxId, name } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
   const evaluationOptions = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
 
   const logger = _logger.child({
-    id,
+    contractTxId,
     record: name,
     evaluationOptions,
   });
 
   try {
     logger.debug('Fetching contract record');
-    const { state } = await getContractState({ id, warp, evaluationOptions });
+    const { state } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptions,
+    });
     const record = state['records'][name];
 
     if (!record) {
@@ -208,7 +235,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     }
 
     const response: ContractRecordResponse = {
-      contract: id,
+      contractTxId,
       name,
       record,
       evaluationOptions,
@@ -220,7 +247,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
         contractTxId: record.contractTxId,
       });
       const { state: antContract } = await getContractState({
-        id: record.contractTxId,
+        contractTxId: record.contractTxId,
         warp,
         // TODO: ant contracts likely have different evaluation options - for now set defaults
         evaluationOptions: DEFAULT_EVALUATION_OPTIONS,

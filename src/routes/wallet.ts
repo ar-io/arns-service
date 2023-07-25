@@ -31,7 +31,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       address,
     });
 
-    const [{ ids: deployedContractIds }, { ids: controlledOrOwnedIds }] =
+    const [{ ids: deployedContractTxIds }, { ids: controlledOrOwnedIds }] =
       await Promise.all([
         getDeployedContractsByWallet(arweave, { address }),
         getContractsTransferredToOrControlledByWallet(arweave, { address }),
@@ -39,7 +39,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
 
     // merge them
     const deployedOrOwned = new Set([
-      ...deployedContractIds,
+      ...deployedContractTxIds,
       ...controlledOrOwnedIds,
     ]);
 
@@ -48,7 +48,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
       'Filtering contracts state that match provided type and are owned or controlled by provided wallet.',
       {
         type,
-        contractIds: deployedOrOwned,
+        contractTxIds: deployedOrOwned,
         address,
       },
     );
@@ -72,7 +72,7 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     });
     ctx.body = {
       address,
-      contractIds: _.compact(validContractsOfType),
+      contractTxIds: _.compact(validContractsOfType),
       type,
     };
   } catch (error: unknown) {

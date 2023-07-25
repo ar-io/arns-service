@@ -87,13 +87,13 @@ describe('PDNS Service Integration tests', () => {
 
   describe('/v1', () => {
     describe('/contract', () => {
-      describe('/:id', () => {
+      describe('/:contractTxId', () => {
         it('should return the contract state and id without any evaluation options provided', async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contract, state, evaluationOptions } = data;
-          expect(contract).to.equal(id);
+          const { contractTxId, state, evaluationOptions } = data;
+          expect(contractTxId).to.equal(id);
           expect(evaluationOptions).not.to.be.undefined;
           expect(state).to.include.keys([
             'balances',
@@ -119,20 +119,20 @@ describe('PDNS Service Integration tests', () => {
         });
       });
 
-      describe('/:id/interactions', () => {
+      describe('/:contractTxId/interactions', () => {
         it('should return the contract interactions', async () => {
           const { status, data } = await axios.get(
             `/v1/contract/${id}/interactions`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contract, interactions } = data;
-          expect(contract).to.equal(id);
+          const { contractTxId, interactions } = data;
+          expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal(contractInteractions);
         });
       });
 
-      describe('/:id/:field', () => {
+      describe('/:contractTxId/:field', () => {
         for (const field of [
           'balances',
           'owner',
@@ -150,8 +150,8 @@ describe('PDNS Service Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contract } = data;
-            expect(contract).to.equal(id);
+            const { contractTxId } = data;
+            expect(contractTxId).to.equal(id);
             expect(data[field]).to.not.be.undefined; // we haven't created any interactions
           });
         }
@@ -169,8 +169,8 @@ describe('PDNS Service Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contract, owner, record } = data;
-            expect(contract).to.equal(id);
+            const { contractTxId, owner, record } = data;
+            expect(contractTxId).to.equal(id);
             expect(record).to.deep.equal({
               contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
             });
@@ -184,8 +184,8 @@ describe('PDNS Service Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contract, owner, record } = data;
-            expect(contract).to.equal(id);
+            const { contractTxId, owner, record } = data;
+            expect(contractTxId).to.equal(id);
             expect(record).to.not.be.undefined;
             expect(owner).to.be.undefined;
           });
@@ -209,10 +209,10 @@ describe('PDNS Service Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { address, contractIds } = data;
+            const { address, contractTxIds } = data;
             expect(address).to.equal(walletAddress);
-            expect(contractIds).to.not.be.undefined;
-            expect(contractIds).to.deep.equal(ids);
+            expect(contractTxIds).to.not.be.undefined;
+            expect(contractTxIds).to.deep.equal(ids);
           });
           it('should return a 404 for an invalid wallet address', async () => {
             const { status } = await axios.get(
@@ -228,10 +228,10 @@ describe('PDNS Service Integration tests', () => {
               );
               expect(status).to.equal(200);
               expect(data).to.not.be.undefined;
-              const { address, contractIds } = data;
+              const { address, contractTxIds } = data;
               expect(address).to.equal(walletAddress);
-              expect(contractIds).to.not.be.undefined;
-              expect(contractIds).to.deep.equal(ids);
+              expect(contractTxIds).to.not.be.undefined;
+              expect(contractTxIds).to.deep.equal(ids);
             });
 
             it('should return the transferred contract for the new owner', async () => {
@@ -240,10 +240,10 @@ describe('PDNS Service Integration tests', () => {
               );
               expect(status).to.equal(200);
               expect(data).to.not.be.undefined;
-              const { address, contractIds } = data;
+              const { address, contractTxIds } = data;
               expect(address).to.equal(transferToAddress);
-              expect(contractIds).to.not.be.undefined;
-              expect(contractIds).to.deep.equal([
+              expect(contractTxIds).to.not.be.undefined;
+              expect(contractTxIds).to.deep.equal([
                 process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID,
               ]);
             });
@@ -257,10 +257,10 @@ describe('PDNS Service Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { address, contractIds } = data;
+            const { address, contractTxIds } = data;
             expect(address).to.equal(walletAddress);
-            expect(contractIds).to.not.be.undefined;
-            expect(contractIds).to.deep.equal([
+            expect(contractTxIds).to.not.be.undefined;
+            expect(contractTxIds).to.deep.equal([
               process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
             ]);
           });
@@ -275,16 +275,16 @@ describe('PDNS Service Integration tests', () => {
         });
       });
 
-      describe('/:address/contracts/:id/interactions', () => {
+      describe('/:address/contracts/:contractTxId/interactions', () => {
         it('should return the all the wallets contract interactions', async () => {
           const { status, data } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${id}`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { address, contract, interactions } = data;
+          const { address, contractTxId, interactions } = data;
           expect(address).to.equal(walletAddress);
-          expect(contract).to.equal(id);
+          expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal(contractInteractions);
         });
       });
