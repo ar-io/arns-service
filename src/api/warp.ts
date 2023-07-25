@@ -4,16 +4,26 @@ import {
   EvaluationOptions,
   Warp,
 } from 'warp-contracts';
-import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from '../constants';
+import {
+  DEFAULT_EVALUATION_OPTIONS,
+  EVALUATION_TIMEOUT_MS,
+  allowedContractTypes,
+} from '../constants';
 import { ContractType } from '../types';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
-const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
-export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {};
+export class EvaluationError extends Error {
+  constructor(message?: string) {
+    super(message);
+  }
+}
+
+// cache duplicate requests on the same instance within a short period of time
+const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
 function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   // Function to calculate the hash of a string
@@ -22,22 +32,18 @@ function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   return hash.digest('hex');
 }
 
-export class EvaluationError extends Error {
-  constructor(message?: string) {
-    super(message);
-  }
-}
-
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState({
   contractTxId,
   warp,
-  evaluationOptions = DEFAULT_EVALUATION_OPTIONS,
+  evaluationOptionOverrides = DEFAULT_EVALUATION_OPTIONS,
 }: {
   contractTxId: string;
   warp: Warp;
-  evaluationOptions?: Partial<EvaluationOptions>;
-}): Promise<EvalStateResult<any>> {
+  evaluationOptionOverrides?: Partial<EvaluationOptions>;
+}): Promise<
+  EvalStateResult<any> & { evaluationOptions?: Partial<EvaluationOptions> }
+> {
   try {
     // get the contract manifest eval options by default
     const { evaluationOptions: contractDefinedEvalOptions } =
@@ -45,14 +51,17 @@ export async function getContractState({
     // override any contract manifest eval options with eval options provided
     const combinedEvalOptions = {
       ...contractDefinedEvalOptions,
-      ...evaluationOptions,
+      ...evaluationOptionOverrides,
     };
     const evaluationOptionsHash = createQueryParamHash(combinedEvalOptions);
     const cacheId = `${contractTxId}-${evaluationOptionsHash}`;
     // validate request is new, if not return the existing promise (e.g. barrier synchronization)
     if (requestMap.get(cacheId)) {
       const { cachedValue } = await requestMap.get(cacheId);
-      return cachedValue;
+      return {
+        ...cachedValue,
+        evaluationOptions: combinedEvalOptions,
+      };
     }
     // use the combined evaluation options
     const contract = warp
@@ -64,7 +73,10 @@ export async function getContractState({
     const { cachedValue } = await requestMap.get(cacheId);
     // remove the cached value once it's been retrieved
     requestMap.delete(cacheId);
-    return cachedValue;
+    return {
+      ...cachedValue,
+      evaluationOptions: combinedEvalOptions,
+    };
   } catch (error) {
     // throw an eval here so we can properly return correct status code
     if (
@@ -85,7 +97,6 @@ export async function getContractManifest({
 }: {
   contractTxId: string;
   arweave: Arweave;
-  evaluationOptions?: Partial<EvaluationOptions>;
 }): Promise<EvaluationManifest> {
   const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
   const decodedTags = tagsToObject(encodedTags);
@@ -111,16 +122,9 @@ export async function validateStateWithTimeout(
   warp: Warp,
   type?: ContractType,
   address?: string,
-  evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS,
 ): Promise<unknown> {
   return Promise.race([
-    validateStateAndOwnership(
-      contractTxId,
-      warp,
-      type,
-      address,
-      evaluationOptions,
-    ),
+    validateStateAndOwnership(contractTxId, warp, type, address),
     new Promise((_, reject) =>
       setTimeout(
         () => reject(new EvaluationTimeoutError()),
@@ -136,12 +140,10 @@ export async function validateStateAndOwnership(
   warp: Warp,
   type?: ContractType,
   address?: string,
-  evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS,
 ): Promise<boolean> {
   const { state } = await getContractState({
     contractTxId,
     warp,
-    evaluationOptions,
   });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =
