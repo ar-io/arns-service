@@ -25,49 +25,25 @@ router.get('/healthcheck', (ctx) => {
   };
 });
 
-// TODO: deprecate this in favor of versioned endpoints once portal is migrated
-router.get(`/contract/:id${ARNS_CONTRACT_ID_REGEX}`, contractHandler);
-router.get(
-  `/contract/:id${ARNS_CONTRACT_ID_REGEX}/interactions`,
-  contractInteractionsHandler,
-);
-router.get(
-  `/contract/:id${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
-  contractFieldHandler,
-);
-router.get(
-  `/contract/:id${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
-  contractBalanceHandler,
-);
-router.get(
-  `/contract/:id${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
-  contractRecordHandler,
-);
-router.get(
-  `/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,
-  walletContractHandler,
-);
-router.get(
-  `/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contract/:id${ARNS_CONTRACT_ID_REGEX}`,
-  contractInteractionsHandler,
-);
-
 // V1 endpoints
-router.get(`/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}`, contractHandler);
 router.get(
-  `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/interactions`,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}`,
+  contractHandler,
+);
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/interactions`,
   contractInteractionsHandler,
 );
 router.get(
-  `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
   contractFieldHandler,
 );
 router.get(
-  `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
   contractBalanceHandler,
 );
 router.get(
-  `/v1/contract/:id${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
   contractRecordHandler,
 );
 router.get(
@@ -75,7 +51,7 @@ router.get(
   walletContractHandler,
 );
 router.get(
-  `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contract/:id${ARNS_CONTRACT_ID_REGEX}`,
+  `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}`,
   contractInteractionsHandler,
 );
 

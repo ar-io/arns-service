@@ -37,7 +37,7 @@ export type ArNSContractInteractions = {
 
 export type ContractType = (typeof allowedContractTypes)[number];
 export type ContractRecordResponse = {
-  contract: string;
+  contractTxId: string;
   record: unknown;
   owner?: string;
   name: string;

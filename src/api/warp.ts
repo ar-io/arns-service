@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
 import Arweave from 'arweave';
+import { Tag } from 'arweave/node/lib/transaction';
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
 
 export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {};
@@ -29,25 +30,25 @@ export class EvaluationError extends Error {
 
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState({
-  id,
+  contractTxId,
   warp,
   evaluationOptions = DEFAULT_EVALUATION_OPTIONS,
 }: {
-  id: string;
+  contractTxId: string;
   warp: Warp;
   evaluationOptions?: Partial<EvaluationOptions>;
 }): Promise<EvalStateResult<any>> {
   try {
     // get the contract manifest eval options by default
     const { evaluationOptions: contractDefinedEvalOptions } =
-      await getContractManifest({ id, arweave: warp.arweave });
+      await getContractManifest({ contractTxId, arweave: warp.arweave });
     // override any contract manifest eval options with eval options provided
     const combinedEvalOptions = {
       ...contractDefinedEvalOptions,
       ...evaluationOptions,
     };
     const evaluationOptionsHash = createQueryParamHash(combinedEvalOptions);
-    const cacheId = `${id}-${evaluationOptionsHash}`;
+    const cacheId = `${contractTxId}-${evaluationOptionsHash}`;
     // validate request is new, if not return the existing promise (e.g. barrier synchronization)
     if (requestMap.get(cacheId)) {
       const { cachedValue } = await requestMap.get(cacheId);
@@ -55,7 +56,7 @@ export async function getContractState({
     }
     // use the combined evaluation options
     const contract = warp
-      .contract(id)
+      .contract(contractTxId)
       .setEvaluationOptions(combinedEvalOptions);
     // set cached value for multiple requests during initial promise
     requestMap.set(cacheId, contract.readState());
@@ -79,14 +80,14 @@ export async function getContractState({
 }
 
 export async function getContractManifest({
-  id,
+  contractTxId,
   arweave,
 }: {
-  id: string;
+  contractTxId: string;
   arweave: Arweave;
   evaluationOptions?: Partial<EvaluationOptions>;
 }): Promise<EvaluationManifest> {
-  const { data: encodedTags } = await arweave.api.get(`/tx/${id}/tags`);
+  const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
   const decodedTags = tagsToObject(encodedTags);
   // this may not exist, so provided empty json object string as default
   const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
@@ -94,27 +95,32 @@ export async function getContractManifest({
   return contractManifest;
 }
 
-export function tagsToObject(tags: { name: string; value: string }[]): {
+export function tagsToObject(tags: Tag[]): {
   [x: string]: string;
 } {
-  return tags.reduce(
-    (newTags, tag) => ({
-      ...newTags,
-      [fromB64Url(tag.name)]: fromB64Url(tag.value),
-    }),
-    {},
-  );
+  return tags.reduce((decodedTags: { [x: string]: string }, tag) => {
+    const key = tag.get('name', { decode: true, string: true });
+    const value = tag.get('value', { decode: true, string: true });
+    decodedTags[key] = value;
+    return decodedTags;
+  }, {});
 }
 
 export async function validateStateWithTimeout(
-  id: string,
+  contractTxId: string,
   warp: Warp,
   type?: ContractType,
   address?: string,
   evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS,
 ): Promise<unknown> {
   return Promise.race([
-    validateStateAndOwnership(id, warp, type, address, evaluationOptions),
+    validateStateAndOwnership(
+      contractTxId,
+      warp,
+      type,
+      address,
+      evaluationOptions,
+    ),
     new Promise((_, reject) =>
       setTimeout(
         () => reject(new EvaluationTimeoutError()),
@@ -126,13 +132,17 @@ export async function validateStateWithTimeout(
 
 // TODO: this could be come a generic and return the full state of contract once validated
 export async function validateStateAndOwnership(
-  id: string,
+  contractTxId: string,
   warp: Warp,
   type?: ContractType,
   address?: string,
   evaluationOptions: Partial<EvaluationOptions> = DEFAULT_EVALUATION_OPTIONS,
 ): Promise<boolean> {
-  const { state } = await getContractState({ id, warp, evaluationOptions });
+  const { state } = await getContractState({
+    contractTxId,
+    warp,
+    evaluationOptions,
+  });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =
     !type ||
@@ -153,9 +163,4 @@ export function isValidContractType(
   }
 
   return !type || (!!type && _.includes(allowedContractTypes, type));
-}
-
-export function fromB64Url(input: string): string {
-  const decodedBuffer = Buffer.from(input, 'base64');
-  return decodedBuffer.toString();
 }

@@ -83,14 +83,14 @@ export async function getDeployedContractsByWallet(
 
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
-  params: { address?: string; contractId: string },
+  params: { address?: string; contractTxId: string },
 ): Promise<{
   interactions: Map<
     string,
     Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>
   >;
 }> {
-  const { address, contractId } = params;
+  const { address, contractTxId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const interactions = new Map<
@@ -107,7 +107,7 @@ export async function getWalletInteractionsForContract(
                 tags:[
                     {
                         name:"Contract",
-                        values:["${contractId}"]
+                        values:["${contractTxId}"]
                     }
                 ],
                 sort: HEIGHT_DESC,
