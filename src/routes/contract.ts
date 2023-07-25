@@ -1,14 +1,11 @@
 import { Next } from 'koa';
 
 import { ContractRecordResponse, KoaContext } from '../types';
-import {
-  DEFAULT_EVALUATION_OPTIONS,
-  EvaluationError,
-  getContractState,
-} from '../api/warp';
+import { EvaluationError, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 import { EvaluationOptions } from 'warp-contracts';
 import { ParsedUrlQuery } from 'querystring';
+import { DEFAULT_EVALUATION_OPTIONS } from '../constants';
 
 // Small util to parse evaluation options query params - we may want to use a library to help with this for other types
 export function decodeQueryParams(
@@ -40,18 +37,18 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;
   const { contractTxId } = ctx.params;
   // query params can be set for contracts with various eval options
-  const evaluationOptions = ctx.request.querystring
+  const evaluationOptionOverrides = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
   try {
     logger.debug('Fetching contract state', {
       contractTxId,
-      evaluationOptions,
+      query: evaluationOptionOverrides,
     });
-    const { state } = await getContractState({
+    const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptions,
+      evaluationOptionOverrides,
     });
     ctx.body = {
       contractTxId,
@@ -63,7 +60,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     logger.error('Failed to fetch contract', {
       contractTxId,
       error: message,
-      evaluationOptions,
+      query: evaluationOptionOverrides,
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to fetch contract: ${contractTxId}. ${message}`;
@@ -75,22 +72,27 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
   const { arweave, logger, warp } = ctx.state;
   const { contractTxId, address } = ctx.params;
-  const evaluationOptions = ctx.request.querystring
+  const evaluationOptionOverrides = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
 
   try {
     logger.debug('Fetching all contract interactions', {
       contractTxId,
-      evaluationOptions,
+      query: evaluationOptionOverrides,
     });
-    const [{ validity, errorMessages }, { interactions }] = await Promise.all([
-      getContractState({ contractTxId, warp, evaluationOptions }),
-      getWalletInteractionsForContract(arweave, {
-        address,
-        contractTxId,
-      }),
-    ]);
+    const [{ validity, errorMessages, evaluationOptions }, { interactions }] =
+      await Promise.all([
+        getContractState({
+          contractTxId,
+          warp,
+          evaluationOptionOverrides,
+        }),
+        getWalletInteractionsForContract(arweave, {
+          address,
+          contractTxId,
+        }),
+      ]);
     const mappedInteractions = [...interactions.keys()].map((id: string) => {
       const interaction = interactions.get(id);
       if (interaction) {
@@ -126,19 +128,19 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, field } = ctx.params;
   const { logger, warp } = ctx.state;
-  const evaluationOptions = ctx.request.querystring
+  const evaluationOptionOverrides = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
   try {
     logger.debug('Fetching contract field', {
       contractTxId,
       field,
-      evaluationOptions,
+      query: evaluationOptionOverrides,
     });
-    const { state } = await getContractState({
+    const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptions,
+      evaluationOptionOverrides,
     });
     const contractField = state[field];
 
@@ -170,19 +172,19 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, address } = ctx.params;
   const { logger, warp } = ctx.state;
   // query params can be set for contracts with various eval options
-  const evaluationOptions = ctx.request.querystring
+  const evaluationOptionOverrides = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
   try {
     logger.debug('Fetching contract balance for wallet', {
       contractTxId,
       wallet: address,
-      evaluationOptions,
+      evaluationOptionOverrides,
     });
-    const { state } = await getContractState({
+    const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptions,
+      evaluationOptionOverrides,
     });
     const balance = state['balances'][address];
 
@@ -209,22 +211,22 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
 export async function contractRecordHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, name } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
-  const evaluationOptions = ctx.request.querystring
+  const evaluationOptionOverrides = ctx.request.querystring
     ? decodeQueryParams(ctx.request.query)
     : DEFAULT_EVALUATION_OPTIONS;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
-    evaluationOptions,
+    evaluationOptionOverrides,
   });
 
   try {
     logger.debug('Fetching contract record');
-    const { state } = await getContractState({
+    const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptions,
+      evaluationOptionOverrides,
     });
     const record = state['records'][name];
 
@@ -246,13 +248,13 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
       logger.info('Fetching owner of record name', {
         contractTxId: record.contractTxId,
       });
-      const { state: antContract } = await getContractState({
+      const { state: antContract, evaluationOptions } = await getContractState({
         contractTxId: record.contractTxId,
         warp,
-        // TODO: ant contracts likely have different evaluation options - for now set defaults
-        evaluationOptions: DEFAULT_EVALUATION_OPTIONS,
+        // don't set evaluation options for sub contracts - they'll be pulled on load
       });
       response['owner'] = antContract?.owner;
+      response['evaluationOptions'] = evaluationOptions;
     }
 
     ctx.body = response;
