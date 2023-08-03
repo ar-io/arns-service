@@ -1,6 +1,6 @@
 # arns-service
 
-Koa microservice that facilities the PDNS Portal.
+Koa microservice that facilities the ArNS Portal.
 
 ## Getting Started
 
@@ -49,7 +49,7 @@ e.g.
 curl localhost:3000/v1/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
 ```
 
-### Evaluatuion Options
+### Evaluation Options
 
 By default, the service will load `Contract-Manifest` tags for state evaluation. Query params can be provided if you wish to evaluate state using more restrictive tags. If an invalid combination of evaluation options are provided via query params, a 400 response will be returned.
 

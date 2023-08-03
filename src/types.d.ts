@@ -36,10 +36,20 @@ export type ArNSContractInteractions = {
 };
 
 export type ContractType = (typeof allowedContractTypes)[number];
-export type ContractRecordResponse = {
+
+export type ContractBaseResponse = {
   contractTxId: string;
+  evaluationOptions?: Partial<EvaluationOptions>;
+};
+
+export type ContractRecordResponse = ContractBaseResponse & {
   record: unknown;
   owner?: string;
   name: string;
-  evaluationOptions?: Partial<EvaluationOptions>;
+};
+
+export type ContractReservedResponse = ContractBaseResponse & {
+  reserved: boolean;
+  details?: unknown;
+  name: string; // TODO: abstract to higher type
 };
