@@ -1,7 +1,7 @@
 {
   "name": "arns-service",
   "version": "1.0.0",
-  "description": "Service that supports PDNS Portal",
+  "description": "Service that supports ArNS Portal",
   "main": "./dist/app.js",
   "type": "commonjs",
   "repository": {
@@ -16,7 +16,7 @@
     "build": "yarn clean && yarn && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [ node_modules dist cache ]",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
-    "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $* ; docker compose down",
+    "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $* ; docker compose down -v",
     "docker:run": "docker compose up arns-service --build",
     "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format:fix": "yarn prettier --write .",

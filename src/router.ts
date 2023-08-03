@@ -10,6 +10,7 @@ import {
   contractHandler,
   contractInteractionsHandler,
   contractRecordHandler,
+  contractReservedHandler,
   prometheusHandler,
   walletContractHandler,
 } from './routes';
@@ -45,6 +46,10 @@ router.get(
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
   contractRecordHandler,
+);
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/reserved/:name${ARNS_NAME_REGEX}`,
+  contractReservedHandler,
 );
 router.get(
   `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,

@@ -86,7 +86,11 @@ export async function mochaGlobalSetup() {
           [address]: 1,
         },
         auctions: {},
-        reserved: {},
+        reserved: {
+          'reserved-name': {
+            target: 'a-fake-transaction-id',
+          },
+        },
       }),
       src: contractSrcJs,
       evaluationManifest: {

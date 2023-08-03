@@ -1,6 +1,10 @@
 import { Next } from 'koa';
 
-import { ContractRecordResponse, KoaContext } from '../types';
+import {
+  ContractRecordResponse,
+  ContractReservedResponse,
+  KoaContext,
+} from '../types';
 import { EvaluationError, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 import { EvaluationOptions } from 'warp-contracts';
@@ -265,6 +269,47 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to fetch record. ${message}`;
+  }
+  return next();
+}
+
+export async function contractReservedHandler(ctx: KoaContext, next: Next) {
+  const { contractTxId, name } = ctx.params;
+  const { warp, logger: _logger } = ctx.state;
+  const evaluationOptionOverrides = ctx.request.querystring
+    ? decodeQueryParams(ctx.request.query)
+    : DEFAULT_EVALUATION_OPTIONS;
+
+  const logger = _logger.child({
+    contractTxId,
+    record: name,
+    evaluationOptionOverrides,
+  });
+
+  try {
+    const { state, evaluationOptions } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptionOverrides,
+    });
+    const reservedName = state['reserved'][name];
+
+    const response: ContractReservedResponse = {
+      contractTxId,
+      name,
+      reserved: !!reservedName,
+      ...(reservedName ? { details: reservedName } : {}),
+      evaluationOptions,
+    };
+
+    ctx.body = response;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error.';
+    logger.error('Failed to determine if record is reserved.', {
+      error: message,
+    });
+    ctx.status = error instanceof EvaluationError ? 400 : 503;
+    ctx.body = `Failed to determine if record is reserved. ${message}`;
   }
   return next();
 }
