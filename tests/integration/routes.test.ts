@@ -197,6 +197,34 @@ describe('PDNS Service Integration tests', () => {
             expect(status).to.equal(404);
           });
         });
+
+        describe('/reserved/:name', () => {
+          it('should returns true when a contract is reserved', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/reserved/reserved-name`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, reserved, details, evaluationOptions } = data;
+            expect(contractTxId).to.equal(id);
+            expect(reserved).to.be.true;
+            expect(details).to.not.be.undefined;
+            expect(evaluationOptions).to.not.be.undefined;
+          });
+
+          it('should returns false when a contract is not reserved', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/reserved/non-reserved-name`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, reserved, details, evaluationOptions } = data;
+            expect(contractTxId).to.equal(id);
+            expect(reserved).to.be.false;
+            expect(details).to.be.undefined;
+            expect(evaluationOptions).to.not.be.undefined;
+          });
+        });
       });
     });
 
