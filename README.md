@@ -97,8 +97,8 @@ You can `cp .env.sample .env` and modify them locally.
 Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
 
 ```shell
-docker compose up arns-service arlocal --build
-yarn test:integration
+docker compose up arns-service -d --build
+yarn test:integration:local
 ```
 
 or entirely via docker compose:
