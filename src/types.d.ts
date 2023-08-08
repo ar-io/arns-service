@@ -59,4 +59,3 @@ export type ContractAuctionsResponse = ContractBaseResponse & {
   details?: unknown;
   name: string; // TODO: abstract to higher type
 };
-
