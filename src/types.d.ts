@@ -53,3 +53,10 @@ export type ContractReservedResponse = ContractBaseResponse & {
   details?: unknown;
   name: string; // TODO: abstract to higher type
 };
+
+export type ContractAuctionsResponse = ContractBaseResponse & {
+  auction: boolean;
+  details?: unknown;
+  name: string; // TODO: abstract to higher type
+};
+

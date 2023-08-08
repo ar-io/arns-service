@@ -1,6 +1,7 @@
 import { Next } from 'koa';
 
 import {
+  ContractAuctionsResponse,
   ContractRecordResponse,
   ContractReservedResponse,
   KoaContext,
@@ -310,6 +311,47 @@ export async function contractReservedHandler(ctx: KoaContext, next: Next) {
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to determine if record is reserved. ${message}`;
+  }
+  return next();
+}
+
+export async function contractAuctionsHandler(ctx: KoaContext, next: Next) {
+  const { contractTxId, name } = ctx.params;
+  const { warp, logger: _logger } = ctx.state;
+  const evaluationOptionOverrides = ctx.request.querystring
+    ? decodeQueryParams(ctx.request.query)
+    : DEFAULT_EVALUATION_OPTIONS;
+
+  const logger = _logger.child({
+    contractTxId,
+    record: name,
+    evaluationOptionOverrides,
+  });
+
+  try {
+    const { state, evaluationOptions } = await getContractState({
+      contractTxId,
+      warp,
+      evaluationOptionOverrides,
+    });
+    const auctionName = state['auctions'][name];
+
+    const response: ContractAuctionsResponse = {
+      contractTxId,
+      name,
+      auction: !!auctionName,
+      ...(auctionName ? { details: auctionName } : {}),
+      evaluationOptions,
+    };
+
+    ctx.body = response;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error.';
+    logger.error('Failed to determine if record is in auction.', {
+      error: message,
+    });
+    ctx.status = error instanceof EvaluationError ? 400 : 503;
+    ctx.body = `Failed to determine if record is in auction. ${message}`;
   }
   return next();
 }

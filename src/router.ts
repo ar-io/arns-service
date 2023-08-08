@@ -5,6 +5,7 @@ import {
   ARNS_NAME_REGEX,
 } from './constants';
 import {
+  contractAuctionsHandler,
   contractBalanceHandler,
   contractFieldHandler,
   contractHandler,
@@ -50,6 +51,10 @@ router.get(
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/reserved/:name${ARNS_NAME_REGEX}`,
   contractReservedHandler,
+);
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/auctions/:name${ARNS_NAME_REGEX}`,
+  contractAuctionsHandler,
 );
 router.get(
   `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,
