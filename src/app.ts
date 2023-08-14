@@ -7,6 +7,7 @@ import {
   loggerMiddleware,
   warpMiddleware,
   headersMiddleware,
+  queryParamsMiddleware,
 } from './middleware';
 import * as promClient from 'prom-client';
 import logger from './logger';
@@ -17,6 +18,7 @@ const app = new Koa();
 app.use(loggerMiddleware);
 app.use(arweaveMiddleware);
 app.use(warpMiddleware);
+app.use(queryParamsMiddleware);
 app.use(headersMiddleware);
 app.use(cors());
 app.use(bodyParser());

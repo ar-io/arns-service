@@ -14,8 +14,8 @@ import * as _ from 'lodash';
 
 export async function walletContractHandler(ctx: KoaContext, next: Next) {
   const { address } = ctx.params;
-  const { logger, arweave, warp } = ctx.state;
-  const { type } = ctx.request.query;
+  const { logger, arweave, warp, queryParams } = ctx.state;
+  const type = queryParams['type'] as string;
 
   try {
     // validate type is empty or valid
