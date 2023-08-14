@@ -294,11 +294,18 @@ export async function contractReservedHandler(ctx: KoaContext, next: Next) {
     });
     const reservedName = state['reserved'][name];
 
+    // validate if the name is still reserved
+    // TODO: should this be using block height instead to avoid clock time issues
+    const reserved =
+      !!reservedName &&
+      reservedName.endTimestamp &&
+      reservedName.endTimestamp > Date.now();
+
     const response: ContractReservedResponse = {
       contractTxId,
       name,
-      reserved: !!reservedName,
-      ...(reservedName ? { details: reservedName } : {}),
+      reserved,
+      ...(reserved ? { details: reservedName } : {}),
       evaluationOptions,
     };
 
