@@ -22,9 +22,11 @@
     "format:fix": "yarn prettier --write .",
     "format:check": "yarn prettier . --check",
     "lint:fix": "yarn eslint . --fix",
-    "lint:check": "yarn eslint ."
+    "lint:check": "yarn eslint .",
+    "prepare": "husky install"
   },
   "dependencies": {
+    "@commitlint/config-conventional": "^17.7.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "arweave": "^1.13.7",
@@ -50,9 +52,11 @@
     "@typescript-eslint/parser": "^5.59.11",
     "axios": "^1.4.0",
     "chai": "^4.3.7",
+    "commitlint": "^17.7.1",
     "dotenv": "^16.0.3",
     "eslint": "^8.42.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "nodemon": "^2.0.22",
     "prettier": "^3.0.0",
