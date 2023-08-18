@@ -9,17 +9,15 @@ import { EvaluationError, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
-  const { logger, warp, queryParams: evaluationOptionOverrides } = ctx.state;
+  const { logger, warp } = ctx.state;
   const { contractTxId } = ctx.params;
   try {
     logger.debug('Fetching contract state', {
       contractTxId,
-      evaluationOptionOverrides,
     });
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptionOverrides,
     });
     ctx.body = {
       contractTxId,
@@ -31,7 +29,6 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     logger.error('Failed to fetch contract', {
       contractTxId,
       error: message,
-      evaluationOptionOverrides,
     });
     ctx.status = error instanceof EvaluationError ? 400 : 503;
     ctx.body = `Failed to fetch contract: ${contractTxId}. ${message}`;
@@ -41,25 +38,18 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
-  const {
-    arweave,
-    logger,
-    warp,
-    queryParams: evaluationOptionOverrides,
-  } = ctx.state;
+  const { arweave, logger, warp } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
   try {
     logger.debug('Fetching all contract interactions', {
       contractTxId,
-      evaluationOptionOverrides,
     });
     const [{ validity, errorMessages, evaluationOptions }, { interactions }] =
       await Promise.all([
         getContractState({
           contractTxId,
           warp,
-          evaluationOptionOverrides,
         }),
         getWalletInteractionsForContract(arweave, {
           address,
@@ -100,17 +90,15 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
 
 export async function contractFieldHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, field } = ctx.params;
-  const { logger, warp, queryParams: evaluationOptionOverrides } = ctx.state;
+  const { logger, warp } = ctx.state;
   try {
     logger.debug('Fetching contract field', {
       contractTxId,
       field,
-      evaluationOptionOverrides,
     });
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptionOverrides,
     });
     const contractField = state[field];
 
@@ -140,17 +128,15 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
 
 export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, address } = ctx.params;
-  const { logger, warp, queryParams: evaluationOptionOverrides } = ctx.state;
+  const { logger, warp } = ctx.state;
   try {
     logger.debug('Fetching contract balance for wallet', {
       contractTxId,
       wallet: address,
-      evaluationOptionOverrides,
     });
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptionOverrides,
     });
     const balance = state['balances'][address];
 
@@ -176,16 +162,11 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
 
 export async function contractRecordHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, name } = ctx.params;
-  const {
-    warp,
-    logger: _logger,
-    queryParams: evaluationOptionOverrides,
-  } = ctx.state;
+  const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
-    evaluationOptionOverrides,
   });
 
   try {
@@ -193,7 +174,6 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptionOverrides,
     });
     const record = state['records'][name];
 
@@ -238,23 +218,17 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
 
 export async function contractReservedHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, name } = ctx.params;
-  const {
-    warp,
-    logger: _logger,
-    queryParams: evaluationOptionOverrides,
-  } = ctx.state;
+  const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
-    evaluationOptionOverrides,
   });
 
   try {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
-      evaluationOptionOverrides,
     });
     const reservedName = state['reserved'][name];
 

@@ -15,7 +15,7 @@ import {
   walletContractHandler,
 } from './routes';
 
-const router = new Router();
+const router: Router = new Router();
 
 // healthcheck
 router.get('/healthcheck', (ctx) => {
@@ -33,6 +33,10 @@ router.get(
 );
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/interactions`,
+  contractInteractionsHandler,
+);
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/interactions/:address${ARNS_CONTRACT_ID_REGEX}`,
   contractInteractionsHandler,
 );
 router.get(

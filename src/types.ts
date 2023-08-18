@@ -9,17 +9,9 @@ export type KoaState = {
   logger: winston.Logger;
   warp: Warp;
   arweave: Arweave;
-  queryParams: QueryParameters;
 } & DefaultState;
 
 export type KoaContext = ParameterizedContext<KoaState>;
-
-export type OptionalQueryParameters = {
-  type: string;
-};
-
-export type QueryParameters = Partial<EvaluationOptions> &
-  Partial<OptionalQueryParameters>;
 
 export type ArNSRecord = {
   transactionId: string;
