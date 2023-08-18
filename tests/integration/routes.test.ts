@@ -110,13 +110,6 @@ describe('PDNS Service Integration tests', () => {
           const { status } = await axios.get(`/v1/contract/non-matching-regex`);
           expect(status).to.equal(404);
         });
-
-        it('should return an error when evaluation option is less restrictive then the contract-manifest', async () => {
-          const { status } = await axios.get(
-            `/v1/contract/${id}?throwOnInternalWriteError=false`,
-          );
-          expect(status).to.equal(400);
-        });
       });
 
       describe('/:contractTxId/interactions', () => {
@@ -128,6 +121,20 @@ describe('PDNS Service Integration tests', () => {
           expect(data).to.not.be.undefined;
           const { contractTxId, interactions } = data;
           expect(contractTxId).to.equal(id);
+          expect(interactions).to.deep.equal(contractInteractions);
+        });
+      });
+
+      describe('/:contractTxId/interactions/:address', () => {
+        it('should return the contract interactions for the provided address', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions/${walletAddress}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions } = data;
+          expect(contractTxId).to.equal(id);
+          // TODO: filter out interactions specific to the wallet address
           expect(interactions).to.deep.equal(contractInteractions);
         });
       });

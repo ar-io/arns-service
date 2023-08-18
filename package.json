@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Service that supports ArNS Portal",
   "main": "./dist/app.js",
+  "types": "./dist/types.d.ts",
   "type": "commonjs",
   "repository": {
     "type": "git",

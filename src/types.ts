@@ -1,11 +1,14 @@
+import winston from 'winston';
+import Arweave from 'arweave';
 import { DefaultState, ParameterizedContext } from 'koa';
 import { EvaluationOptions, PstState, Warp } from 'warp-contracts';
-import winston from 'winston';
 import { allowedContractTypes } from './constants';
 
+// accessible across middleware and handlers
 export type KoaState = {
   logger: winston.Logger;
   warp: Warp;
+  arweave: Arweave;
 } & DefaultState;
 
 export type KoaContext = ParameterizedContext<KoaState>;
