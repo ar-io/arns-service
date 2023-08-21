@@ -14,6 +14,7 @@ import {
   prometheusHandler,
   walletContractHandler,
 } from './routes';
+import { swaggerDocs } from './routes/swagger';
 
 const router: Router = new Router();
 
@@ -65,6 +66,8 @@ router.get(
 );
 
 // prometheus
-router.get('/arns_metrics', prometheusHandler);
+router.get('/metrics', prometheusHandler);
+// swagger
+router.get('/api-docs', swaggerDocs);
 
 export default router;

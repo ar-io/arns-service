@@ -1,0 +1,300 @@
+openapi: 3.0.0
+info:
+  title: ArNS Microservice
+  version: 0.1.0
+  description: A koa microservice that provides API interface for fetching and retrieving ArNS related Smartweave contracts.
+
+servers:
+  - url: '/'
+
+paths:
+  /healthcheck:
+    get:
+      summary: Simple healthcheck endpoint
+      description: Simple healthcheck endpoint
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+                  timestamp:
+                    type: Date
+                    example: '2021-08-01T00:00:00.000Z'
+                  message:
+                    type: string
+                    example: 'Hello World!'
+
+  /v1/contract/{contractTxId}:
+    get:
+      summary: Fetches a contract state by its transaction id using Warp
+      description: Fetches a contract state by its transaction id using Warp
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'contractTxId'
+                  state:
+                    type: object
+                    example: {}
+                  evaluationOptions:
+                    type: object
+                    example:
+                      {
+                        'sourceType': 'arweave',
+                        'internalWrites': true,
+                        'useKVStorage': true,
+                        'remoteStateSyncEnabled': false,
+                        'waitForConfirmation': true,
+                        'updateCacheForEachInteraction': true,
+                        'maxInteractionEvaluationTimeSeconds': 60,
+                        'throwOnInternalWriteError': true,
+                      }
+        '404':
+          description: Contract not found.
+        '500':
+          description: Internal server error.
+
+  /v1/contract/{contractTxId}/{field}:
+    get:
+      summary: Returns the field in the contract state for a given transaction id
+      description: Returns the field in the contract state for a given transaction id
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+        - in: path
+          name: field
+          required: true
+          description: The field of the state to return.
+          schema:
+            type: string
+            example: 'owner'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  field:
+                    type: any
+                    example: {}
+                  evaluationOptions:
+                    type: object
+                    example:
+                      {
+                        'sourceType': 'arweave',
+                        'internalWrites': true,
+                        'useKVStorage': true,
+                        'remoteStateSyncEnabled': false,
+                        'waitForConfirmation': true,
+                        'updateCacheForEachInteraction': true,
+                        'maxInteractionEvaluationTimeSeconds': 60,
+                        'throwOnInternalWriteError': true,
+                      }
+        '404':
+          description: Contract not found.
+        '500':
+          description: Internal server error.
+
+  /v1/contract/{contractTxId}/interactions:
+    get:
+      summary: Returns the interactions for a given contract sorted in descending order
+      description: Returns the interactions for a given contract sorted in descending order
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  interactions:
+                    type: array
+                    example:
+                      [
+                        {
+                          'height': 1242905,
+                          'input':
+                            {
+                              'function': 'evolve',
+                              'value': 'PdBWdSgiNcLw4ge1kveUf8wORcdSaMJsdVXqlQFMPUg',
+                            },
+                          'owner': 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ',
+                          'valid': true,
+                          'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
+                        },
+                      ]
+                  evaluationOptions:
+                    type: object
+                    example:
+                      {
+                        'sourceType': 'arweave',
+                        'internalWrites': true,
+                        'useKVStorage': true,
+                        'remoteStateSyncEnabled': false,
+                        'waitForConfirmation': true,
+                        'updateCacheForEachInteraction': true,
+                        'maxInteractionEvaluationTimeSeconds': 60,
+                        'throwOnInternalWriteError': true,
+                      }
+        '404':
+          description: Contract not found.
+        '500':
+          description: Internal server error.
+
+  /v1/wallet/{address}/contracts:
+    get:
+      summary: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
+      description: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
+      parameters:
+        - in: path
+          name: address
+          required: true
+          description: Public Arweave wallet address.
+          schema:
+            type: string
+            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  contractTxIds:
+                    type: array
+                    example:
+                      [
+                        'gYM6k-ymF0FJMmBYXddQoWBQk8sq9A0j5WCg3fqHSM4',
+                        'upfGHah4dA2b6h-o3RjZYznrFvO0tbG_jt3AeyxrAJw',
+                        'cwDtGmLtFdC1P2ofZrGhVkmcQRPHYJ5nophS4Zv-qnY',
+                        'qp9i4_cOoAWzys4W-FjY3yeFhUByj4EWOUPSgRFfgzU',
+                        '1h8wTTxp_eLfrgEEJrdjyVxJ71A7hBVD7ky2qg3b7uc',
+                        '6vAPRgFbITTdeYi-FKxfbSqE19lb4koc1Gbps7nlpFI',
+                        'RXomDSAFyvqFIIGlsnUbUMcXTP8XIH8ZlOm6ZTrmL2c',
+                        'qRLTxyvdHP1T8XV7p2mNT1Fa5dH7KNAJhPdCC68HWyA',
+                        'HGhUVNXj6EL1Jhj71_zKt0dvPCXNtblOJSi37hXBUZQ',
+                        'ymnhSYxCOsEIPFpb4gEUJ2l6u4twLu9E3xeLa6gk0Wo',
+                        'M946iDywDM2pz62371ntI3bi_rzzcKOXKVMJUq4QHaY',
+                        'EEBotyDhXsH8Coj3GPRP39yBqRbVQ8S7nbHm1nMELiU',
+                        '2tkf6Pkk-dJ7stDkGTGLMILwFDebyf3ShVOVxhjaHtg',
+                        '-NOdnNjkViGgsF7A98naG_UB7eVneX54kWkSV13ILfQ',
+                        'FTBCy7FIakfSYtKZ2yfgTecDKpxiH_CI-SBgtiwQHEs',
+                        '-tYkDvWQKiJF8TZTKX3ccRY8Nx7rIh21r1UNbrXAB38',
+                        'GmFuXgBgtXHgVf1RJtgAyuZyDx3OfRn-HXzdDGlrFe0',
+                      ]
+        '404':
+          description: Wallet not found.
+        '500':
+          description: Internal server error.
+
+  /v1/wallet/{address}/contract/{contractTxId}:
+    get:
+      summary: Returns the interactions on a given contract for a given wallet address
+      description: Returns the interactions on a given contract for a given wallet address
+      parameters:
+        - in: path
+          name: address
+          required: true
+          description: Public Arweave wallet address.
+          schema:
+            type: string
+            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  interactions:
+                    type: array
+                    example:
+                      [
+                        {
+                          'height': 1242905,
+                          'input':
+                            {
+                              'function': 'evolve',
+                              'value': 'PdBWdSgiNcLw4ge1kveUf8wORcdSaMJsdVXqlQFMPUg',
+                            },
+                          'owner': 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ',
+                          'valid': true,
+                          'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
+                        },
+                      ]
+                  evaluationOptions:
+                    type: object
+                    example:
+                      {
+                        'sourceType': 'arweave',
+                        'internalWrites': true,
+                        'useKVStorage': true,
+                        'remoteStateSyncEnabled': false,
+                        'waitForConfirmation': true,
+                        'updateCacheForEachInteraction': true,
+                        'maxInteractionEvaluationTimeSeconds': 60,
+                        'throwOnInternalWriteError': true,
+                      }
+        '404':
+          description: Wallet not found.
+        '500':
+          description: Internal server error.

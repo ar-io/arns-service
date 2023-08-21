@@ -78,8 +78,14 @@ describe('PDNS Service Integration tests', () => {
       expect(data).to.not.be.undefined;
     });
 
-    it('should return 200 prometheus', async () => {
-      const { status, data } = await axios.get(`/arns_metrics`);
+    it('should return 200 from prometheus', async () => {
+      const { status, data } = await axios.get(`/metrics`);
+      expect(status).to.equal(200);
+      expect(data).to.not.be.undefined;
+    });
+
+    it('should return 200 from swagger', async () => {
+      const { status, data } = await axios.get(`/api-docs`);
       expect(status).to.equal(200);
       expect(data).to.not.be.undefined;
     });
