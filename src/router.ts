@@ -66,7 +66,7 @@ router.get(
 );
 
 // prometheus
-router.get('/metrics', prometheusHandler);
+router.get('/arns_metrics', prometheusHandler);
 // swagger
 router.get('/api-docs', swaggerDocs);
 
