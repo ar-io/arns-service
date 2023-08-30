@@ -30,7 +30,7 @@ USER node
 # Copy build files
 COPY --from=builder --chown=node /usr/src/app .
 
-LABEL org.opencontainers.image.title="ar.io - PDNS Service"
+LABEL org.opencontainers.image.title="ar.io - ArNS Service"
 
 EXPOSE 3000
 CMD ["./dist/app.js"]
