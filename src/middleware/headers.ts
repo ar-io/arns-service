@@ -1,7 +1,7 @@
 import { Next } from 'koa';
 import { KoaContext } from '../types';
 
-const MAX_AGE_SECONDS = process.env.MAX_AGE_SECONDS ?? 120;
+const MAX_AGE_SECONDS = process.env.MAX_AGE_SECONDS ?? 30;
 
 export async function headersMiddleware(ctx: KoaContext, next: Next) {
   const { logger } = ctx.state;
