@@ -51,32 +51,7 @@ curl localhost:3000/v1/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
 
 ### Evaluation Options
 
-By default, the service will load `Contract-Manifest` tags for state evaluation. Query params can be provided if you wish to evaluate state using more restrictive tags. If an invalid combination of evaluation options are provided via query params, a 400 response will be returned.
-
-Examples:
-
-1. Valid evaluation option
-
-   ```shell
-   curl localhost:3000/v1/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U?internalWrites=false
-   ```
-
-   - Will evaluate the contact with `internalWrites` set to `false`.
-
-2. Invalid evaluation param provided
-   A query param that is looser than the contract's own evaluation options:
-
-   ```shell
-   curl http://localhost:3000/contract/GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY?waitForConfirmation=false
-   ```
-
-   - Returns the following response:
-
-   ```
-   Failed to fetch contract: GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY. Option {waitForConfirmation} differs. EvaluationOptions: [false], manifest: [true]. Use contract.setEvaluationOptions({waitForConfirmation: true}) to evaluate contract state.
-   ```
-
-The list of all evaluation options and their priority provided by [Warp](warp.cc) can be found [here](https://academy.warp.cc/docs/sdk/advanced/evaluation-options)
+By default, the service will load `Contract-Manifest` tags for state evaluation.
 
 ## Configuration
 
