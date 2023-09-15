@@ -28,8 +28,8 @@ const errorCounter = new promClient.Counter({
   help: 'Total error count',
 });
 
-// TODO: add error metrics
-app.on('error', (err) => {
+// catch any floating errors, swallow them and increment prometheus counter
+process.on('uncaughtException', (err) => {
   logger.error(err);
   errorCounter.inc();
 });
