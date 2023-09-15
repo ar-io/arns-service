@@ -51,6 +51,7 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
         getContractState({
           contractTxId,
           warp,
+          logger,
         }),
         getWalletInteractionsForContract(arweave, {
           address,
@@ -100,6 +101,7 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
+      logger,
     });
     const contractField = state[field];
 
@@ -138,6 +140,7 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
+      logger,
     });
     const balance = state['balances'][address];
 
@@ -175,6 +178,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
+      logger,
     });
     const record = state['records'][name];
 
@@ -199,6 +203,7 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
       const { state: antContract, evaluationOptions } = await getContractState({
         contractTxId: record.contractTxId,
         warp,
+        logger,
         // don't set evaluation options for sub contracts - they'll be pulled on load
       });
       response['owner'] = antContract?.owner;
@@ -230,6 +235,7 @@ export async function contractReservedHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
+      logger,
     });
     const reservedName = state['reserved'][name];
 

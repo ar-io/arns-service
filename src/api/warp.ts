@@ -172,7 +172,7 @@ export async function getContractState({
   contractTxId: string;
   warp: Warp;
   evaluationOptionOverrides?: Partial<EvaluationOptions>;
-  logger?: winston.Logger;
+  logger: winston.Logger;
 }): Promise<EvaluatedContractState> {
   try {
     // get the contract manifest eval options by default
@@ -256,14 +256,27 @@ export function tagsToObject(tags: Tag[]): {
   }, {});
 }
 
-export async function validateStateWithTimeout(
-  contractTxId: string,
-  warp: Warp,
-  type?: ContractType,
-  address?: string,
-): Promise<unknown> {
+export async function validateStateWithTimeout({
+  contractTxId,
+  warp,
+  type,
+  address,
+  logger,
+}: {
+  contractTxId: string;
+  warp: Warp;
+  type?: ContractType;
+  address?: string;
+  logger: winston.Logger;
+}): Promise<unknown> {
   return Promise.race([
-    validateStateAndOwnership(contractTxId, warp, type, address),
+    validateStateAndOwnership({
+      contractTxId,
+      warp,
+      type,
+      address,
+      logger,
+    }),
     new Promise((_, reject) =>
       setTimeout(
         () => reject(new EvaluationTimeoutError()),
@@ -274,15 +287,23 @@ export async function validateStateWithTimeout(
 }
 
 // TODO: this could be come a generic and return the full state of contract once validated
-export async function validateStateAndOwnership(
-  contractTxId: string,
-  warp: Warp,
-  type?: ContractType,
-  address?: string,
-): Promise<boolean> {
+export async function validateStateAndOwnership({
+  contractTxId,
+  warp,
+  type,
+  address,
+  logger,
+}: {
+  contractTxId: string;
+  warp: Warp;
+  type?: ContractType;
+  address?: string;
+  logger: winston.Logger;
+}): Promise<boolean> {
   const { state } = await getContractState({
     contractTxId,
     warp,
+    logger,
   });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =
