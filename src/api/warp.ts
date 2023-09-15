@@ -219,7 +219,7 @@ async function readThroughToContractManifest({
   contractTxId: string;
   arweave: Arweave;
   logger?: winston.Logger;
-}) {
+}): Promise<EvaluationManifest> {
   logger?.debug('Reading through to contract manifest...', {
     contractTxId,
   });
