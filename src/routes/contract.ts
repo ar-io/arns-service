@@ -18,6 +18,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     const { state, evaluationOptions } = await getContractState({
       contractTxId,
       warp,
+      logger,
     });
     ctx.body = {
       contractTxId,
