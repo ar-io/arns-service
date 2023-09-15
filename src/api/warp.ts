@@ -84,7 +84,7 @@ const contractManifestCache: ReadThroughPromiseCache<
   any
 > = new ReadThroughPromiseCache({
   cacheParams: {
-    cacheCapacity: 100,
+    cacheCapacity: 1000,
     cacheTTL: 1000 * 60 * 60 * 24 * 365, // 365 days - effectively permanent
   },
   readThroughFunction: (cacheKey) => readThroughToContractManifest(cacheKey),
