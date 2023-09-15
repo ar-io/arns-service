@@ -270,12 +270,12 @@ export async function validateStateWithTimeout({
   logger: winston.Logger;
 }): Promise<unknown> {
   return Promise.race([
-    validateStateAndOwnership( {
+    validateStateAndOwnership({
       contractTxId,
       warp,
       type,
       address,
-      logger
+      logger,
     }),
     new Promise((_, reject) =>
       setTimeout(
