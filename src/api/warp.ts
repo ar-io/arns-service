@@ -4,7 +4,11 @@ import {
   EvaluationOptions,
   Warp,
 } from 'warp-contracts';
-import { EVALUATION_TIMEOUT_MS, allowedContractTypes } from '../constants';
+import {
+  DEFAULT_EVALUATION_OPTIONS,
+  EVALUATION_TIMEOUT_MS,
+  allowedContractTypes,
+} from '../constants';
 import { ContractType } from '../types';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
@@ -77,7 +81,7 @@ class ContractManifestCacheKey {
 // Aggressively cache contract manifests since they're permanent on chain
 const contractManifestCache: ReadThroughPromiseCache<
   ContractManifestCacheKey,
-  any
+  EvaluationManifest
 > = new ReadThroughPromiseCache({
   cacheParams: {
     cacheCapacity: 1000,
@@ -141,7 +145,7 @@ async function readThroughToContractState(
       });
     })
     .finally(() => {
-      logger?.debug('Removing cached request from barrier map.', {
+      logger?.debug('Removing request from in-flight cache.', {
         cacheId,
       });
       // remove the cached request whether it completes or fails
@@ -173,9 +177,10 @@ export async function getContractState({
 }): Promise<EvaluatedContractState> {
   try {
     // get the contract manifest eval options by default
-    const { evaluationOptions } = await contractManifestCache.get(
-      new ContractManifestCacheKey(contractTxId, warp.arweave, logger),
-    );
+    const { evaluationOptions = DEFAULT_EVALUATION_OPTIONS } =
+      await contractManifestCache.get(
+        new ContractManifestCacheKey(contractTxId, warp.arweave, logger),
+      );
     // Awaiting here so that promise rejection can be caught below, wrapped, and propagated
     return await contractStateCache.get(
       new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
