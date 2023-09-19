@@ -61,7 +61,7 @@ const contractStateCache: ReadThroughPromiseCache<
     cacheCapacity: 100,
     cacheTTL: 1000 * 30, // 30 seconds
   },
-  readThroughFunction: (cacheKey) => readThroughToContractState(cacheKey),
+  readThroughFunction: readThroughToContractState,
 });
 
 // Convenience class for read through caching
@@ -81,13 +81,13 @@ class ContractManifestCacheKey {
 // Aggressively cache contract manifests since they're permanent on chain
 const contractManifestCache: ReadThroughPromiseCache<
   ContractManifestCacheKey,
-  any
+  EvaluationManifest
 > = new ReadThroughPromiseCache({
   cacheParams: {
     cacheCapacity: 1000,
     cacheTTL: 1000 * 60 * 60 * 24 * 365, // 365 days - effectively permanent
   },
-  readThroughFunction: (cacheKey) => readThroughToContractManifest(cacheKey),
+  readThroughFunction: readThroughToContractManifest,
 });
 
 function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
@@ -120,12 +120,12 @@ async function readThroughToContractState(
       ...cachedValue,
       evaluationOptions,
     };
-  } else {
-    logger?.debug('Evaluating contract state...', {
-      contractTxId,
-      cacheKey: cacheKey.toString(),
-    });
   }
+
+  logger?.debug('Evaluating contract state...', {
+    contractTxId,
+    cacheKey: cacheKey.toString(),
+  });
 
   // use the combined evaluation options
   const contract = warp
@@ -137,14 +137,17 @@ async function readThroughToContractState(
   requestMap.set(cacheId, readStatePromise);
 
   readStatePromise
-    .catch((error) => {
+    .catch((error: unknown) => {
       logger?.debug('Failed to evaluate contract state!', {
         contractTxId,
         cacheKey: cacheKey.toString(),
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     })
     .finally(() => {
+      logger?.debug('Removing request from in-flight cache.', {
+        cacheId,
+      });
       // remove the cached request whether it completes or fails
       requestMap.delete(cacheId);
     });
@@ -166,36 +169,21 @@ async function readThroughToContractState(
 export async function getContractState({
   contractTxId,
   warp,
-  evaluationOptionOverrides = DEFAULT_EVALUATION_OPTIONS,
   logger,
 }: {
   contractTxId: string;
   warp: Warp;
-  evaluationOptionOverrides?: Partial<EvaluationOptions>;
   logger: winston.Logger;
 }): Promise<EvaluatedContractState> {
   try {
     // get the contract manifest eval options by default
-    const { evaluationOptions: contractDefinedEvalOptions } =
-      await getContractManifest({
-        contractTxId,
-        arweave: warp.arweave,
-        logger,
-      });
-    // override any contract manifest eval options with eval options provided
-    const combinedEvalOptions = {
-      ...contractDefinedEvalOptions,
-      ...evaluationOptionOverrides,
-    };
-
+    const { evaluationOptions = DEFAULT_EVALUATION_OPTIONS } =
+      await contractManifestCache.get(
+        new ContractManifestCacheKey(contractTxId, warp.arweave, logger),
+      );
     // Awaiting here so that promise rejection can be caught below, wrapped, and propagated
     return await contractStateCache.get(
-      new ContractStateCacheKey(
-        contractTxId,
-        combinedEvalOptions,
-        warp,
-        logger,
-      ),
+      new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
     );
   } catch (error) {
     // throw an eval here so we can properly return correct status code
@@ -215,11 +203,7 @@ async function readThroughToContractManifest({
   contractTxId,
   arweave,
   logger,
-}: {
-  contractTxId: string;
-  arweave: Arweave;
-  logger?: winston.Logger;
-}): Promise<EvaluationManifest> {
+}: ContractManifestCacheKey): Promise<EvaluationManifest> {
   logger?.debug('Reading through to contract manifest...', {
     contractTxId,
   });
@@ -229,20 +213,6 @@ async function readThroughToContractManifest({
   const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
   const contractManifest = JSON.parse(contractManifestString);
   return contractManifest;
-}
-
-export async function getContractManifest({
-  contractTxId,
-  arweave,
-  logger,
-}: {
-  contractTxId: string;
-  arweave: Arweave;
-  logger?: winston.Logger;
-}): Promise<EvaluationManifest> {
-  return contractManifestCache.get(
-    new ContractManifestCacheKey(contractTxId, arweave, logger),
-  );
 }
 
 export function tagsToObject(tags: Tag[]): {
