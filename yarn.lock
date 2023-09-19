@@ -117,10 +117,10 @@
   dependencies:
     xss "^1.0.8"
 
-"@ardrive/ardrive-promise-cache@^1.1.4-alpha.1":
-  version "1.1.4-alpha.1"
-  resolved "https://registry.yarnpkg.com/@ardrive/ardrive-promise-cache/-/ardrive-promise-cache-1.1.4-alpha.1.tgz#a35507eff7f4ecd13c0a692f2e6d8f7450fd344f"
-  integrity sha512-XiX230ReWAsVc9Nr9e65qdRgip4TmlOQhKFozrX3FUmh+Ee5ry0Q4B5XMmn/jgGOuAIrGeI8tO+vCW/y90uS6A==
+"@ardrive/ardrive-promise-cache@^1.1.4":
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/@ardrive/ardrive-promise-cache/-/ardrive-promise-cache-1.1.4.tgz#6199aaf4fc861e74a7d355c81321883a9abb3b8b"
+  integrity sha512-8HzOfgY7CVFJNJX/xZSbbZIl7qfO+Mkbp100bNdB/e40YrFFXfy1NXxQR2lc/AJKsMGdcWgSqfI8QOeFYQup1A==
   dependencies:
     "@alexsasharegan/simple-cache" "^3.3.3"
 
