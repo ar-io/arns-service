@@ -141,7 +141,7 @@ async function readThroughToContractState(
       });
     })
     .finally(() => {
-      logger?.debug('Removing cached rqeuest from barrier map.', {
+      logger?.debug('Removing cached request from barrier map.', {
         cacheId,
       });
       // remove the cached request whether it completes or fails
