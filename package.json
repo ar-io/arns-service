@@ -27,7 +27,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@ardrive/ardrive-promise-cache": "^1.1.4-alpha.1",
+    "@ardrive/ardrive-promise-cache": "^1.1.4",
     "@commitlint/config-conventional": "^17.7.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
