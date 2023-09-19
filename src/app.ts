@@ -30,7 +30,7 @@ const errorCounter = new promClient.Counter({
 
 // catch any floating errors, swallow them and increment prometheus counter
 process.on('uncaughtException', (err) => {
-  logger.error(err);
+  logger.error('Uncaught exception!', err);
   errorCounter.inc();
 });
 
