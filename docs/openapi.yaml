@@ -143,45 +143,49 @@ paths:
           schema:
             type: string
             example: 'ario'
-          responses:
-            '200':
-              description: OK
-              content:
-                application/json:
-                  schema:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  name:
+                    type: string
+                    example: 'ario'
+                  record:
                     type: object
                     properties:
                       contractTxId:
                         type: string
-                        example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
-                      name:
+                        example: 'I-cxQhfh0Zb9UqQNizC9PiLC41KpUeA9hjiVV02rQRw'
+                      type:
                         type: string
-                        example: 'ario'
-                      record:
-                        type: object
-                        properties:
-                          contractTxId:
-                            type: string
-                            example: 'I-cxQhfh0Zb9UqQNizC9PiLC41KpUeA9hjiVV02rQRw'
-                          type:
-                            type: string
-                            example: 'lease'
-                          startTimestamp:
-                            type: number
-                            example: 162781440
-                          endTimestamp:
-                            type: number
-                            example: 172781440
-                      owner:
-                        type: string
-                        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-                      evaluationOptions:
-                        type: object
-                        example: {}
-            '404':
-              description: Record does not exist in the contract.
-            '503':
-              description: Internal server error.
+                        example: 'lease'
+                      startTimestamp:
+                        type: number
+                        example: 162781440
+                      endTimestamp:
+                        type: number
+                        example: 172781440
+                      undernames:
+                        type: number
+                        example: 10
+                  owner:
+                    type: string
+                    example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  evaluationOptions:
+                    type: object
+                    example: {}
+        '404':
+          description: Record does not exist in the contract.
+        '503':
+          description: Internal server error.
+
   /v1/contract/{contractTxId}/balances/{walletAddress}:
     get:
       summary: Returns the balance given contract and wallet address
@@ -200,27 +204,30 @@ paths:
           schema:
             type: string
             example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-          responses:
-            '200':
-              description: OK
-              content:
-                application/json:
-                  schema:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  address:
+                    type: string
+                    example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  balance:
+                    type: number
+                    example: 994963650
+                  evaluationOptions:
                     type: object
-                    properties:
-                      address:
-                        type: string
-                        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-                      balance:
-                        type: number
-                        example: 994963650
-                      evaluationOptions:
-                        type: object
-                        example: {}
-            '404':
-              description: Wallet does not have a balance in the contract.
-            '503':
-              description: Internal server error.
+                    example: {}
+        '404':
+          description: Wallet does not have a balance in the contract.
+        '503':
+          description: Internal server error.
 
   /v1/contract/{contractTxId}/interactions:
     get:
