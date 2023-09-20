@@ -116,6 +116,13 @@ describe('PDNS Service Integration tests', () => {
           const { status } = await axios.get(`/v1/contract/non-matching-regex`);
           expect(status).to.equal(404);
         });
+
+        it('should throw a 404 for a contract that does not exist/has not been mined', async () => {
+          const { status } = await axios.get(
+            '/v1/contract/kbtXub0JcZYfBn7-WUgkFQjKmZb4y5DY2nT8WovBhWY',
+          );
+          expect(status).to.equal(404);
+        });
       });
 
       describe('/:contractTxId/interactions', () => {
