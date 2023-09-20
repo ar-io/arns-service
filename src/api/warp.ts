@@ -177,14 +177,15 @@ export async function getContractState({
     );
   } catch (error) {
     /**
-     * Warp throws various errors, that we need to parse to know what status code to return to clients
+     * Warp throws various errors that we need to parse to know what status code to return to clients.
+     * They also don't expose their error types in the SDK, hence why we have to cast to any for some of these checks.
      *
      * e.g.
      *
      * ArweaveError
-     *    at Transactions.get (/Users/dylanfiedler/Documents/ario/arns/pdns-service/src/common/transactions.ts:94:13)
+     *    at Transactions.get (/../transactions.ts:94:13)
      *    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-     *    at async ReadThroughPromiseCache.readThroughToContractManifest [as readThroughFunction] (/Users/dylanfiedler/Documents/ario/arns/pdns-service/src/api/warp.ts:208:33) {
+     *    at async ReadThroughPromiseCache.readThroughToContractManifest [as readThroughFunction] (~/src/api/warp.ts:208:33) {
      *      type: 'TX_NOT_FOUND',
      *      response: undefined
      *  }
