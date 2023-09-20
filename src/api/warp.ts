@@ -1,15 +1,15 @@
-import {
-  EvalStateResult,
-  EvaluationManifest,
-  EvaluationOptions,
-  Warp,
-} from 'warp-contracts';
+import { EvaluationManifest, EvaluationOptions, Warp } from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
   EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
-import { ContractType } from '../types';
+import {
+  ContractType,
+  EvaluatedContractState,
+  EvaluationError,
+  NotFoundError,
+} from '../types';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
@@ -17,16 +17,6 @@ import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
 import winston from 'winston';
-
-export type EvaluatedContractState = EvalStateResult<any> & {
-  evaluationOptions?: Partial<EvaluationOptions>;
-};
-
-export class EvaluationError extends Error {
-  constructor(message?: string) {
-    super(message);
-  }
-}
 
 // cache duplicate requests on the same instance within a short period of time
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
@@ -194,6 +184,8 @@ export async function getContractState({
         error.message.includes('Use contract.setEvaluationOptions'))
     ) {
       throw new EvaluationError(error.message);
+    } else if ((error as any).type.includes('TX_NOT_FOUND')) {
+      throw new NotFoundError('Contract not found');
     }
     throw error;
   }

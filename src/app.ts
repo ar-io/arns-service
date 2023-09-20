@@ -7,6 +7,7 @@ import {
   loggerMiddleware,
   warpMiddleware,
   headersMiddleware,
+  errorMiddleware,
 } from './middleware';
 import * as promClient from 'prom-client';
 import logger from './logger';
@@ -15,6 +16,7 @@ const app = new Koa();
 
 // attach middlewares
 app.use(loggerMiddleware);
+app.use(errorMiddleware);
 app.use(arweaveMiddleware);
 app.use(warpMiddleware);
 app.use(headersMiddleware);
