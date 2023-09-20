@@ -176,6 +176,7 @@ export async function getContractState({
       new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
     );
   } catch (error) {
+    console.log(error);
     // throw an eval here so we can properly return correct status code
     if (
       error instanceof Error &&
@@ -184,8 +185,13 @@ export async function getContractState({
         error.message.includes('Use contract.setEvaluationOptions'))
     ) {
       throw new EvaluationError(error.message);
-    } else if ((error as any).type.includes('TX_NOT_FOUND')) {
+    } else if (
+      (error as any).type &&
+      (error as any).type.includes('TX_NOT_FOUND')
+    ) {
       throw new NotFoundError('Contract not found');
+    } else if (error instanceof Error && error.message.includes('404')) {
+      throw new NotFoundError(error.message);
     }
     throw error;
   }
