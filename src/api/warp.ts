@@ -1,15 +1,15 @@
-import {
-  EvalStateResult,
-  EvaluationManifest,
-  EvaluationOptions,
-  Warp,
-} from 'warp-contracts';
+import { EvaluationManifest, EvaluationOptions, Warp } from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
   EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
-import { ContractType } from '../types';
+import {
+  ContractType,
+  EvaluatedContractState,
+  EvaluationError,
+  NotFoundError,
+} from '../types';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
@@ -17,16 +17,6 @@ import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
 import winston from 'winston';
-
-export type EvaluatedContractState = EvalStateResult<any> & {
-  evaluationOptions?: Partial<EvaluationOptions>;
-};
-
-export class EvaluationError extends Error {
-  constructor(message?: string) {
-    super(message);
-  }
-}
 
 // cache duplicate requests on the same instance within a short period of time
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
@@ -186,7 +176,20 @@ export async function getContractState({
       new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
     );
   } catch (error) {
-    // throw an eval here so we can properly return correct status code
+    /**
+     * Warp throws various errors that we need to parse to know what status code to return to clients.
+     * They also don't expose their error types in the SDK, hence why we have to cast to any for some of these checks.
+     *
+     * e.g.
+     *
+     * ArweaveError
+     *    at Transactions.get (/../transactions.ts:94:13)
+     *    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+     *    at async ReadThroughPromiseCache.readThroughToContractManifest [as readThroughFunction] (~/src/api/warp.ts:208:33) {
+     *      type: 'TX_NOT_FOUND',
+     *      response: undefined
+     *  }
+     */
     if (
       error instanceof Error &&
       // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
@@ -194,6 +197,13 @@ export async function getContractState({
         error.message.includes('Use contract.setEvaluationOptions'))
     ) {
       throw new EvaluationError(error.message);
+    } else if (
+      ((error as any).type && (error as any).type.includes('TX_NOT_FOUND')) ||
+      (error as any).includes('TX_INVALID')
+    ) {
+      throw new NotFoundError('Contract not found');
+    } else if (error instanceof Error && error.message.includes('404')) {
+      throw new NotFoundError(error.message);
     }
     throw error;
   }

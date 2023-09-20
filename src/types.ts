@@ -1,10 +1,15 @@
 import winston from 'winston';
 import Arweave from 'arweave';
 import { DefaultState, ParameterizedContext } from 'koa';
-import { EvaluationOptions, PstState, Warp } from 'warp-contracts';
+import {
+  EvalStateResult,
+  EvaluationOptions,
+  PstState,
+  Warp,
+} from 'warp-contracts';
 import { allowedContractTypes } from './constants';
 
-// accessible across middleware and handlers
+// Koa types
 export type KoaState = {
   logger: winston.Logger;
   warp: Warp;
@@ -12,6 +17,8 @@ export type KoaState = {
 } & DefaultState;
 
 export type KoaContext = ParameterizedContext<KoaState>;
+
+// ArNS types
 
 export type ArNSRecord = {
   transactionId: string;
@@ -40,6 +47,8 @@ export type ArNSContractInteractions = {
 
 export type ContractType = (typeof allowedContractTypes)[number];
 
+// Response types
+
 export type ContractBaseResponse = {
   contractTxId: string;
   evaluationOptions?: Partial<EvaluationOptions>;
@@ -56,3 +65,16 @@ export type ContractReservedResponse = ContractBaseResponse & {
   details?: unknown;
   name: string; // TODO: abstract to higher type
 };
+
+// Warp types
+
+export type EvaluatedContractState = EvalStateResult<any> & {
+  evaluationOptions?: Partial<EvaluationOptions>;
+};
+
+// Error types
+
+export class EvaluationError extends Error {}
+export class NotFoundError extends Error {}
+export class UnknownError extends Error {}
+export class BadRequestError extends Error {}
