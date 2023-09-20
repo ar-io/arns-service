@@ -71,7 +71,7 @@ paths:
                       }
         '404':
           description: Contract not found.
-        '500':
+        '503':
           description: Internal server error.
 
   /v1/contract/{contractTxId}/{field}:
@@ -122,8 +122,105 @@ paths:
                       }
         '404':
           description: Contract not found.
-        '500':
+        '503':
           description: Internal server error.
+
+  /v1/contract/{contractTxId}/records/{name}:
+    get:
+      summary: Returns the record object for a given contract and name
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+        - in: path
+          name: name
+          required: true
+          description: The name of the record to return.
+          schema:
+            type: string
+            example: 'ario'
+          responses:
+            '200':
+              description: OK
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      contractTxId:
+                        type: string
+                        example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                      name:
+                        type: string
+                        example: 'ario'
+                      record:
+                        type: object
+                        properties:
+                          contractTxId:
+                            type: string
+                            example: 'I-cxQhfh0Zb9UqQNizC9PiLC41KpUeA9hjiVV02rQRw'
+                          type:
+                            type: string
+                            example: 'lease'
+                          startTimestamp:
+                            type: number
+                            example: 162781440
+                          endTimestamp:
+                            type: number
+                            example: 172781440
+                      owner:
+                        type: string
+                        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                      evaluationOptions:
+                        type: object
+                        example: {}
+            '404':
+              description: Record does not exist in the contract.
+            '503':
+              description: Internal server error.
+  /v1/contract/{contractTxId}/balances/{walletAddress}:
+    get:
+      summary: Returns the balance given contract and wallet address
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+        - in: path
+          name: walletAddress
+          required: true
+          description: The wallet address.
+          schema:
+            type: string
+            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+          responses:
+            '200':
+              description: OK
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      address:
+                        type: string
+                        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                      balance:
+                        type: number
+                        example: 994963650
+                      evaluationOptions:
+                        type: object
+                        example: {}
+            '404':
+              description: Wallet does not have a balance in the contract.
+            '503':
+              description: Internal server error.
 
   /v1/contract/{contractTxId}/interactions:
     get:
@@ -179,7 +276,62 @@ paths:
                       }
         '404':
           description: Contract not found.
-        '500':
+        '503':
+          description: Internal server error.
+  /v1/contract/{contractTxId}/interactions/{walletAddress}:
+    get:
+      summary: Returns the interactions for a given contract created by a given wallet address
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: Transaction ID of the contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+        - in: path
+          name: walletAddress
+          required: true
+          description: The wallet address.
+          schema:
+            type: string
+            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  address:
+                    type: string
+                    example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  interactions:
+                    type: array
+                    example:
+                      [
+                        {
+                          'height': 1242905,
+                          'input':
+                            {
+                              'function': 'evolve',
+                              'value': 'PdBWdSgiNcLw4ge1kveUf8wORcdSaMJsdVXqlQFMPUg',
+                            },
+                          'owner': 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ',
+                          'valid': true,
+                          'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
+                        },
+                      ]
+                  evaluationOptions:
+                    type: object
+                    example: {}
+        '404':
+          description: Contract not found.
+        '503':
           description: Internal server error.
 
   /v1/wallet/{address}/contracts:
@@ -229,7 +381,7 @@ paths:
                       ]
         '404':
           description: Wallet not found.
-        '500':
+        '503':
           description: Internal server error.
 
   /v1/wallet/{address}/contract/{contractTxId}:
@@ -296,5 +448,5 @@ paths:
                       }
         '404':
           description: Wallet not found.
-        '500':
+        '503':
           description: Internal server error.
