@@ -157,7 +157,6 @@ describe('PDNS Service Integration tests', () => {
           'balances',
           'owner',
           'name',
-          'records',
           'ticker',
           'owner',
           'controller',
@@ -182,6 +181,42 @@ describe('PDNS Service Integration tests', () => {
           );
           expect(status).to.equal(404);
         });
+
+        describe('/records?contractTxId', () => {
+          it('should return all records if no filter provided', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId } = data;
+            expect(contractTxId).to.equal(id);
+            expect(Object.keys(data['records'])).to.have.length(2);
+          });
+
+          it('should return records that have contractTxId matching the query filter', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?contractTxId=${process.env.DEPLOYED_ANT_CONTRACT_TX_ID}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId } = data;
+            expect(contractTxId).to.equal(id);
+            expect(Object.keys(data['records'])).to.have.length(1);
+          });
+
+          it('should return empty records if the contractTxId does not match any record object', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?contractTxId=not-a-real-tx-id`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId } = data;
+            expect(contractTxId).to.equal(id);
+            expect(Object.keys(data['records'])).to.have.length(0);
+          });
+        });
+
         describe('/records/:name', () => {
           it('should return the owner of record name when available', async () => {
             const { status, data } = await axios.get(

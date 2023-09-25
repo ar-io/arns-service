@@ -173,6 +173,59 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
   return next();
 }
 
+export async function contractRecordFilterHandler(ctx: KoaContext, next: Next) {
+  const { contractTxId } = ctx.params;
+  const { warp, logger: _logger } = ctx.state;
+  // TODO: add other query filters (e.g. endTimestamp)
+  const { contractTxId: filteredContractTxIds = [] } = ctx.query;
+
+  // normalize to an array
+  const filteredContractTxIdsArray = Array.isArray(filteredContractTxIds)
+    ? filteredContractTxIds
+    : [filteredContractTxIds];
+
+  const logger = _logger.child({
+    contractTxId,
+    filters: {
+      contractTxId: filteredContractTxIdsArray,
+    },
+  });
+
+  const { state, evaluationOptions } = await getContractState({
+    contractTxId,
+    warp,
+    logger,
+  });
+
+  const { records = {} } = state;
+
+  const associatedRecords = Object.entries(records).reduce(
+    (
+      filteredRecords: { [x: string]: any },
+      [record, recordObj]: [string, any],
+    ) => {
+      if (
+        !filteredContractTxIdsArray.length ||
+        // TODO: make this more dynamic based on various filters
+        (recordObj['contractTxId'] &&
+          filteredContractTxIdsArray.includes(recordObj.contractTxId))
+      ) {
+        filteredRecords[record] = recordObj;
+      }
+      return filteredRecords;
+    },
+    {},
+  );
+
+  ctx.body = {
+    contractTxId,
+    records: associatedRecords,
+    // TODO: include filters in response
+    evaluationOptions,
+  };
+  return next();
+}
+
 export async function contractReservedHandler(ctx: KoaContext, next: Next) {
   const { contractTxId, name } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
