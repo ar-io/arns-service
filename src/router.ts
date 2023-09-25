@@ -9,6 +9,7 @@ import {
   contractFieldHandler,
   contractHandler,
   contractInteractionsHandler,
+  contractRecordFilterHandler,
   contractRecordHandler,
   contractReservedHandler,
   prometheusHandler,
@@ -41,20 +42,26 @@ router.get(
   contractInteractionsHandler,
 );
 router.get(
-  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
-  contractFieldHandler,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
+  contractRecordHandler,
+);
+router.get(
+  // handles query params to filter records with a specific contractTxId (e.g. /v1/contract/<ARNS_REGISTRY>/records?contractTxId=<ARNS_CONTRACT_ID>)
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/records`,
+  contractRecordFilterHandler,
 );
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
   contractBalanceHandler,
 );
 router.get(
-  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/records/:name${ARNS_NAME_REGEX}`,
-  contractRecordHandler,
-);
-router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/reserved/:name${ARNS_NAME_REGEX}`,
   contractReservedHandler,
+);
+// fallback for any other contract fields that don't include additional logic (i.e. this just returns partial contract state)
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
+  contractFieldHandler,
 );
 router.get(
   `/v1/wallet/:address${ARNS_CONTRACT_ID_REGEX}/contracts`,

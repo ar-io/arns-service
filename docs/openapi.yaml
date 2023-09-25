@@ -125,6 +125,64 @@ paths:
         '503':
           description: Internal server error.
 
+  /v1/contract/{contractTxId}/records:
+    get:
+      summary: Returns the record objects for a given contract, who's object parameters match query parameters
+      parameters:
+        - in: path
+          name: contractTxId
+          required: true
+          description: ID of the root contract.
+          schema:
+            type: string
+            example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+        - in: query
+          name: contractTxId
+          required: true
+          description: The contractTxID for the records to return
+          schema:
+            type: string
+            example: 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc'
+                  records:
+                    type: array
+                    example:
+                      [
+                        'testname3':
+                          {
+                            'undernames': 100,
+                            'startTimestamp': 1694101828,
+                            'type': 'lease',
+                            'contractTxId': 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA',
+                            'endTimestamp': 1714145976,
+                          },
+                        'testname11':
+                          {
+                            'undernames': 100,
+                            'startTimestamp': 1694101828,
+                            'type': 'lease',
+                            'contractTxId': 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA',
+                            'endTimestamp': 1714581732,
+                          },
+                      ]
+                  evaluationOptions:
+                    type: object
+                    example: {}
+        '404':
+          description: Contract not found.
+        '503':
+          description: Internal server error.
+
   /v1/contract/{contractTxId}/records/{name}:
     get:
       summary: Returns the record object for a given contract and name
