@@ -9,6 +9,7 @@ import {
   EvaluatedContractState,
   EvaluationError,
   NotFoundError,
+  UnknownError,
 } from '../types';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
@@ -190,6 +191,7 @@ export async function getContractState({
      *      response: undefined
      *  }
      */
+
     if (
       error instanceof Error &&
       // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
@@ -197,15 +199,24 @@ export async function getContractState({
         error.message.includes('Use contract.setEvaluationOptions'))
     ) {
       throw new EvaluationError(error.message);
-    } else if (
-      ((error as any).type && (error as any).type.includes('TX_NOT_FOUND')) ||
-      (error as any).includes('TX_INVALID')
-    ) {
-      throw new NotFoundError('Contract not found');
     } else if (error instanceof Error && error.message.includes('404')) {
       throw new NotFoundError(error.message);
+    } else if (
+      (error instanceof Error &&
+        (error as any).type &&
+        (error as any).type.includes('TX_NOT_FOUND')) ||
+      (typeof error === 'string' && (error as string).includes('TX_INVALID'))
+    ) {
+      throw new NotFoundError(`Contract not found. ${error}`);
+    } else if (error instanceof Error) {
+      // likely an error thrown directly by warp, so just rethrow it
+      throw error;
+    } else {
+      // something gnarly happened
+      throw new UnknownError(
+        `Unknown error occurred evaluating contract. ${error}`,
+      );
     }
-    throw error;
   }
 }
 
