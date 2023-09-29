@@ -18,6 +18,7 @@ import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
 import winston from 'winston';
+import { ParsedUrlQuery } from 'querystring';
 
 // cache duplicate requests on the same instance within a short period of time
 const requestMap: Map<string, Promise<any> | undefined> = new Map();
@@ -68,6 +69,43 @@ class ContractManifestCacheKey {
     return { contractTxId: this.contractTxId };
   }
 }
+
+class ContractReadInteractionCacheKey {
+  constructor(
+    public readonly contractTxId: string,
+    public readonly functionName: string,
+    public readonly input: any,
+    public readonly warp: Warp,
+    public readonly evaluationOptions: Partial<EvaluationOptions>,
+    public readonly logger?: winston.Logger,
+  ) {}
+
+  toString(): string {
+    return `${this.contractTxId}-${this.functionName}-${createQueryParamHash(
+      this.input,
+    )}-${createQueryParamHash(this.evaluationOptions)}`;
+  }
+
+  // Facilitate ReadThroughPromiseCache key derivation
+  toJSON() {
+    return { cacheKey: this.toString() };
+  }
+}
+
+// Cache contract read interactions for 30 seconds since block time is around 2 minutes
+const contractReadInteractionCache: ReadThroughPromiseCache<
+  ContractReadInteractionCacheKey,
+  {
+    result: any;
+    evaluationOptions: Partial<EvaluationOptions>;
+  }
+> = new ReadThroughPromiseCache({
+  cacheParams: {
+    cacheCapacity: 100,
+    cacheTTL: 1000 * 30, // 30 seconds
+  },
+  readThroughFunction: readThroughToContractReadInteraction,
+});
 
 // Aggressively cache contract manifests since they're permanent on chain
 const contractManifestCache: ReadThroughPromiseCache<
@@ -156,6 +194,49 @@ async function readThroughToContractState(
   };
 }
 
+export function handleWarpErrors(error: unknown): Error {
+  /**
+   * Warp throws various errors that we need to parse to know what status code to return to clients.
+   * They also don't expose their error types in the SDK, hence why we have to cast to any for some of these checks.
+   *
+   * e.g.
+   *
+   * ArweaveError
+   *    at Transactions.get (/../transactions.ts:94:13)
+   *    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+   *    at async ReadThroughPromiseCache.readThroughToContractManifest [as readThroughFunction] (~/src/api/warp.ts:208:33) {
+   *      type: 'TX_NOT_FOUND',
+   *      response: undefined
+   *  }
+   */
+
+  if (
+    error instanceof Error &&
+    // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
+    (error.message.includes('Cannot proceed with contract evaluation') ||
+      error.message.includes('Use contract.setEvaluationOptions'))
+  ) {
+    return new EvaluationError(error.message);
+  } else if (error instanceof Error && error.message.includes('404')) {
+    return new NotFoundError(error.message);
+  } else if (
+    (error instanceof Error &&
+      (error as any).type &&
+      (error as any).type.includes('TX_NOT_FOUND')) ||
+    (typeof error === 'string' && (error as string).includes('TX_INVALID'))
+  ) {
+    throw new NotFoundError(`Contract not found. ${error}`);
+  } else if (error instanceof Error) {
+    // likely an error thrown directly by warp, so just rethrow it
+    return error;
+  } else {
+    // something gnarly happened
+    return new UnknownError(
+      `Unknown error occurred evaluating contract. ${error}`,
+    );
+  }
+}
+
 // TODO: we can put this in a interface/class and update the resolved type
 export async function getContractState({
   contractTxId,
@@ -177,46 +258,119 @@ export async function getContractState({
       new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
     );
   } catch (error) {
-    /**
-     * Warp throws various errors that we need to parse to know what status code to return to clients.
-     * They also don't expose their error types in the SDK, hence why we have to cast to any for some of these checks.
-     *
-     * e.g.
-     *
-     * ArweaveError
-     *    at Transactions.get (/../transactions.ts:94:13)
-     *    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-     *    at async ReadThroughPromiseCache.readThroughToContractManifest [as readThroughFunction] (~/src/api/warp.ts:208:33) {
-     *      type: 'TX_NOT_FOUND',
-     *      response: undefined
-     *  }
-     */
+    throw handleWarpErrors(error);
+  }
+}
 
-    if (
-      error instanceof Error &&
-      // reference: https://github.com/warp-contracts/warp/blob/92e3ec4bffdea27abb791c38b77a115d7c8bd8f5/src/contract/EvaluationOptionsEvaluator.ts#L134-L162
-      (error.message.includes('Cannot proceed with contract evaluation') ||
-        error.message.includes('Use contract.setEvaluationOptions'))
-    ) {
-      throw new EvaluationError(error.message);
-    } else if (error instanceof Error && error.message.includes('404')) {
-      throw new NotFoundError(error.message);
-    } else if (
-      (error instanceof Error &&
-        (error as any).type &&
-        (error as any).type.includes('TX_NOT_FOUND')) ||
-      (typeof error === 'string' && (error as string).includes('TX_INVALID'))
-    ) {
-      throw new NotFoundError(`Contract not found. ${error}`);
-    } else if (error instanceof Error) {
-      // likely an error thrown directly by warp, so just rethrow it
-      throw error;
-    } else {
-      // something gnarly happened
-      throw new UnknownError(
-        `Unknown error occurred evaluating contract. ${error}`,
+export async function readThroughToContractReadInteraction(
+  cacheKey: ContractReadInteractionCacheKey,
+): Promise<{
+  result: any;
+  evaluationOptions: Partial<EvaluationOptions>;
+}> {
+  const { contractTxId, evaluationOptions, warp, logger, functionName, input } =
+    cacheKey;
+  logger?.debug('Reading through to contract read interaction...', {
+    contractTxId,
+    cacheKey: cacheKey.toString(),
+  });
+  const cacheId = cacheKey.toString();
+
+  // Prevent multiple in-flight requests for the same contract state
+  // This could be needed if the read through cache gets overwhelmed
+  const inFlightRequest = requestMap.get(cacheId);
+  if (inFlightRequest) {
+    logger?.debug('Deduplicating in flight requests for read interaction...', {
+      contractTxId,
+      cacheKey: cacheKey.toString(),
+    });
+    const { result } = await inFlightRequest;
+    return {
+      result,
+      evaluationOptions,
+    };
+  }
+
+  logger?.debug('Evaluating contract read interaction...', {
+    contractTxId,
+    cacheKey: cacheKey.toString(),
+  });
+
+  // use the combined evaluation options
+  const contract = warp
+    .contract(contractTxId)
+    .setEvaluationOptions(evaluationOptions);
+
+  // set cached value for multiple requests during initial promise
+  const readInteractionPromise = contract.viewState({
+    function: functionName,
+    ...input,
+  });
+  requestMap.set(cacheId, readInteractionPromise);
+
+  readInteractionPromise
+    .catch((error: unknown) => {
+      logger?.debug('Failed to evaluate read interaction on contract!', {
+        contractTxId,
+        cacheKey: cacheKey.toString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    })
+    .finally(() => {
+      logger?.debug('Removing request from in-flight cache.', {
+        cacheId,
+      });
+      // remove the cached request whether it completes or fails
+      requestMap.delete(cacheId);
+    });
+
+  // await the response
+  const { result } = await requestMap.get(cacheId);
+  logger?.debug('Successfully evaluated read interaction on contract.', {
+    contractTxId,
+    cacheKey: cacheKey.toString(),
+  });
+
+  return {
+    result,
+    evaluationOptions,
+  };
+}
+
+export async function getContractReadInteraction({
+  contractTxId,
+  warp,
+  logger,
+  functionName,
+  input,
+}: {
+  contractTxId: string;
+  warp: Warp;
+  logger: winston.Logger;
+  functionName: string;
+  input: ParsedUrlQuery;
+}): Promise<{
+  result: any;
+  evaluationOptions: Partial<EvaluationOptions>;
+}> {
+  try {
+    const { evaluationOptions = DEFAULT_EVALUATION_OPTIONS } =
+      await contractManifestCache.get(
+        new ContractManifestCacheKey(contractTxId, warp.arweave, logger),
       );
-    }
+    // use the combined evaluation options
+    return await contractReadInteractionCache.get(
+      new ContractReadInteractionCacheKey(
+        contractTxId,
+        functionName,
+        input,
+        warp,
+        evaluationOptions,
+        logger,
+      ),
+    );
+  } catch (error) {
+    throw handleWarpErrors(error);
   }
 }
 

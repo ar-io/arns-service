@@ -72,6 +72,11 @@ export type EvaluatedContractState = EvalStateResult<any> & {
   evaluationOptions?: Partial<EvaluationOptions>;
 };
 
+export type EvaluatedReadInteraction = {
+  result: any;
+  evaluationOptions?: Partial<EvaluationOptions>;
+};
+
 // Error types
 
 export class EvaluationError extends Error {}
