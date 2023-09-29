@@ -276,6 +276,7 @@ export async function contractReadInteractionHandler(
   });
 
   ctx.body = {
+    contractTxId,
     result,
     evaluationOptions,
   };
