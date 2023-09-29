@@ -9,6 +9,7 @@ import {
   contractFieldHandler,
   contractHandler,
   contractInteractionsHandler,
+  contractReadInteractionHandler,
   contractRecordFilterHandler,
   contractRecordHandler,
   contractReservedHandler,
@@ -16,6 +17,8 @@ import {
   walletContractHandler,
 } from './routes';
 import { swaggerDocs } from './routes/swagger';
+import { KoaContext } from './types';
+import { Next } from 'koa';
 
 const router: Router = new Router();
 
@@ -53,6 +56,17 @@ router.get(
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/balances/:address${ARNS_CONTRACT_ID_REGEX}`,
   contractBalanceHandler,
+);
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/auctions/:name${ARNS_NAME_REGEX}`,
+  (ctx: KoaContext, next: Next) => {
+    // set params for auction read interaction
+    ctx.params.functionName = 'auction';
+    ctx.query = {
+      name: ctx.params.name,
+    };
+    return contractReadInteractionHandler(ctx, next);
+  },
 );
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/reserved/:name${ARNS_NAME_REGEX}`,

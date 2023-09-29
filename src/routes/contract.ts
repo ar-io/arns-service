@@ -6,7 +6,7 @@ import {
   KoaContext,
   NotFoundError,
 } from '../types';
-import { getContractState } from '../api/warp';
+import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
@@ -251,5 +251,33 @@ export async function contractReservedHandler(ctx: KoaContext, next: Next) {
   };
 
   ctx.body = response;
+  return next();
+}
+
+export async function contractReadInteractionHandler(
+  ctx: KoaContext,
+  next: Next,
+) {
+  const { contractTxId, functionName } = ctx.params;
+  const { warp, logger: _logger } = ctx.state;
+  const { query: input } = ctx.request;
+
+  const logger = _logger.child({
+    contractTxId,
+    functionName,
+  });
+
+  const { result, evaluationOptions } = await getContractReadInteraction({
+    contractTxId,
+    warp,
+    logger,
+    functionName,
+    input,
+  });
+
+  ctx.body = {
+    result,
+    evaluationOptions,
+  };
   return next();
 }
