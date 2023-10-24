@@ -222,10 +222,10 @@ export function handleWarpErrors(error: unknown): Error {
   } else if (
     (error instanceof Error &&
       (error as any).type &&
-      (error as any).type.includes('TX_NOT_FOUND')) ||
+      ['TX_NOT_FOUND', 'TX_INVALID'].includes((error as any).type)) ||
     (typeof error === 'string' && (error as string).includes('TX_INVALID'))
   ) {
-    throw new NotFoundError(`Contract not found. ${error}`);
+    return new NotFoundError(`Contract not found. ${error}`);
   } else if (error instanceof Error) {
     // likely an error thrown directly by warp, so just rethrow it
     return error;
@@ -382,7 +382,12 @@ async function readThroughToContractManifest({
   logger?.debug('Reading through to contract manifest...', {
     contractTxId,
   });
-  const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
+  const { tags: encodedTags } = await arweave.transactions
+    .get(contractTxId)
+    .catch((error: unknown) => {
+      logger?.error('Failed to get contract manifest!', error);
+      throw handleWarpErrors(error);
+    });
   const decodedTags = tagsToObject(encodedTags);
   // this may not exist, so provided empty json object string as default
   const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
