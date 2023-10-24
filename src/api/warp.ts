@@ -225,7 +225,7 @@ export function handleWarpErrors(error: unknown): Error {
       ['TX_NOT_FOUND', 'TX_INVALID'].includes((error as any).type)) ||
     (typeof error === 'string' && (error as string).includes('TX_INVALID'))
   ) {
-    throw new NotFoundError(`Contract not found. ${error.toString()}`);
+    throw new NotFoundError(`Contract not found. ${error}`);
   } else if (error instanceof Error) {
     // likely an error thrown directly by warp, so just rethrow it
     return error;
