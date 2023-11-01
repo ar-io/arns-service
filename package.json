@@ -38,7 +38,7 @@
     "koa2-swagger-ui": "^5.8.0",
     "lodash": "^4.17.21",
     "prom-client": "^14.2.0",
-    "warp-contracts": "^1.4.21",
+    "warp-contracts": "^1.4.22",
     "warp-contracts-lmdb": "^1.1.10",
     "winston": "^3.8.2",
     "yaml": "^2.3.1"
