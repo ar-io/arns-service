@@ -22,7 +22,12 @@ const warp = WarpFactory.forMainnet(
   },
   true,
   arweave,
-).useStateCache(new LmdbCache(defaultCacheOptions));
+).useStateCache(
+  new LmdbCache(defaultCacheOptions, {
+    maxEntriesPerContract: 1000,
+    minEntriesPerContract: 10,
+  }),
+);
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
