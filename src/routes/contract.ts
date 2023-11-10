@@ -15,7 +15,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   logger.debug('Fetching contract state', {
     contractTxId,
   });
-  const { state, evaluationOptions } = await getContractState({
+  const { state, evaluationOptions, sortKey } = await getContractState({
     contractTxId,
     warp,
     logger,
@@ -23,6 +23,7 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
   ctx.body = {
     contractTxId,
     state,
+    sortKey,
     evaluationOptions,
   };
 

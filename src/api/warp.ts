@@ -144,9 +144,10 @@ async function readThroughToContractState(
       contractTxId,
       cacheKey: cacheKey.toString(),
     });
-    const { cachedValue } = await inFlightRequest;
+    const { cachedValue, sortKey } = await inFlightRequest;
     return {
       ...cachedValue,
+      sortKey,
       evaluationOptions,
     };
   }
@@ -182,14 +183,16 @@ async function readThroughToContractState(
     });
 
   // await the response
-  const { cachedValue } = await requestMap.get(cacheId);
+  const { cachedValue, sortKey } = await requestMap.get(cacheId);
   logger?.debug('Successfully evaluated contract state.', {
     contractTxId,
     cacheKey: cacheKey.toString(),
+    sortKey,
   });
 
   return {
     ...cachedValue,
+    sortKey,
     evaluationOptions,
   };
 }
