@@ -69,7 +69,8 @@ export type ContractReservedResponse = ContractBaseResponse & {
 // Warp types
 
 export type EvaluatedContractState = EvalStateResult<any> & {
-  evaluationOptions?: Partial<EvaluationOptions>;
+  evaluationOptions: Partial<EvaluationOptions>;
+  sortKey: string;
 };
 
 export type EvaluatedReadInteraction = {
