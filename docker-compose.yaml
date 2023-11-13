@@ -14,9 +14,9 @@ services:
         NODE_VERSION_SHORT: ${NODE_VERSION_SHORT:-18}
     environment:
       NODE_ENV: ${NODE_ENV:-dev}
-      GATEWAY_HOST: arlocal
-      GATEWAY_PORT: 1984
-      GATEWAY_PROTOCOL: http
+      GATEWAY_HOST: ${GATEWAY_HOST:-arlocal}
+      GATEWAY_PORT: ${GATEWAY_PORT:-1984}
+      GATEWAY_PROTOCOL: ${GATEWAY_PROTOCOL:-http}
     ports:
       - '3000:3000'
 
