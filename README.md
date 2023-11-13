@@ -40,13 +40,23 @@ docker run -p 3000:3000 arns-service
 The service leverages `warp-sdk` to retrieve, evaluate and cache contract state. To request a contract state, run:
 
 ```shell
-curl localhost:3000/v1/contract/CONTRACT_ID
+curl localhost:3000/v1/contract/${CONTRACT_ID}
 ```
 
 e.g.
 
 ```shell
 curl localhost:3000/v1/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
+```
+
+For more advanced features of Warp caching and state evaluation (e.g. D.R.E nodes), refer to the [Warp] documentation.
+
+### LMDB
+
+This service uses the `warp-contracts-lmdb` for storing contract state. The LMDB is stored in the `./cache` directory. To clear the LMDB, run:
+
+```shell
+rm -rf ./cache
 ```
 
 ### Evaluation Options
@@ -84,9 +94,29 @@ yarn docker:integration
 
 ## Swagger
 
-TODO
+[Swagger] is used for endpoint documentation and testing. When running the service, you can load the Swagger UI in your browser at:
+
+```shell
+http://localhost:3000/api-docs
+```
+
+For production, the Swagger UI is available at:
+
+```shell
+https://api.arns.app/api-docs
+```
 
 ## Contributions
 
 - Build to interfaces
 - Integration tests take precedent over unit tests
+- Use [conventional commits] for commit messages
+- Use [prettier] for code formatting
+- Use [eslint] for linting
+- Use [swagger] for API documentation
+
+[Swagger]: https://swagger.io/
+[conventional commits]: https://www.conventionalcommits.org/en/v1.0.0/
+[prettier]: https://prettier.io/
+[eslint]: https://eslint.org/
+[Warp]: https://academy.warp.cc/docs/docs-intro
