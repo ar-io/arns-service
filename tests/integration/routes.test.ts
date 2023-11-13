@@ -30,7 +30,7 @@ const axios = axiosPackage.create({
   baseURL: serviceURL,
   validateStatus: () => true, // don't throw errors
 });
-describe('PDNS Service Integration tests', () => {
+describe('Integration tests', () => {
   let ids: string[] = [];
   let id: string;
   let walletAddress: string;
@@ -138,6 +138,20 @@ describe('PDNS Service Integration tests', () => {
             '/v1/contract/kbtXub0JcZYfBn7-WUgkFQjKmZb4y5DY2nT8WovBhWY',
           );
           expect(status).to.equal(404);
+        });
+      });
+      describe('/:contractTxId/price', () => {
+        it('should properly handle price interaction inputs', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/price?qty=100`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, result, evaluationOptions } = data;
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(result).to.include.keys(['price']);
+          expect(result.price).to.equal(100);
         });
       });
 

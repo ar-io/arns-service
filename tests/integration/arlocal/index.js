@@ -70,6 +70,10 @@ export function handle(state, action) {
     return { state };
   }
 
+  if (input.function === 'priceForInteraction') {
+    return { result: { price: input.qty } };
+  }
+
   throw new ContractError(
     `No function supplied or function not recognized: "${input.function}"`,
   );
