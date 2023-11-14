@@ -350,6 +350,11 @@ export async function readThroughToContractReadInteraction(
 
   // we shouldn't return read interactions that don't have a result
   if (!result) {
+    logger?.error('Read interaction did not return a result!', {
+      contractTxId,
+      cacheKey: cacheKey.toString(),
+      input,
+    });
     throw new BadRequestError(
       `Invalid read interaction for contract ${contractTxId}.`,
     );
