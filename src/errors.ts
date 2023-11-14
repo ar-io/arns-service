@@ -22,3 +22,8 @@ export class EvaluationTimeoutError extends Error {
     super(`State evaluation exceeded limit of ${EVALUATION_TIMEOUT_MS}ms.`);
   }
 }
+
+export class EvaluationError extends Error {}
+export class NotFoundError extends Error {}
+export class UnknownError extends Error {}
+export class BadRequestError extends Error {}
