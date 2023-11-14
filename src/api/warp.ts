@@ -351,7 +351,7 @@ export async function readThroughToContractReadInteraction(
   // we shouldn't return read interactions that don't have a result
   if (!result) {
     throw new BadRequestError(
-      `Read interaction failed to evaluate for contract ${contractTxId}.`,
+      `Invalid read interaction for contract ${contractTxId}.`,
     );
   }
 
