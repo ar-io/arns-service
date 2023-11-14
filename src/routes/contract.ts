@@ -20,10 +20,10 @@ import {
   ContractRecordResponse,
   ContractReservedResponse,
   KoaContext,
-  NotFoundError,
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
+import { NotFoundError } from '../errors';
 
 export async function contractHandler(ctx: KoaContext, next: Next) {
   const { logger, warp } = ctx.state;

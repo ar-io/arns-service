@@ -20,13 +20,13 @@ import {
   EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
+import { ContractType, EvaluatedContractState } from '../types';
 import {
-  ContractType,
-  EvaluatedContractState,
+  BadRequestError,
   EvaluationError,
   NotFoundError,
   UnknownError,
-} from '../types';
+} from '../errors';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
@@ -189,6 +189,7 @@ async function readThroughToContractState(
         cacheKey: cacheKey.toString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });
+      throw error;
     })
     .finally(() => {
       logger?.debug('Removing request from in-flight cache.', {
@@ -334,6 +335,7 @@ export async function readThroughToContractReadInteraction(
         cacheKey: cacheKey.toString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });
+      throw error;
     })
     .finally(() => {
       logger?.debug('Removing request from in-flight cache.', {
@@ -345,6 +347,14 @@ export async function readThroughToContractReadInteraction(
 
   // await the response
   const { result } = await requestMap.get(cacheId);
+
+  // we shouldn't return read interactions that don't have a result
+  if (!result) {
+    throw new BadRequestError(
+      `Read interaction failed to evaluate for contract ${contractTxId}.`,
+    );
+  }
+
   logger?.debug('Successfully evaluated read interaction on contract.', {
     contractTxId,
     cacheKey: cacheKey.toString(),

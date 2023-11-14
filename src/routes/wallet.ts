@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { Next } from 'koa';
-import { BadRequestError, KoaContext } from '../types';
+import { KoaContext } from '../types';
 import {
   getContractsTransferredToOrControlledByWallet,
   getDeployedContractsByWallet,
@@ -23,6 +23,7 @@ import {
 import { isValidContractType, validateStateWithTimeout } from '../api/warp';
 import { allowedContractTypes } from '../constants';
 import * as _ from 'lodash';
+import { BadRequestError } from '../errors';
 
 export async function walletContractHandler(ctx: KoaContext, next: Next) {
   const { address } = ctx.params;

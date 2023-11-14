@@ -16,7 +16,7 @@
  */
 import { KoaContext } from '../types';
 import { Next } from 'koa';
-import { BadRequestError, EvaluationError, NotFoundError } from '../types';
+import { BadRequestError, EvaluationError, NotFoundError } from '../errors';
 
 // globally handle errors and return proper status based on their type
 export async function errorMiddleware(ctx: KoaContext, next: Next) {
