@@ -284,12 +284,25 @@ export async function contractReadInteractionHandler(
     functionName,
   });
 
+  const parsedInput = Object.entries(input).reduce(
+    (parsedParams: { [x: string]: any }, [key, value]) => {
+      // parse known integer values
+      if (typeof value === 'string' && !isNaN(+value)) {
+        parsedParams[key] = +value;
+        return parsedParams;
+      }
+      parsedParams[key] = value;
+      return parsedParams;
+    },
+    {},
+  );
+
   const { result, evaluationOptions } = await getContractReadInteraction({
     contractTxId,
     warp,
     logger,
     functionName,
-    input,
+    input: parsedInput,
   });
 
   ctx.body = {

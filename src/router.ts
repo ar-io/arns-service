@@ -86,6 +86,14 @@ router.get(
     return contractReadInteractionHandler(ctx, next);
   },
 );
+router.get(
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/price`,
+  (ctx: KoaContext, next: Next) => {
+    // set params for auction read interaction and then use our generic handler
+    ctx.params.functionName = 'priceForInteraction';
+    return contractReadInteractionHandler(ctx, next);
+  },
+);
 // generic handler that handles read APIs for any contract function
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/read/:functionName`,
