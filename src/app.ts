@@ -52,6 +52,16 @@ process.on('uncaughtException', (err) => {
   errorCounter.inc();
 });
 
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, exiting...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, exiting...');
+  process.exit(0);
+});
+
 const serverConfigs = {
   port: +(process.env.PORT || 3000),
   keepAliveTimeout: 120_000, // two minute timeout for connections

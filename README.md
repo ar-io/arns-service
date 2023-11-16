@@ -32,8 +32,10 @@ Build and run the container:
 
 ```shell
 docker build --build-arg NODE_VERSION=$(cat .nvmrc |cut -c2-8) --build-arg NODE_VERSION_SHORT=$(cat .nvmrc |cut -c2-3) . -t arns-service
-docker run -p 3000:3000 arns-service
+docker run -e PORT=3000 -p 3000:3000 arns-service
 ```
+
+You can run on a different port by changing the `-e PORT=3000 -p 3000:3000` to `-e PORT=4000 -p 4000:4000`, for example.
 
 ## Warp
 
