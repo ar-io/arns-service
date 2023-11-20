@@ -39,10 +39,16 @@ const warp = WarpFactory.forMainnet(
   true,
   arweave,
 ).useStateCache(
-  new LmdbCache(defaultCacheOptions, {
-    maxEntriesPerContract: 1000,
-    minEntriesPerContract: 0,
-  }),
+  new LmdbCache(
+    {
+      ...defaultCacheOptions,
+      inMemory: false,
+    },
+    {
+      maxEntriesPerContract: 1000,
+      minEntriesPerContract: 0,
+    },
+  ),
 );
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
