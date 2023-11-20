@@ -15,11 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import Router from '@koa/router';
-import {
-  ARNS_CONTRACT_FIELD_REGEX,
-  ARNS_CONTRACT_ID_REGEX,
-  ARNS_NAME_REGEX,
-} from './constants';
+import { ARNS_CONTRACT_ID_REGEX, ARNS_NAME_REGEX } from './constants';
 import {
   contractBalanceHandler,
   contractFieldHandler,
@@ -104,7 +100,7 @@ router.get(
 );
 // fallback for any other contract fields that don't include additional logic (i.e. this just returns partial contract state)
 router.get(
-  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/:field${ARNS_CONTRACT_FIELD_REGEX}`,
+  `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/:field`,
   contractFieldHandler,
 );
 router.get(
