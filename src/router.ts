@@ -34,7 +34,6 @@ import {
 } from './routes';
 import { swaggerDocs } from './routes/swagger';
 import { KoaContext } from './types';
-import { Next } from 'koa';
 
 const router: Router = new Router();
 
@@ -76,22 +75,22 @@ router.get(
 // RESTful API to easy get auction prices
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/auctions/:name${ARNS_NAME_REGEX}`,
-  (ctx: KoaContext, next: Next) => {
+  (ctx: KoaContext) => {
     // set params for auction read interaction and then use our generic handler
     ctx.params.functionName = 'auction';
     ctx.query = {
       ...ctx.query,
       name: ctx.params.name,
     };
-    return contractReadInteractionHandler(ctx, next);
+    return contractReadInteractionHandler(ctx);
   },
 );
 router.get(
   `/v1/contract/:contractTxId${ARNS_CONTRACT_ID_REGEX}/price`,
-  (ctx: KoaContext, next: Next) => {
+  (ctx: KoaContext) => {
     // set params for auction read interaction and then use our generic handler
     ctx.params.functionName = 'priceForInteraction';
-    return contractReadInteractionHandler(ctx, next);
+    return contractReadInteractionHandler(ctx);
   },
 );
 // generic handler that handles read APIs for any contract function

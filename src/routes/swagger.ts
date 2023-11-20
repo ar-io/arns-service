@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { readFileSync } from 'fs';
-import { Next } from 'koa';
+
 import { koaSwagger } from 'koa2-swagger-ui';
 import YAML from 'yaml';
 
@@ -30,9 +30,8 @@ function loadSwaggerYAML() {
     throw Error('OpenAPI spec could not be read!');
   }
 }
-export function swaggerDocsJSON(ctx: KoaContext, next: Next) {
+export function swaggerDocsJSON(ctx: KoaContext) {
   ctx.response.body = JSON.stringify(loadSwaggerYAML(), null, 2);
-  return next();
 }
 
 export const swaggerDocs = koaSwagger({

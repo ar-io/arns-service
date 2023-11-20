@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { Next } from 'koa';
+
 import { KoaContext } from '../types.js';
 import * as promClient from 'prom-client';
 
 const metricsRegistry = promClient.register;
 promClient.collectDefaultMetrics({ register: metricsRegistry });
 
-export async function prometheusHandler(ctx: KoaContext, next: Next) {
+export async function prometheusHandler(ctx: KoaContext) {
   ctx.body = await metricsRegistry.metrics();
-  return next();
 }
