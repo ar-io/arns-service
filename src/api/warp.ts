@@ -121,7 +121,8 @@ class ContractReadInteractionCacheKey {
 const contractReadInteractionCache: ReadThroughPromiseCache<
   ContractReadInteractionCacheKey,
   {
-    result: any;
+    result: unknown;
+    input: unknown;
     evaluationOptions: Partial<EvaluationOptions>;
   }
 > = new ReadThroughPromiseCache({
@@ -382,11 +383,13 @@ export async function readThroughToContractReadInteraction(
 
   const { result, error, errorMessage } = readInteractionResult;
 
-  if (error) {
+  if (error || errorMessage) {
     logger?.error('Read interaction failed!', {
       contractTxId,
       cacheKey: cacheKey.toString(),
       input,
+      error,
+      errorMessage,
     });
     throw new EvaluationError(errorMessage);
   }
