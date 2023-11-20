@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { Next } from 'koa';
 
 import {
   ContractRecordResponse,
@@ -25,7 +24,7 @@ import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 import { NotFoundError } from '../errors';
 
-export async function contractHandler(ctx: KoaContext, next: Next) {
+export async function contractHandler(ctx: KoaContext) {
   const { logger, warp } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
@@ -42,11 +41,9 @@ export async function contractHandler(ctx: KoaContext, next: Next) {
     sortKey,
     evaluationOptions,
   };
-
-  return next();
 }
 
-export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
+export async function contractInteractionsHandler(ctx: KoaContext) {
   const { arweave, logger, warp } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
@@ -85,11 +82,9 @@ export async function contractInteractionsHandler(ctx: KoaContext, next: Next) {
     ...(address ? { address } : {}), // only include address if it was provided
     evaluationOptions,
   };
-
-  return next();
 }
 
-export async function contractFieldHandler(ctx: KoaContext, next: Next) {
+export async function contractFieldHandler(ctx: KoaContext) {
   const { contractTxId, field } = ctx.params;
   const { logger, warp } = ctx.state;
   logger.debug('Fetching contract field', {
@@ -114,11 +109,9 @@ export async function contractFieldHandler(ctx: KoaContext, next: Next) {
     [field]: contractField,
     evaluationOptions,
   };
-
-  return next();
 }
 
-export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
+export async function contractBalanceHandler(ctx: KoaContext) {
   const { contractTxId, address } = ctx.params;
   const { logger, warp } = ctx.state;
   logger.debug('Fetching contract balance for wallet', {
@@ -138,10 +131,9 @@ export async function contractBalanceHandler(ctx: KoaContext, next: Next) {
     balance: balance ?? 0,
     evaluationOptions,
   };
-  return next();
 }
 
-export async function contractRecordHandler(ctx: KoaContext, next: Next) {
+export async function contractRecordHandler(ctx: KoaContext) {
   const { contractTxId, name } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
 
@@ -187,10 +179,9 @@ export async function contractRecordHandler(ctx: KoaContext, next: Next) {
   }
 
   ctx.body = response;
-  return next();
 }
 
-export async function contractRecordFilterHandler(ctx: KoaContext, next: Next) {
+export async function contractRecordFilterHandler(ctx: KoaContext) {
   const { contractTxId } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
   // TODO: add other query filters (e.g. endTimestamp)
@@ -240,10 +231,9 @@ export async function contractRecordFilterHandler(ctx: KoaContext, next: Next) {
     // TODO: include filters in response
     evaluationOptions,
   };
-  return next();
 }
 
-export async function contractReservedHandler(ctx: KoaContext, next: Next) {
+export async function contractReservedHandler(ctx: KoaContext) {
   const { contractTxId, name } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
 
@@ -268,13 +258,9 @@ export async function contractReservedHandler(ctx: KoaContext, next: Next) {
   };
 
   ctx.body = response;
-  return next();
 }
 
-export async function contractReadInteractionHandler(
-  ctx: KoaContext,
-  next: Next,
-) {
+export async function contractReadInteractionHandler(ctx: KoaContext) {
   const { contractTxId, functionName } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
   const { query: input } = ctx.request;
@@ -310,5 +296,4 @@ export async function contractReadInteractionHandler(
     result,
     evaluationOptions,
   };
-  return next();
 }

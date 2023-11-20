@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { Next } from 'koa';
+
 import { KoaContext } from '../types';
 import {
   getContractsTransferredToOrControlledByWallet,
@@ -25,7 +25,7 @@ import { allowedContractTypes } from '../constants';
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
 
-export async function walletContractHandler(ctx: KoaContext, next: Next) {
+export async function walletContractHandler(ctx: KoaContext) {
   const { address } = ctx.params;
   const { logger, arweave, warp } = ctx.state;
   const { type } = ctx.query;
@@ -93,6 +93,4 @@ export async function walletContractHandler(ctx: KoaContext, next: Next) {
     contractTxIds: _.compact(validContractsOfType),
     type,
   };
-
-  return next();
 }
