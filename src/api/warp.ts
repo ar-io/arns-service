@@ -14,19 +14,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { EvaluationManifest, EvaluationOptions, Warp } from 'warp-contracts';
+import {
+  EvalStateResult,
+  EvaluationManifest,
+  EvaluationOptions,
+  InteractionResult,
+  SortKeyCacheResult,
+  Warp,
+} from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
   EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
-import {
-  BadRequestError,
-  EvaluationError,
-  NotFoundError,
-  UnknownError,
-} from '../errors';
+import { EvaluationError, NotFoundError, UnknownError } from '../errors';
 import * as _ from 'lodash';
 import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
@@ -37,7 +39,14 @@ import winston from 'winston';
 import { ParsedUrlQuery } from 'querystring';
 
 // cache duplicate requests on the same instance within a short period of time
-const requestMap: Map<string, Promise<any> | undefined> = new Map();
+const stateRequestMap: Map<
+  string,
+  Promise<SortKeyCacheResult<EvalStateResult<unknown>>>
+> = new Map();
+const readRequestMap: Map<
+  string,
+  Promise<InteractionResult<unknown, unknown>>
+> = new Map();
 
 // Convenience class for read through caching
 class ContractStateCacheKey {
@@ -112,7 +121,8 @@ class ContractReadInteractionCacheKey {
 const contractReadInteractionCache: ReadThroughPromiseCache<
   ContractReadInteractionCacheKey,
   {
-    result: any;
+    result: unknown;
+    input: unknown;
     evaluationOptions: Partial<EvaluationOptions>;
   }
 > = new ReadThroughPromiseCache({
@@ -154,7 +164,7 @@ async function readThroughToContractState(
 
   // Prevent multiple in-flight requests for the same contract state
   // This could be needed if the read through cache gets overwhelmed
-  const inFlightRequest = requestMap.get(cacheId);
+  const inFlightRequest = stateRequestMap.get(cacheId);
   if (inFlightRequest) {
     logger?.debug('Deduplicating in flight requests for contract state...', {
       contractTxId,
@@ -180,7 +190,7 @@ async function readThroughToContractState(
 
   // set cached value for multiple requests during initial promise
   const readStatePromise = contract.readState();
-  requestMap.set(cacheId, readStatePromise);
+  stateRequestMap.set(cacheId, readStatePromise);
 
   readStatePromise
     .catch((error: unknown) => {
@@ -196,11 +206,20 @@ async function readThroughToContractState(
         cacheId,
       });
       // remove the cached request whether it completes or fails
-      requestMap.delete(cacheId);
+      stateRequestMap.delete(cacheId);
     });
 
   // await the response
-  const { cachedValue, sortKey } = await requestMap.get(cacheId);
+  const stateEvaluationResult = await stateRequestMap.get(cacheId);
+  if (!stateEvaluationResult) {
+    logger?.error('Contract state did not return a result!', {
+      contractTxId,
+      cacheKey: cacheKey.toString(),
+    });
+    throw new UnknownError(`Unknown error occurred evaluating contract state.`);
+  }
+
+  const { cachedValue, sortKey } = stateEvaluationResult;
   logger?.debug('Successfully evaluated contract state.', {
     contractTxId,
     cacheKey: cacheKey.toString(),
@@ -285,8 +304,9 @@ export async function getContractState({
 export async function readThroughToContractReadInteraction(
   cacheKey: ContractReadInteractionCacheKey,
 ): Promise<{
-  result: any;
+  result: unknown;
   evaluationOptions: Partial<EvaluationOptions>;
+  input: unknown;
 }> {
   const { contractTxId, evaluationOptions, warp, logger, functionName, input } =
     cacheKey;
@@ -298,7 +318,7 @@ export async function readThroughToContractReadInteraction(
 
   // Prevent multiple in-flight requests for the same contract state
   // This could be needed if the read through cache gets overwhelmed
-  const inFlightRequest = requestMap.get(cacheId);
+  const inFlightRequest = readRequestMap.get(cacheId);
   if (inFlightRequest) {
     logger?.debug('Deduplicating in flight requests for read interaction...', {
       contractTxId,
@@ -307,6 +327,7 @@ export async function readThroughToContractReadInteraction(
     const { result } = await inFlightRequest;
     return {
       result,
+      input,
       evaluationOptions,
     };
   }
@@ -326,7 +347,7 @@ export async function readThroughToContractReadInteraction(
     function: functionName,
     ...input,
   });
-  requestMap.set(cacheId, readInteractionPromise);
+  readRequestMap.set(cacheId, readInteractionPromise);
 
   readInteractionPromise
     .catch((error: unknown) => {
@@ -342,22 +363,35 @@ export async function readThroughToContractReadInteraction(
         cacheId,
       });
       // remove the cached request whether it completes or fails
-      requestMap.delete(cacheId);
+      readRequestMap.delete(cacheId);
     });
 
   // await the response
-  const { result } = await requestMap.get(cacheId);
+  const readInteractionResult = await readRequestMap.get(cacheId);
 
   // we shouldn't return read interactions that don't have a result
-  if (!result) {
+  if (!readInteractionResult) {
     logger?.error('Read interaction did not return a result!', {
       contractTxId,
       cacheKey: cacheKey.toString(),
       input,
     });
-    throw new BadRequestError(
-      `Invalid read interaction for contract ${contractTxId}.`,
+    throw new UnknownError(
+      `Failed to evaluate read interaction for ${contractTxId}.`,
     );
+  }
+
+  const { result, error, errorMessage } = readInteractionResult;
+
+  if (error || errorMessage) {
+    logger?.error('Read interaction failed!', {
+      contractTxId,
+      cacheKey: cacheKey.toString(),
+      input,
+      error,
+      errorMessage,
+    });
+    throw new EvaluationError(errorMessage);
   }
 
   logger?.debug('Successfully evaluated read interaction on contract.', {
@@ -367,6 +401,7 @@ export async function readThroughToContractReadInteraction(
 
   return {
     result,
+    input,
     evaluationOptions,
   };
 }

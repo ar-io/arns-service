@@ -41,7 +41,7 @@ const warp = WarpFactory.forMainnet(
 ).useStateCache(
   new LmdbCache(defaultCacheOptions, {
     maxEntriesPerContract: 1000,
-    minEntriesPerContract: 10,
+    minEntriesPerContract: 0,
   }),
 );
 
