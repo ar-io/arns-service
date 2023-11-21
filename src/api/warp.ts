@@ -199,7 +199,6 @@ async function readThroughToContractState(
         cacheKey: cacheKey.toString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw error;
     })
     .finally(() => {
       logger?.debug('Removing request from in-flight cache.', {
@@ -356,7 +355,6 @@ export async function readThroughToContractReadInteraction(
         cacheKey: cacheKey.toString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      throw error;
     })
     .finally(() => {
       logger?.debug('Removing request from in-flight cache.', {
