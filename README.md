@@ -51,11 +51,11 @@ e.g.
 curl localhost:3000/v1/contract/bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U
 ```
 
-For more advanced features of Warp caching and state evaluation (e.g. D.R.E nodes), refer to the [Warp] documentation.
+For more advanced features of Warp caching and state evaluation (e.g. [D.R.E nodes]), refer to the [Warp] documentation.
 
-### LMDB
+### SQLite
 
-This service uses the `warp-contracts-lmdb` for storing contract state. The LMDB is stored in the `./cache` directory. To clear the LMDB, run:
+This service uses the `warp-contracts-sqlite` for storing contract state. The sqlite database is stored in the `./cache` directory. To clear the Warp cache, run:
 
 ```shell
 rm -rf ./cache
@@ -64,6 +64,17 @@ rm -rf ./cache
 ### Evaluation Options
 
 By default, the service will load `Contract-Manifest` tags for state evaluation.
+
+### Syncing State
+
+Similar to [D.R.E nodes], the service can be configured to sync state for a given contract. This is useful for contracts with large number of interactions that may take a long time to evaluate locally. To sync state from this service via [Warp], you can use `syncState()` with the `/v1/contract/${CONTRACT_ID}` endpoint:
+
+```js
+const contract = await warp
+  .contract(CONTRACT_TX_ID)
+  .setEvaluationOptions(evaluationOptions)
+  .syncState(`https://api.arns.app/v1/contract/${CONTRACT_TX_ID}`);
+```
 
 ## Configuration
 
@@ -122,3 +133,4 @@ https://api.arns.app/api-docs
 [prettier]: https://prettier.io/
 [eslint]: https://eslint.org/
 [Warp]: https://academy.warp.cc/docs/docs-intro
+[D.R.E nodes]: https://academy.warp.cc/docs/dre/overview
