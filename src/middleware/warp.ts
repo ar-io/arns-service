@@ -45,7 +45,7 @@ const warp = WarpFactory.forMainnet(
       dbLocation: `./cache/warp/sqlite/state`,
     },
     {
-      maxEntriesPerContract: 1000,
+      maxEntriesPerContract: 10000,
     },
   ),
 );
