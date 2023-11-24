@@ -16,6 +16,7 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
+import { GQLNodeInterface, TagsParser } from 'warp-contracts';
 
 export const MAX_REQUEST_SIZE = 100;
 
@@ -106,6 +107,7 @@ export async function getWalletInteractionsForContract(
     Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>
   >;
 }> {
+  const parser = new TagsParser();
   const { address, contractTxId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
@@ -178,11 +180,13 @@ export async function getWalletInteractionsForContract(
         };
         pageInfo?: { hasNextPage: boolean };
       }) => {
-        const interactionInput = e.node.tags.find(
-          (t: { name: string; value: string }) => t.name === 'Input',
+        const inputTag = parser.getInputTag(
+          e.node as GQLNodeInterface,
+          contractTxId,
         );
-        const parsedInput = interactionInput
-          ? JSON.parse(interactionInput.value)
+
+        const parsedInput = inputTag?.value
+          ? JSON.parse(inputTag.value)
           : undefined;
         interactions.set(e.node.id, {
           height: e.node.block.height,
