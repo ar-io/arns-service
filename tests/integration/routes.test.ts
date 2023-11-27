@@ -82,6 +82,7 @@ describe('Integration tests', () => {
       height: (await arweave.blocks.getCurrent()).height,
       input: transferInteraction,
       owner: walletAddress,
+      timestamp: (await arweave.blocks.getCurrent()).timestamp,
       valid: true,
       id: writeInteraction!.originalTxId,
     });
