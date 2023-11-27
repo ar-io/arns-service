@@ -42,6 +42,7 @@ const warp = WarpFactory.forMainnet(
   new SqliteContractCache(
     {
       ...defaultCacheOptions,
+      inMemory: false,
       dbLocation: `./cache/warp/sqlite/state`,
     },
     {
