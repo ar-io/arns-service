@@ -25,8 +25,8 @@ import {
   headersMiddleware,
   errorMiddleware,
 } from './middleware';
-import * as promClient from 'prom-client';
 import logger from './logger';
+import { uncaughtExceptionError } from './metrics';
 
 const app = new Koa();
 
@@ -40,16 +40,10 @@ app.use(cors());
 app.use(bodyParser());
 app.use(router.routes());
 
-// prometheus metric for errors
-const errorCounter = new promClient.Counter({
-  name: 'errors_total',
-  help: 'Total error count',
-});
-
 // catch any floating errors, swallow them and increment prometheus counter
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught exception!', err);
-  errorCounter.inc();
+  uncaughtExceptionError.inc();
 });
 
 process.on('SIGTERM', () => {
