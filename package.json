@@ -40,6 +40,7 @@
     "lodash": "^4.17.21",
     "prom-client": "^14.2.0",
     "warp-contracts": "^1.4.22",
+    "warp-contracts-lmdb": "^1.1.10",
     "warp-contracts-sqlite": "^1.0.2",
     "winston": "^3.8.2",
     "yaml": "^2.3.1"

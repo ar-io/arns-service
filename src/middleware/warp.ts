@@ -19,11 +19,11 @@ import { KoaContext } from '../types.js';
 import {
   LogLevel,
   LoggerFactory,
-  WarpFactory,
   defaultCacheOptions,
+  WarpFactory,
 } from 'warp-contracts';
+import { LmdbCache } from 'warp-contracts-lmdb';
 import { arweave } from './arweave';
-import { SqliteContractCache } from 'warp-contracts-sqlite';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
@@ -32,23 +32,46 @@ LoggerFactory.INST.logLevel(
 /**
  * TODO: consider using warp-contracts-postgres cache for distributed state caching across instances
  */
+
 const warp = WarpFactory.forMainnet(
-  {
-    ...defaultCacheOptions,
-  },
+  { ...defaultCacheOptions, inMemory: false },
   true,
   arweave,
-).useStateCache(
-  new SqliteContractCache(
-    {
-      ...defaultCacheOptions,
-      dbLocation: `./cache/warp/sqlite/state`,
-    },
-    {
-      maxEntriesPerContract: 10000,
-    },
-  ),
-);
+)
+  .useStateCache(
+    new LmdbCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/lmdb/state`,
+      },
+      {
+        minEntriesPerContract: 0,
+        maxEntriesPerContract: 100,
+      },
+    ),
+  )
+  .useContractCache(
+    new LmdbCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/lmdb/contract`,
+      },
+      {
+        minEntriesPerContract: 0,
+        maxEntriesPerContract: 100,
+      },
+    ),
+    new LmdbCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/lmdb/source`,
+      },
+      {
+        minEntriesPerContract: 0,
+        maxEntriesPerContract: 100,
+      },
+    ),
+  );
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
