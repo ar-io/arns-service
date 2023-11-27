@@ -16,7 +16,8 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
-import { GQLEdgeInterface, TagsParser } from 'warp-contracts';
+import { TagsParser } from 'warp-contracts';
+import logger from '../logger';
 
 export const MAX_REQUEST_SIZE = 100;
 
@@ -170,9 +171,19 @@ export async function getWalletInteractionsForContract(
     if (!response.data.data?.transactions?.edges?.length) {
       continue;
     }
-    response.data.data.transactions.edges.forEach((e: GQLEdgeInterface) => {
+    for (const e of response.data.data.transactions.edges) {
+      // basic validation for smartweave tags
       const inputTag = parser.getInputTag(e.node, contractTxId);
-
+      const contractTag = parser.getContractTag(e.node);
+      if (!inputTag || !contractTag) {
+        logger.debug('Invalid tags for interaction via GQL, ignoring...', {
+          contractTxId,
+          interactionId: e.node.id,
+          inputTag,
+          contractTag,
+        });
+        continue;
+      }
       const parsedInput = inputTag?.value
         ? JSON.parse(inputTag.value)
         : undefined;
@@ -182,7 +193,7 @@ export async function getWalletInteractionsForContract(
         input: parsedInput,
         owner: e.node.owner.address,
       });
-    });
+    }
     cursor =
       response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
       undefined;
