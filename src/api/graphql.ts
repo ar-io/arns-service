@@ -16,7 +16,7 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
-import { GQLEdgeInterface, TagsParser } from 'warp-contracts';
+import { TagsParser } from 'warp-contracts';
 import logger from '../logger';
 
 export const MAX_REQUEST_SIZE = 100;
