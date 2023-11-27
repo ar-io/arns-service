@@ -74,4 +74,4 @@ jobs:
 
       - name: Update Deployed image
         run: |
-          aws ecs update-service --cluster ${{ secrets.AWS_CLUSTER }} --service ${{ secrets.AWS_SERVICE }} --force-new-deployment --region ${{ secrets.AWS_REGION }}
+          aws ecs update-service --cluster ${{ secrets.AWS_CLUSTER }} --service ${{ secrets.AWS_SERVICE }} --task-definition ${{ secrets.AWS_SERVICE }} --force-new-deployment --region ${{ secrets.AWS_REGION }}
