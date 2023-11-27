@@ -88,7 +88,7 @@ describe('Integration tests', () => {
       owner: walletAddress,
       timestamp: Math.floor(interactionBlock.timestamp / 1000),
       sortKey: await interactionSorter.createSortKey(
-        interactionBlock.hash,
+        interactionBlock.indep_hash,
         writeInteraction!.originalTxId,
         interactionBlock.height,
       ),
