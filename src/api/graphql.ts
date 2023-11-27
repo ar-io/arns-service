@@ -190,9 +190,9 @@ export async function getWalletInteractionsForContract(
         ? JSON.parse(inputTag.value)
         : undefined;
       const sortKey = await interactionSorter.createSortKey(
-        e.block.id,
+        e.node.block.id,
         e.node.id,
-        e.block.height,
+        e.node.block.height,
       );
       interactions.set(e.node.id, {
         height: e.node.block.height,
