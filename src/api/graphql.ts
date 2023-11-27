@@ -16,7 +16,7 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
-import { GQLNodeInterface, TagsParser } from 'warp-contracts';
+import { GQLEdgeInterface, TagsParser } from 'warp-contracts';
 
 export const MAX_REQUEST_SIZE = 100;
 
@@ -169,32 +169,18 @@ export async function getWalletInteractionsForContract(
     if (!response.data.data?.transactions?.edges?.length) {
       continue;
     }
-    response.data.data.transactions.edges.forEach(
-      (e: {
-        cursor: string;
-        node: {
-          block: { height: number };
-          owner: { address: string };
-          id: string;
-          tags: { name: string; value: string }[];
-        };
-        pageInfo?: { hasNextPage: boolean };
-      }) => {
-        const inputTag = parser.getInputTag(
-          e.node as GQLNodeInterface,
-          contractTxId,
-        );
+    response.data.data.transactions.edges.forEach((e: GQLEdgeInterface) => {
+      const inputTag = parser.getInputTag(e.node, contractTxId);
 
-        const parsedInput = inputTag?.value
-          ? JSON.parse(inputTag.value)
-          : undefined;
-        interactions.set(e.node.id, {
-          height: e.node.block.height,
-          input: parsedInput,
-          owner: e.node.owner.address,
-        });
-      },
-    );
+      const parsedInput = inputTag?.value
+        ? JSON.parse(inputTag.value)
+        : undefined;
+      interactions.set(e.node.id, {
+        height: e.node.block.height,
+        input: parsedInput,
+        owner: e.node.owner.address,
+      });
+    });
     cursor =
       response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
       undefined;
