@@ -23,6 +23,7 @@ import {
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 import { NotFoundError } from '../errors';
+import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
   const { logger, warp } = ctx.state;
@@ -72,6 +73,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         id,
       };
     }
+    // record the mismatch so we can debug
+    mismatchedInteractionCount.inc();
     return;
   });
 
