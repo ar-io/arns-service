@@ -81,7 +81,6 @@ describe('Integration tests', () => {
       },
     );
     expect(writeInteraction?.originalTxId).to.not.be.undefined;
-    transferToAddress = address;
     const interactionBlock = await arweave.blocks.getCurrent();
     contractInteractions.push({
       height: interactionBlock.height,
@@ -90,7 +89,7 @@ describe('Integration tests', () => {
       timestamp: Math.floor(interactionBlock.timestamp / 1000),
       sortKey: await interactionSorter.createSortKey(
         interactionBlock.hash,
-        writeInteraction?.originalTxId,
+        writeInteraction!.originalTxId,
         interactionBlock.height,
       ),
       valid: true,
