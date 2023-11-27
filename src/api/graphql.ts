@@ -149,6 +149,7 @@ export async function getWalletInteractionsForContract(
                         }
                         block {
                             height
+                            timestamp
                         }
                     }
                 }
@@ -177,6 +178,7 @@ export async function getWalletInteractionsForContract(
         : undefined;
       interactions.set(e.node.id, {
         height: e.node.block.height,
+        timestamp: e.node.block.timestamp,
         input: parsedInput,
         owner: e.node.owner.address,
       });
