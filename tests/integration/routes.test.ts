@@ -81,6 +81,7 @@ describe('Integration tests', () => {
       },
     );
     expect(writeInteraction?.originalTxId).to.not.be.undefined;
+    transferToAddress = address;
     const interactionBlock = await arweave.blocks.getCurrent();
     contractInteractions.push({
       height: interactionBlock.height,
