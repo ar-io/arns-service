@@ -78,11 +78,12 @@ describe('Integration tests', () => {
     );
     expect(writeInteraction?.originalTxId).to.not.be.undefined;
     transferToAddress = address;
+    const interactionBlock = await arweave.blocks.getCurrent();
     contractInteractions.push({
-      height: (await arweave.blocks.getCurrent()).height,
+      height: interactionBlock.height,
       input: transferInteraction,
       owner: walletAddress,
-      timestamp: (await arweave.blocks.getCurrent()).timestamp,
+      timestamp: Math.floor(interactionBlock.timestamp / 1000),
       valid: true,
       id: writeInteraction!.originalTxId,
     });
