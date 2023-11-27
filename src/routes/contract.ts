@@ -66,6 +66,17 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
   const mappedInteractions = [...interactions.keys()].map((id: string) => {
     const interaction = interactions.get(id);
     if (interaction) {
+      // record the mismatch so we can debug
+      if (!Object.keys(validity).includes(id)) {
+        logger.debug(
+          'Interaction found via GraphQL but not evaluated by warp',
+          {
+            contractTxId,
+            interaction: id,
+          },
+        );
+        mismatchedInteractionCount.inc();
+      }
       return {
         ...interaction,
         valid: validity[id] ?? false,
@@ -73,8 +84,6 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         id,
       };
     }
-    // record the mismatch so we can debug
-    mismatchedInteractionCount.inc();
     return;
   });
 
