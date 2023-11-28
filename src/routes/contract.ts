@@ -22,32 +22,43 @@ import {
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
-import { NotFoundError } from '../errors';
+import { BadRequestError, NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
-  const { logger, warp, sortKeyOrBlockHeight } = ctx.state;
+  const { logger, warp, sortKey, blockHeight } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
     contractTxId,
   });
-  const { state, evaluationOptions, sortKey } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
-    sortKeyOrBlockHeight,
+    sortKey,
+    blockHeight,
   });
   ctx.body = {
     contractTxId,
     state,
-    sortKey,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext) {
-  const { arweave, logger, warp, sortKeyOrBlockHeight } = ctx.state;
+  const { arweave, logger, warp, sortKey, blockHeight } = ctx.state;
   const { contractTxId, address } = ctx.params;
+
+  if (sortKey) {
+    throw new BadRequestError(
+      'Sort key is not supported for contract interactions',
+    );
+  }
 
   logger.debug('Fetching all contract interactions', {
     contractTxId,
@@ -58,38 +69,31 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         contractTxId,
         warp,
         logger,
-        sortKeyOrBlockHeight,
+        sortKey,
+        blockHeight,
       }),
       getWalletInteractionsForContract(arweave, {
         address,
         contractTxId,
-        blockHeight: isNaN(sortKeyOrBlockHeight)
-          ? undefined
-          : sortKeyOrBlockHeight,
+        blockHeight,
       }),
     ]);
   const mappedInteractions = [...interactions.keys()].map((id: string) => {
     const interaction = interactions.get(id);
-    if (interaction) {
-      // record the mismatch so we can debug
-      if (!Object.keys(validity).includes(id)) {
-        logger.debug(
-          'Interaction found via GraphQL but not evaluated by warp',
-          {
-            contractTxId,
-            interaction: id,
-          },
-        );
-        mismatchedInteractionCount.inc();
-      }
-      return {
-        ...interaction,
-        valid: validity[id] ?? false,
-        ...(errorMessages[id] ? { error: errorMessages[id] } : {}),
-        id,
-      };
+    // found in graphql but not by warp
+    if (interaction && !Object.keys(validity).includes(id)) {
+      logger.debug('Interaction found via GraphQL but not evaluated by warp', {
+        contractTxId,
+        interaction: id,
+      });
+      mismatchedInteractionCount.inc();
     }
-    return;
+    return {
+      ...interaction,
+      valid: validity[id] ?? false,
+      ...(errorMessages[id] ? { error: errorMessages[id] } : {}),
+      id,
+    };
   });
 
   // TODO: maybe add a check here that gql and warp returned the same number of interactions
@@ -103,7 +107,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
 
 export async function contractFieldHandler(ctx: KoaContext) {
   const { contractTxId, field } = ctx.params;
-  const { logger, warp, sortKeyOrBlockHeight } = ctx.state;
+  const { logger, warp, sortKey, blockHeight } = ctx.state;
   logger.debug('Fetching contract field', {
     contractTxId,
     field,
@@ -112,7 +116,8 @@ export async function contractFieldHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKeyOrBlockHeight,
+    sortKey,
+    blockHeight,
   });
   const contractField = state[field];
 
@@ -130,7 +135,7 @@ export async function contractFieldHandler(ctx: KoaContext) {
 }
 
 export async function contractBalanceHandler(ctx: KoaContext) {
-  const { contractTxId, address, sortKeyOrBlockHeight } = ctx.params;
+  const { contractTxId, address, sortKey, blockHeight } = ctx.params;
   const { logger, warp } = ctx.state;
   logger.debug('Fetching contract balance for wallet', {
     contractTxId,
@@ -140,7 +145,8 @@ export async function contractBalanceHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKeyOrBlockHeight,
+    sortKey,
+    blockHeight,
   });
   const balance = state['balances'][address];
 
@@ -153,7 +159,7 @@ export async function contractBalanceHandler(ctx: KoaContext) {
 }
 
 export async function contractRecordHandler(ctx: KoaContext) {
-  const { contractTxId, name, sortKeyOrBlockHeight } = ctx.params;
+  const { contractTxId, name, sortKey, blockHeight } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
@@ -166,7 +172,8 @@ export async function contractRecordHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKeyOrBlockHeight,
+    sortKey,
+    blockHeight,
   });
   const record = state['records'][name];
 
@@ -193,9 +200,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
       warp,
       logger,
       // only use if block height, the sort key wil not match the sub contract
-      sortKeyOrBlockHeight: isNaN(sortKeyOrBlockHeight)
-        ? undefined
-        : sortKeyOrBlockHeight,
+      blockHeight,
     });
     response['owner'] = antContract?.owner;
     response['evaluationOptions'] = evaluationOptions;
@@ -206,7 +211,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
 
 export async function contractRecordFilterHandler(ctx: KoaContext) {
   const { contractTxId } = ctx.params;
-  const { warp, logger: _logger, sortKeyOrBlockHeight } = ctx.state;
+  const { warp, logger: _logger, sortKey, blockHeight } = ctx.state;
   // TODO: add other query filters (e.g. endTimestamp)
   const { contractTxId: filteredContractTxIds = [] } = ctx.query;
 
@@ -226,7 +231,8 @@ export async function contractRecordFilterHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKeyOrBlockHeight,
+    sortKey,
+    blockHeight,
   });
 
   const { records = {} } = state;

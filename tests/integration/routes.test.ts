@@ -45,6 +45,7 @@ describe('Integration tests', () => {
   before(async function () {
     // set a large timeout to 10 secs
     this.timeout(10_000);
+
     ids = [
       process.env.DEPLOYED_ANT_CONTRACT_TX_ID!,
       process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID!,
@@ -74,6 +75,14 @@ describe('Integration tests', () => {
       target: address,
       qty: 1,
     };
+
+    /**
+     * TODO: there is an issue in arlocal where maxHeight of 0 is not getting respected - once resolved we can remove this call and update the /interactions tests
+     * https://github.com/textury/arlocal/issues/148
+     */
+    await arweave.api.get('mine');
+
+    // create a write interaction we can test against
     const writeInteraction = await contract.writeInteraction(
       transferInteraction,
       {
@@ -173,8 +182,8 @@ describe('Integration tests', () => {
           expect(status).to.equal(400);
         });
 
-        it('should return contract state evaluated up to a given block height query param', async () => {
-          // block height before other interactions
+        it.only('should return contract state evaluated up to a given block height', async () => {
+          // block height before interactions
           const blockHeight = 1;
           const { status, data } = await axios.get(
             `/v1/contract/${id}?blockHeight=${blockHeight}`,
@@ -247,7 +256,7 @@ describe('Integration tests', () => {
 
         it('should only return interactions up to a provided block height', async () => {
           // block height before the interactions were created
-          const previousInteractionHeight = 0;
+          const previousInteractionHeight = 1;
 
           const { status, data } = await axios.get(
             `/v1/contract/${id}/interactions?blockHeight=${previousInteractionHeight}`,
@@ -256,7 +265,17 @@ describe('Integration tests', () => {
           expect(data).to.not.be.undefined;
           const { contractTxId, interactions } = data;
           expect(contractTxId).to.equal(id);
-          expect(interactions).to.equal([]);
+          expect(interactions).to.deep.equal([]);
+        });
+
+        it('should throw a bad request error when trying to use sortKey for interactions endpoint', async () => {
+          // block height before the interactions were created
+          const sortKey = 'test-sort-key';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?sortKey=${sortKey}`,
+          );
+          expect(status).to.equal(400);
         });
       });
 

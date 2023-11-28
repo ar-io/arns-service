@@ -36,7 +36,7 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
       );
     }
     logger.info('Block height provided via query param', { blockHeight });
-    ctx.state.sortKeyOrBlockHeight = +blockHeight;
+    ctx.state.blockHeight = +blockHeight;
   }
 
   // Note: this takes sortKey precedence over block height
@@ -47,7 +47,7 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
       throw new BadRequestError('Invalid sort key, must be a single string');
     }
     logger.info('Sort key provided via query param', { sortKey });
-    ctx.state.sortKeyOrBlockHeight = sortKey;
+    ctx.state.sortKey = sortKey;
   }
 
   return next();
