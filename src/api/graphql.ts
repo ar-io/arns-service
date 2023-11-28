@@ -106,7 +106,7 @@ export async function getDeployedContractsByWallet(
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
   params: {
-    address?: string;
+    address?: string | undefined;
     contractTxId: string;
     sortKey: string | undefined;
     blockHeight: number | undefined;
@@ -193,8 +193,6 @@ export async function getWalletInteractionsForContract(
       continue;
     }
 
-    console.log(JSON.stringify(data.data.transactions.edges, null, 2));
-
     // remove interactions without block data
     const validInteractions = data.data.transactions.edges.filter(
       (i) => i.node.block && i.node.block.height && i.node.block.id,
@@ -244,7 +242,6 @@ export async function getContractsTransferredToOrControlledByWallet(
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
-  [];
   let cursor: string | undefined;
   const ids = new Set<string>();
   do {
