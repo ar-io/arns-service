@@ -121,13 +121,14 @@ describe('Integration tests', () => {
   describe('/v1', () => {
     describe('/contract', () => {
       describe('/:contractTxId', () => {
-        it('should return the contract state and id without any evaluation options provided', async () => {
+        it('should return the contract state and id and default evaluation options', async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, state, evaluationOptions } = data;
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
           expect(contractTxId).to.equal(id);
           expect(evaluationOptions).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
           expect(state).to.include.keys([
             'balances',
             'owner',
@@ -149,6 +150,46 @@ describe('Integration tests', () => {
             '/v1/contract/kbtXub0JcZYfBn7-WUgkFQjKmZb4y5DY2nT8WovBhWY',
           );
           expect(status).to.equal(404);
+        });
+
+        it('should return a 400 on invalid block height query param', async () => {
+          // block height before the interactions were created
+          const invalidBlockHeight = 'not-a-number';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${invalidBlockHeight}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return a 400 when block height and sort key query params are provided', async () => {
+          // block height before the interactions were created
+          const validBlockHeight = 1;
+          const exampleSortKey = 'example-sort-key';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${validBlockHeight}&sortKey=${exampleSortKey}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return contract state evaluated up to a given block height query param', async () => {
+          // block height before the interactions were created
+          const blockHeight = 1;
+
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${blockHeight}`,
+          );
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
+          expect(status).to.equal(200);
+          expect(data).not.to.be.undefined;
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(state).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
+          expect(sortKey.split(',')[0]).to.equal(
+            `${blockHeight}`.padStart(12, '0'),
+          );
         });
       });
       describe('/:contractTxId/price', () => {
@@ -204,6 +245,20 @@ describe('Integration tests', () => {
           const { contractTxId, interactions } = data;
           expect(contractTxId).to.equal(id);
           expect(Object.keys(interactions)).not.to.contain(badInteractionTx.id);
+        });
+
+        it('should only return interactions up to a provided block height', async () => {
+          // block height before the interactions were created
+          const previousInteractionHeight = 0;
+
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${previousInteractionHeight}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions } = data;
+          expect(contractTxId).to.equal(id);
+          expect(interactions).to.equal([]);
         });
       });
 

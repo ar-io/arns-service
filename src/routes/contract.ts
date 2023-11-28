@@ -192,8 +192,10 @@ export async function contractRecordHandler(ctx: KoaContext) {
       contractTxId: record.contractTxId,
       warp,
       logger,
-      // don't set evaluation options for sub contracts - they'll be pulled on load
-      // don't use sort key or block height for sub contracts - the sort key won't match but blockHeight will
+      // only use if block height, the sort key wil not match the sub contract
+      sortKeyOrBlockHeight: isNaN(sortKeyOrBlockHeight)
+        ? undefined
+        : sortKeyOrBlockHeight,
     });
     response['owner'] = antContract?.owner;
     response['evaluationOptions'] = evaluationOptions;

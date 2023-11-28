@@ -41,13 +41,12 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
 
   // Note: this takes sortKey precedence over block height
   if (sortKey) {
-    // TODO: add regex to sort key
+    // TODO: regex on sort key to match warp pattern
     if (Array.isArray(sortKey)) {
       logger.debug('Invalid sort key provided', { sortKey });
       throw new BadRequestError('Invalid sort key, must be a single string');
     }
     logger.info('Sort key provided via query param', { sortKey });
-    // TODO: regex on sort key to match warp pattern
     ctx.state.sortKeyOrBlockHeight = sortKey;
   }
 

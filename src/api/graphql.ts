@@ -23,7 +23,7 @@ export const MAX_REQUEST_SIZE = 100;
 
 export async function getDeployedContractsByWallet(
   arweave: Arweave,
-  params: { address: string },
+  params: { address: string | undefined },
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
@@ -102,9 +102,9 @@ export async function getDeployedContractsByWallet(
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
   params: {
-    address?: string;
+    address: string | undefined;
     contractTxId: string;
-    blockHeight: number;
+    blockHeight: number | undefined;
   },
 ): Promise<{
   interactions: Map<
