@@ -177,6 +177,34 @@ describe('Integration tests', () => {
           expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal(contractInteractions);
         });
+
+        it('should filter out poorly formatted interactions', async () => {
+          // deploy the manual constructed interaction
+          const badInteractionTx = await arweave.createTransaction(
+            {
+              data: Math.random().toString().slice(-4),
+            },
+            walletJWK,
+          );
+          badInteractionTx.addTag('App-Name', 'SmartWeaveAction');
+          badInteractionTx.addTag('Contract', id);
+          badInteractionTx.addTag(
+            'input',
+            JSON.stringify({ function: 'evolve', value: 'bad-interaction' }),
+          );
+
+          await arweave.transactions.sign(badInteractionTx, walletJWK);
+          await arweave.transactions.post(badInteractionTx);
+
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions } = data;
+          expect(contractTxId).to.equal(id);
+          expect(Object.keys(interactions)).not.to.contain(badInteractionTx.id);
+        });
       });
 
       describe('/:contractTxId/interactions/:address', () => {
