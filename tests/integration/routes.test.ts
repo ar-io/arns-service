@@ -18,7 +18,10 @@ import { describe } from 'mocha';
 import { expect } from 'chai';
 import axiosPackage from 'axios';
 import { arweave, createLocalWallet, warp } from './setup.test';
-import { JWKInterface } from 'warp-contracts';
+import {
+  JWKInterface,
+  LexicographicalInteractionsSorter,
+} from 'warp-contracts';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ArNSInteraction } from '../../src/types';
@@ -37,6 +40,7 @@ describe('Integration tests', () => {
   let transferToAddress: string;
   let walletJWK: JWKInterface;
   const contractInteractions: ArNSInteraction[] = [];
+  const interactionSorter = new LexicographicalInteractionsSorter(arweave);
 
   before(async function () {
     // set a large timeout to 10 secs
@@ -84,6 +88,11 @@ describe('Integration tests', () => {
       input: transferInteraction,
       owner: walletAddress,
       timestamp: Math.floor(interactionBlock.timestamp / 1000),
+      sortKey: await interactionSorter.createSortKey(
+        interactionBlock.indep_hash,
+        writeInteraction!.originalTxId,
+        interactionBlock.height,
+      ),
       valid: true,
       id: writeInteraction!.originalTxId,
     });

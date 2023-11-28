@@ -16,7 +16,7 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
-import { TagsParser } from 'warp-contracts';
+import { LexicographicalInteractionsSorter, TagsParser } from 'warp-contracts';
 import logger from '../logger';
 
 export const MAX_REQUEST_SIZE = 100;
@@ -109,6 +109,7 @@ export async function getWalletInteractionsForContract(
   >;
 }> {
   const parser = new TagsParser();
+  const interactionSorter = new LexicographicalInteractionsSorter(arweave);
   const { address, contractTxId } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
@@ -149,6 +150,7 @@ export async function getWalletInteractionsForContract(
                             value
                         }
                         block {
+                            id
                             height
                             timestamp
                         }
@@ -187,9 +189,15 @@ export async function getWalletInteractionsForContract(
       const parsedInput = inputTag?.value
         ? JSON.parse(inputTag.value)
         : undefined;
+      const sortKey = await interactionSorter.createSortKey(
+        e.node.block.id,
+        e.node.id,
+        e.node.block.height,
+      );
       interactions.set(e.node.id, {
         height: e.node.block.height,
         timestamp: e.node.block.timestamp,
+        sortKey,
         input: parsedInput,
         owner: e.node.owner.address,
       });
