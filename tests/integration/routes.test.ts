@@ -168,21 +168,19 @@ describe('Integration tests', () => {
           const exampleSortKey = 'example-sort-key';
 
           const { status } = await axios.get(
-            `/v1/contract/${id}/interactions?blockHeight=${validBlockHeight}&sortKey=${exampleSortKey}`,
+            `/v1/contract/${id}?blockHeight=${validBlockHeight}&sortKey=${exampleSortKey}`,
           );
           expect(status).to.equal(400);
         });
 
         it('should return contract state evaluated up to a given block height query param', async () => {
-          // block height before the interactions were created
+          // block height before other interactions
           const blockHeight = 1;
-
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/interactions?blockHeight=${blockHeight}`,
+            `/v1/contract/${id}?blockHeight=${blockHeight}`,
           );
           const { contractTxId, state, evaluationOptions, sortKey } = data;
           expect(status).to.equal(200);
-          expect(data).not.to.be.undefined;
           expect(contractTxId).to.equal(id);
           expect(evaluationOptions).not.to.be.undefined;
           expect(state).not.to.be.undefined;
