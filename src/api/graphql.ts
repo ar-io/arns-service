@@ -123,9 +123,10 @@ export async function getWalletInteractionsForContract(
   >();
   do {
     const ownerFilter = address ? `owners: ["${address}"]` : '';
-    const blockHeightFilter = blockHeight
-      ? `block: { min: 0 max: ${blockHeight} }`
-      : '';
+    const blockHeightFilter =
+      blockHeight !== null && blockHeight !== undefined
+        ? `block: { min: 0 max: ${blockHeight} }`
+        : '';
 
     const queryObject = {
       query: `
