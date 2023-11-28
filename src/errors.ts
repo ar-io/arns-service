@@ -17,13 +17,18 @@
 import { EVALUATION_TIMEOUT_MS } from './constants';
 
 // TODO: we could put a prometheus metric here to help fine tune what our evaluation limit should be
-export class EvaluationTimeoutError extends Error {
+export class BaseError extends Error {
+  super(message: string) {
+    this.message = message;
+    this.name = this.constructor.name;
+  }
+}
+export class EvaluationTimeoutError extends BaseError {
   constructor() {
     super(`State evaluation exceeded limit of ${EVALUATION_TIMEOUT_MS}ms.`);
   }
 }
-
-export class EvaluationError extends Error {}
-export class NotFoundError extends Error {}
-export class UnknownError extends Error {}
-export class BadRequestError extends Error {}
+export class EvaluationError extends BaseError {}
+export class NotFoundError extends BaseError {}
+export class UnknownError extends BaseError {}
+export class BadRequestError extends BaseError {}

@@ -27,12 +27,14 @@ import {
 } from './middleware';
 import logger from './logger';
 import { uncaughtExceptionError } from './metrics';
+import { queryMiddleware } from './middleware/query';
 
 const app = new Koa();
 
 // attach middlewares
 app.use(loggerMiddleware);
 app.use(errorMiddleware);
+app.use(queryMiddleware);
 app.use(arweaveMiddleware);
 app.use(warpMiddleware);
 app.use(headersMiddleware);

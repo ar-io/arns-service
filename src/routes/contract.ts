@@ -26,7 +26,7 @@ import { NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
-  const { logger, warp } = ctx.state;
+  const { logger, warp, sortKeyOrBlockHeight } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
     contractTxId,
@@ -35,6 +35,7 @@ export async function contractHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKeyOrBlockHeight,
   });
   ctx.body = {
     contractTxId,
@@ -45,7 +46,7 @@ export async function contractHandler(ctx: KoaContext) {
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext) {
-  const { arweave, logger, warp } = ctx.state;
+  const { arweave, logger, warp, sortKeyOrBlockHeight } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
   logger.debug('Fetching all contract interactions', {
@@ -57,6 +58,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         contractTxId,
         warp,
         logger,
+        sortKeyOrBlockHeight,
       }),
       getWalletInteractionsForContract(arweave, {
         address,
@@ -98,7 +100,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
 
 export async function contractFieldHandler(ctx: KoaContext) {
   const { contractTxId, field } = ctx.params;
-  const { logger, warp } = ctx.state;
+  const { logger, warp, sortKeyOrBlockHeight } = ctx.state;
   logger.debug('Fetching contract field', {
     contractTxId,
     field,
@@ -107,6 +109,7 @@ export async function contractFieldHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKeyOrBlockHeight,
   });
   const contractField = state[field];
 
@@ -124,7 +127,7 @@ export async function contractFieldHandler(ctx: KoaContext) {
 }
 
 export async function contractBalanceHandler(ctx: KoaContext) {
-  const { contractTxId, address } = ctx.params;
+  const { contractTxId, address, sortKeyOrBlockHeight } = ctx.params;
   const { logger, warp } = ctx.state;
   logger.debug('Fetching contract balance for wallet', {
     contractTxId,
@@ -134,6 +137,7 @@ export async function contractBalanceHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKeyOrBlockHeight,
   });
   const balance = state['balances'][address];
 
@@ -146,7 +150,7 @@ export async function contractBalanceHandler(ctx: KoaContext) {
 }
 
 export async function contractRecordHandler(ctx: KoaContext) {
-  const { contractTxId, name } = ctx.params;
+  const { contractTxId, name, sortKeyOrBlockHeight } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
@@ -159,6 +163,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKeyOrBlockHeight,
   });
   const record = state['records'][name];
 
@@ -185,6 +190,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
       warp,
       logger,
       // don't set evaluation options for sub contracts - they'll be pulled on load
+      // don't use sort key or block height for sub contracts - the sort key won't match but blockHeight will
     });
     response['owner'] = antContract?.owner;
     response['evaluationOptions'] = evaluationOptions;
@@ -195,7 +201,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
 
 export async function contractRecordFilterHandler(ctx: KoaContext) {
   const { contractTxId } = ctx.params;
-  const { warp, logger: _logger } = ctx.state;
+  const { warp, logger: _logger, sortKeyOrBlockHeight } = ctx.state;
   // TODO: add other query filters (e.g. endTimestamp)
   const { contractTxId: filteredContractTxIds = [] } = ctx.query;
 
@@ -215,6 +221,7 @@ export async function contractRecordFilterHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKeyOrBlockHeight,
   });
 
   const { records = {} } = state;
