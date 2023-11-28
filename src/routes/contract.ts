@@ -63,6 +63,9 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       getWalletInteractionsForContract(arweave, {
         address,
         contractTxId,
+        blockHeight: isNaN(sortKeyOrBlockHeight)
+          ? undefined
+          : sortKeyOrBlockHeight,
       }),
     ]);
   const mappedInteractions = [...interactions.keys()].map((id: string) => {

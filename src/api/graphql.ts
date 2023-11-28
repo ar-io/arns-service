@@ -101,7 +101,11 @@ export async function getDeployedContractsByWallet(
 
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
-  params: { address?: string; contractTxId: string },
+  params: {
+    address?: string;
+    contractTxId: string;
+    blockHeight: number;
+  },
 ): Promise<{
   interactions: Map<
     string,
@@ -110,7 +114,7 @@ export async function getWalletInteractionsForContract(
 }> {
   const parser = new TagsParser();
   const interactionSorter = new LexicographicalInteractionsSorter(arweave);
-  const { address, contractTxId } = params;
+  const { address, contractTxId, blockHeight } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const interactions = new Map<
@@ -119,11 +123,16 @@ export async function getWalletInteractionsForContract(
   >();
   do {
     const ownerFilter = address ? `owners: ["${address}"]` : '';
+    const blockHeightFilter = blockHeight
+      ? `block: { min: 0 max: ${blockHeight} }`
+      : '';
+
     const queryObject = {
       query: `
         { 
             transactions (
                 ${ownerFilter}
+                ${blockHeightFilter}
                 tags:[
                     {
                         name:"Contract",
