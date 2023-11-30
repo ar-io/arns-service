@@ -171,7 +171,17 @@ describe('Integration tests', () => {
           expect(status).to.equal(400);
         });
 
-        it('should return a 400 when block height and sort key query params are provided', async () => {
+        it('should return a 400 on invalid sortKey height query param', async () => {
+          // block height before the interactions were created
+          const invalidSortKey = 'not-a-sort-key';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?sortKey=${invalidSortKey}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return a 400 when both block height and sort key query params are provided', async () => {
           // block height before the interactions were created
           const validBlockHeight = 1;
           const exampleSortKey = 'example-sort-key';
@@ -199,6 +209,21 @@ describe('Integration tests', () => {
           expect(sortKey.split(',')[0]).to.equal(
             `${previousBlockHeight}`.padStart(12, '0'),
           );
+        });
+        it('should return contract state evaluated up to a given sort key', async () => {
+          const knownSortKey = contractInteractions[0].sortKey;
+          // mine a block height to ensure the contract is evaluated at previous one
+          await arweave.api.get('mine');
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}?sortKey=${knownSortKey}`,
+          );
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
+          expect(status).to.equal(200);
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(state).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
+          expect(sortKey).to.equal(knownSortKey);
         });
       });
       describe('/:contractTxId/price', () => {

@@ -19,6 +19,7 @@ import { KoaContext } from '../types';
 import logger from '../logger';
 import { BadRequestError } from '../errors';
 
+const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-fA-F]{64}$/;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   const { blockHeight, sortKey } = ctx.query;
 
@@ -39,12 +40,12 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
     ctx.state.blockHeight = +blockHeight;
   }
 
-  // Note: this takes sortKey precedence over block height
   if (sortKey) {
-    // TODO: regex on sort key to match warp pattern
-    if (Array.isArray(sortKey)) {
+    if (Array.isArray(sortKey) || !WARP_SORT_KEY_REGEX.test(sortKey)) {
       logger.debug('Invalid sort key provided', { sortKey });
-      throw new BadRequestError('Invalid sort key, must be a single string');
+      throw new BadRequestError(
+        `Invalid sort key, must be a single string and match ${WARP_SORT_KEY_REGEX}`,
+      );
     }
     logger.info('Sort key provided via query param', { sortKey });
     ctx.state.sortKey = sortKey;
