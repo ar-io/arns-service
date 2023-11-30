@@ -22,7 +22,7 @@ import {
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
-import { BadRequestError, NotFoundError } from '../errors';
+import { NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
@@ -54,12 +54,6 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
   const { arweave, logger, warp, sortKey, blockHeight } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
-  if (sortKey) {
-    throw new BadRequestError(
-      'Sort key is not supported for contract interactions',
-    );
-  }
-
   logger.debug('Fetching all contract interactions', {
     contractTxId,
   });
@@ -75,6 +69,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       getWalletInteractionsForContract(arweave, {
         address,
         contractTxId,
+        sortKey,
         blockHeight,
       }),
     ]);

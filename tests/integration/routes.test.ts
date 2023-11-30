@@ -182,11 +182,13 @@ describe('Integration tests', () => {
           expect(status).to.equal(400);
         });
 
-        it.only('should return contract state evaluated up to a given block height', async () => {
-          // block height before interactions
-          const blockHeight = 1;
+        it('should return contract state evaluated up to a given block height', async () => {
+          const { height: previousBlockHeight } =
+            await arweave.blocks.getCurrent();
+          // mine a block height to ensure the contract is evaluated at previous one
+          await arweave.api.get('mine');
           const { status, data } = await axios.get(
-            `/v1/contract/${id}?blockHeight=${blockHeight}`,
+            `/v1/contract/${id}?blockHeight=${previousBlockHeight}`,
           );
           const { contractTxId, state, evaluationOptions, sortKey } = data;
           expect(status).to.equal(200);
@@ -195,7 +197,7 @@ describe('Integration tests', () => {
           expect(state).not.to.be.undefined;
           expect(sortKey).not.be.undefined;
           expect(sortKey.split(',')[0]).to.equal(
-            `${blockHeight}`.padStart(12, '0'),
+            `${previousBlockHeight}`.padStart(12, '0'),
           );
         });
       });
@@ -268,14 +270,16 @@ describe('Integration tests', () => {
           expect(interactions).to.deep.equal([]);
         });
 
-        it('should throw a bad request error when trying to use sortKey for interactions endpoint', async () => {
-          // block height before the interactions were created
-          const sortKey = 'test-sort-key';
-
-          const { status } = await axios.get(
-            `/v1/contract/${id}/interactions?sortKey=${sortKey}`,
+        it('should only return interactions up to a provided sort key height', async () => {
+          const knownSortKey = contractInteractions[0].sortKey;
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?sortKey=${knownSortKey}`,
           );
-          expect(status).to.equal(400);
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions } = data;
+          expect(contractTxId).to.equal(id);
+          expect(interactions).to.deep.equal([contractInteractions[0]]);
         });
       });
 

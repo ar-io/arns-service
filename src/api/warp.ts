@@ -60,9 +60,10 @@ class ContractStateCacheKey {
   ) {}
 
   toString(): string {
-    return `${this.contractTxId}-${createQueryParamHash(
-      this.evaluationOptions,
-    )}`;
+    return `${this.contractTxId}-${createSortKeyBlockHeightHash({
+      sortKey: this.sortKey,
+      blockHeight: this.blockHeight,
+    })}-${createQueryParamHash(this.evaluationOptions)}`;
   }
 
   // Facilitate ReadThroughPromiseCache key derivation
@@ -151,6 +152,18 @@ function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   // Function to calculate the hash of a string
   const hash = createHash('sha256');
   hash.update(JSON.stringify(evalOptions));
+  return hash.digest('hex');
+}
+
+function createSortKeyBlockHeightHash({
+  sortKey,
+  blockHeight,
+}: {
+  sortKey: string | undefined;
+  blockHeight: number | undefined;
+}) {
+  const hash = createHash('sha256');
+  hash.update(`${sortKey}-${blockHeight}`);
   return hash.digest('hex');
 }
 

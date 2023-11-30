@@ -16,7 +16,11 @@
  */
 import Arweave from 'arweave';
 import { ArNSInteraction } from '../types.js';
-import { LexicographicalInteractionsSorter, TagsParser } from 'warp-contracts';
+import {
+  GQLResultInterface,
+  LexicographicalInteractionsSorter,
+  TagsParser,
+} from 'warp-contracts';
 import logger from '../logger';
 
 export const MAX_REQUEST_SIZE = 100;
@@ -102,8 +106,9 @@ export async function getDeployedContractsByWallet(
 export async function getWalletInteractionsForContract(
   arweave: Arweave,
   params: {
-    address: string | undefined;
+    address?: string;
     contractTxId: string;
+    sortKey: string | undefined;
     blockHeight: number | undefined;
   },
 ): Promise<{
@@ -114,7 +119,12 @@ export async function getWalletInteractionsForContract(
 }> {
   const parser = new TagsParser();
   const interactionSorter = new LexicographicalInteractionsSorter(arweave);
-  const { address, contractTxId, blockHeight } = params;
+  const {
+    address,
+    contractTxId,
+    blockHeight: blockHeightFilter,
+    sortKey: sortKeyFilter,
+  } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const interactions = new Map<
@@ -123,23 +133,21 @@ export async function getWalletInteractionsForContract(
   >();
   do {
     const ownerFilter = address ? `owners: ["${address}"]` : '';
-    const blockHeightFilter =
-      blockHeight !== null && blockHeight !== undefined
-        ? `block: { min: 0 max: ${blockHeight} }`
-        : '';
-
     const queryObject = {
       query: `
         { 
             transactions (
                 ${ownerFilter}
-                ${blockHeightFilter}
                 tags:[
                     {
                         name:"Contract",
                         values:["${contractTxId}"]
                     }
                 ],
+                block: {
+                  min: 0,
+                  max: ${blockHeightFilter ?? null}
+                },
                 sort: HEIGHT_DESC,
                 first: ${MAX_REQUEST_SIZE},
                 bundledIn: null,
@@ -170,27 +178,37 @@ export async function getWalletInteractionsForContract(
         }`,
     };
 
-    const { status, ...response } = await arweave.api.post(
+    const { status, data } = await arweave.api.post<GQLResultInterface>(
       '/graphql',
       queryObject,
     );
+
     if (status !== 200) {
       throw Error(
         `Failed to fetch contracts for wallet. Status code: ${status}`,
       );
     }
 
-    if (!response.data.data?.transactions?.edges?.length) {
+    if (!data.data.transactions?.edges?.length) {
       continue;
     }
-    for (const e of response.data.data.transactions.edges) {
+
+    console.log(JSON.stringify(data.data.transactions.edges, null, 2));
+
+    // remove interactions without block data
+    const validInteractions = data.data.transactions.edges.filter(
+      (i) => i.node.block && i.node.block.height && i.node.block.id,
+    );
+    // sort them using warps sort logic and adds sort keys
+    const sortedInteractions = await interactionSorter.sort(validInteractions);
+    for (const i of sortedInteractions) {
       // basic validation for smartweave tags
-      const inputTag = parser.getInputTag(e.node, contractTxId);
-      const contractTag = parser.getContractTag(e.node);
+      const inputTag = parser.getInputTag(i.node, contractTxId);
+      const contractTag = parser.getContractTag(i.node);
       if (!inputTag || !contractTag) {
         logger.debug('Invalid tags for interaction via GQL, ignoring...', {
           contractTxId,
-          interactionId: e.node.id,
+          interactionId: i.node.id,
           inputTag,
           contractTag,
         });
@@ -199,24 +217,21 @@ export async function getWalletInteractionsForContract(
       const parsedInput = inputTag?.value
         ? JSON.parse(inputTag.value)
         : undefined;
-      const sortKey = await interactionSorter.createSortKey(
-        e.node.block.id,
-        e.node.id,
-        e.node.block.height,
-      );
-      interactions.set(e.node.id, {
-        height: e.node.block.height,
-        timestamp: e.node.block.timestamp,
-        sortKey,
+      interactions.set(i.node.id, {
+        height: i.node.block.height,
+        timestamp: i.node.block.timestamp,
         input: parsedInput,
-        owner: e.node.owner.address,
+        owner: i.node.owner.address,
+        sortKey: i.node.sortKey,
       });
+      // if we have a sort key filter, we can stop here
+      if (i.node.sortKey === sortKeyFilter) {
+        break;
+      }
     }
     cursor =
-      response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
-      undefined;
-    hasNextPage =
-      response.data.data.transactions.pageInfo?.hasNextPage ?? false;
+      data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ?? undefined;
+    hasNextPage = data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
   return {
     interactions,
@@ -229,6 +244,7 @@ export async function getContractsTransferredToOrControlledByWallet(
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
+  [];
   let cursor: string | undefined;
   const ids = new Set<string>();
   do {
