@@ -223,8 +223,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           expect(interactions).to.deep.equal(contractInteractions);
         });
 
@@ -251,8 +252,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           expect(Object.keys(interactions)).not.to.contain(badInteractionTx.id);
         });
 
@@ -265,8 +267,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           expect(interactions).to.deep.equal([]);
         });
 
@@ -277,8 +280,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).to.equal(knownSortKey);
           expect(interactions).to.deep.equal([contractInteractions[0]]);
         });
       });
@@ -290,8 +294,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           // TODO: filter out interactions specific to the wallet address
           expect(interactions).to.deep.equal(contractInteractions);
         });
@@ -314,8 +319,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(data[field]).to.not.be.undefined; // we haven't created any interactions
           });
         }
@@ -334,8 +340,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(2);
           });
 
@@ -345,8 +352,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(1);
           });
 
@@ -356,8 +364,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(0);
           });
         });
@@ -369,11 +378,12 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, owner, record } = data;
+            const { contractTxId, owner, record, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(record).to.deep.equal({
               contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
             });
+            expect(sortKey).not.be.undefined;
             expect(owner).to.not.be.undefined;
             expect(owner).to.equal(walletAddress);
           });
@@ -384,9 +394,10 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, owner, record } = data;
+            const { contractTxId, owner, record, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(record).to.not.be.undefined;
+            expect(sortKey).not.be.undefined;
             expect(owner).to.be.undefined;
           });
 
@@ -405,10 +416,17 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, reserved, details, evaluationOptions } = data;
+            const {
+              contractTxId,
+              reserved,
+              details,
+              sortKey,
+              evaluationOptions,
+            } = data;
             expect(contractTxId).to.equal(id);
             expect(reserved).to.be.true;
             expect(details).to.not.be.undefined;
+            expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
 
@@ -418,10 +436,17 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, reserved, details, evaluationOptions } = data;
+            const {
+              contractTxId,
+              reserved,
+              details,
+              sortKey,
+              evaluationOptions,
+            } = data;
             expect(contractTxId).to.equal(id);
             expect(reserved).to.be.false;
             expect(details).to.be.undefined;
+            expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
         });

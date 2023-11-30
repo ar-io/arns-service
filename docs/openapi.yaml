@@ -2,8 +2,7 @@ openapi: 3.0.0
 info:
   title: ArNS Microservice
   version: 0.1.0
-  description: A koa microservice that provides API interface for fetching and retrieving ArNS related Smartweave contracts.
-
+description: A koa microservice that provides API interface for fetching and retrieving ArNS related Smartweave contracts.
 servers:
   - url: '/v1'
 
@@ -39,29 +38,21 @@ components:
       properties:
         sourceType:
           type: string
-          enum: ['arweave', 'otherSource']
-          description: The source type of the evaluation.
+          enum: ['arweave', 'other']
         internalWrites:
           type: boolean
-          description: Flag to enable or disable internal writes.
         useKVStorage:
           type: boolean
-          description: Indicates if key-value storage is used.
         remoteStateSyncEnabled:
           type: boolean
-          description: Flag for enabling remote state synchronization.
         waitForConfirmation:
           type: boolean
-          description: Whether to wait for confirmation before proceeding.
         updateCacheForEachInteraction:
           type: boolean
-          description: Specifies if the cache should be updated for each interaction.
         maxInteractionEvaluationTimeSeconds:
           type: integer
-          description: The maximum time in seconds for interaction evaluation.
         throwOnInternalWriteError:
           type: boolean
-          description: Indicates if an error should be thrown on internal write failure.
 
     ContractInteraction:
       type: array
@@ -96,17 +87,15 @@ paths:
         - in: query
           name: blockHeight
           required: false
-          description: Evaluate the contract up to a specific block height.
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
           schema:
             type: number
-            example: 1307087
         - in: query
           name: sortKey
           required: false
-          description: Evaluate the contract at up to a specific sort key.
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
           schema:
             type: string
-            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -269,17 +258,15 @@ paths:
         - in: query
           name: blockHeight
           required: false
-          description: Evaluate the contract up to a specific block height.
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
           schema:
             type: number
-            example: 1307087
         - in: query
           name: sortKey
           required: false
-          description: Evaluate the contract at up to a specific sort key.
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
           schema:
             type: string
-            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -325,17 +312,15 @@ paths:
         - in: query
           name: blockHeight
           required: false
-          description: Evaluate the contract up to a specific block height.
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
           schema:
             type: number
-            example: 1307087
         - in: query
           name: sortKey
           required: false
-          description: Evaluate the contract at up to a specific sort key.
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
           schema:
             type: string
-            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -396,6 +381,18 @@ paths:
           schema:
             type: string
             example: 'ario'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
+          schema:
+            type: number
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -462,17 +459,15 @@ paths:
         - in: query
           name: blockHeight
           required: false
-          description: Evaluate the contract up to a specific block height.
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
           schema:
             type: number
-            example: 1307087
         - in: query
           name: sortKey
           required: false
-          description: Evaluate the contract at up to a specific sort key.
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
           schema:
             type: string
-            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -515,17 +510,15 @@ paths:
         - in: query
           name: blockHeight
           required: false
-          description: Evaluate the contract up to a specific block height.
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
           schema:
             type: number
-            example: 1307087
         - in: query
           name: sortKey
           required: false
-          description: Evaluate the contract at up to a specific sort key.
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
           schema:
             type: string
-            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -569,6 +562,18 @@ paths:
           schema:
             type: string
             example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
+          schema:
+            type: number
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
+          schema:
+            type: string
       responses:
         '200':
           description: OK
