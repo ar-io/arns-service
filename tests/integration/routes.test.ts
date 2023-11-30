@@ -440,17 +440,21 @@ describe('Integration tests', () => {
             expect(owner).to.be.undefined;
           });
 
-          it(`should return the correct state value for record up to a given block height`, async () => {
+          it(`should return the correct state value for record up to a given sort key`, async () => {
             const knownSortKey = contractInteractions[0].sortKey;
             const { status, data } = await axios.get(
               `/v1/contract/${id}/records/example?sortKey=${knownSortKey}`,
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, sortKey } = data;
+            const { contractTxId, sortKey, record, owner } = data;
             expect(contractTxId).to.equal(id);
-            expect(sortKey).to.equal(knownSortKey);
-            expect(Object.keys(data['records'])).to.have.length(2);
+            expect(record).to.deep.equal({
+              contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
+            });
+            expect(sortKey).not.be.undefined;
+            expect(owner).to.not.be.undefined;
+            expect(owner).to.equal(walletAddress);
           });
 
           it('should return a 404 when the record name does not exist', async () => {
