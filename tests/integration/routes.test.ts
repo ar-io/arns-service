@@ -324,6 +324,32 @@ describe('Integration tests', () => {
             expect(sortKey).not.be.undefined;
             expect(data[field]).to.not.be.undefined; // we haven't created any interactions
           });
+
+          it(`should return the correct state value for ${field} up to a given block height`, async () => {
+            const previousBlockHeight = 1;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/${field}?blockHeight=${previousBlockHeight}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+          });
+
+          it(`should return the correct state value for ${field} up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/${field}?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+          });
         }
 
         it('should return a 404 for an invalid field', async () => {
@@ -369,6 +395,19 @@ describe('Integration tests', () => {
             expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(0);
           });
+
+          it(`should return the correct state value for record up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(Object.keys(data['records'])).to.have.length(2);
+          });
         });
 
         describe('/records/:name', () => {
@@ -399,6 +438,19 @@ describe('Integration tests', () => {
             expect(record).to.not.be.undefined;
             expect(sortKey).not.be.undefined;
             expect(owner).to.be.undefined;
+          });
+
+          it(`should return the correct state value for record up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records/example?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(Object.keys(data['records'])).to.have.length(2);
           });
 
           it('should return a 404 when the record name does not exist', async () => {
