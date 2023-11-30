@@ -52,12 +52,18 @@ export async function contractHandler(ctx: KoaContext) {
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext) {
-  const { arweave, logger, warp, sortKey, blockHeight } = ctx.state;
+  const {
+    arweave,
+    logger,
+    warp,
+    sortKey: providedSortKey,
+    blockHeight,
+  } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
   logger.debug('Fetching contract interactions', {
     contractTxId,
-    sortKey,
+    sortKey: providedSortKey,
     blockHeight,
   });
   const [
@@ -68,18 +74,17 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       contractTxId,
       warp,
       logger,
-      sortKey,
+      sortKey: providedSortKey,
       blockHeight,
     }),
     getWalletInteractionsForContract(arweave, {
       address,
       contractTxId,
-      sortKey,
       blockHeight,
     }),
   ]);
 
-  const mappedInteractions = Array.from(interactions)
+  let mappedInteractions = Array.from(interactions)
     .map(
       ([id, interaction]: [
         string,
@@ -104,18 +109,27 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         };
       },
     )
-    // sort them in descending order
+    // sort them in order
     .sort((a, b) => {
       // prioritize sort key if it exists
       if (a.sortKey && b.sortKey) {
-        return b.sortKey.localeCompare(a.sortKey);
+        return a.sortKey.localeCompare(b.sortKey);
       }
-      return b.height - a.height;
+      return a.height - b.height;
     });
 
+  // filter up to provided sort key
+  if (providedSortKey) {
+    const sortKeyIndex = mappedInteractions.findIndex(
+      ({ sortKey: interactionSortKey }) =>
+        interactionSortKey === providedSortKey,
+    );
+    mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
+  }
   ctx.body = {
     contractTxId,
-    interactions: mappedInteractions,
+    // return them in descending order
+    interactions: mappedInteractions.reverse(),
     address,
     sortKey: evaluatedSortKey,
     evaluationOptions,

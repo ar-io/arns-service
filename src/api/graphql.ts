@@ -108,7 +108,6 @@ export async function getWalletInteractionsForContract(
   params: {
     address?: string | undefined;
     contractTxId: string;
-    sortKey: string | undefined;
     blockHeight: number | undefined;
   },
 ): Promise<{
@@ -119,12 +118,7 @@ export async function getWalletInteractionsForContract(
 }> {
   const parser = new TagsParser();
   const interactionSorter = new LexicographicalInteractionsSorter(arweave);
-  const {
-    address,
-    contractTxId,
-    blockHeight: blockHeightFilter,
-    sortKey: sortKeyFilter,
-  } = params;
+  const { address, contractTxId, blockHeight: blockHeightFilter } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const interactions = new Map<
@@ -193,12 +187,12 @@ export async function getWalletInteractionsForContract(
     }
 
     // remove interactions without block data
-    const validInteractions = data.data.transactions.edges.filter(
+    let validInteractions = data.data.transactions.edges.filter(
       (i) => i.node.block && i.node.block.height && i.node.block.id,
     );
-    // sort them using warps sort logic and adds sort keys
-    const sortedInteractions = await interactionSorter.sort(validInteractions);
-    for (const i of sortedInteractions) {
+    // sort them using warps sort logic and add sort keys
+    validInteractions = await interactionSorter.sort(validInteractions);
+    for (const i of validInteractions) {
       // basic validation for smartweave tags
       const inputTag = parser.getInputTag(i.node, contractTxId);
       const contractTag = parser.getContractTag(i.node);
@@ -221,11 +215,6 @@ export async function getWalletInteractionsForContract(
         owner: i.node.owner.address,
         sortKey: i.node.sortKey,
       });
-
-      // if we have a sort key filter, we can stop here
-      if (i.node.sortKey === sortKeyFilter) {
-        break;
-      }
     }
     cursor =
       data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ?? undefined;
