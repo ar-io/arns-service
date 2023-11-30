@@ -148,7 +148,6 @@ export async function getWalletInteractionsForContract(
                   min: 0,
                   max: ${blockHeightFilter ?? null}
                 },
-                sort: HEIGHT_DESC,
                 first: ${MAX_REQUEST_SIZE},
                 bundledIn: null,
                 ${cursor ? `after: "${cursor}"` : ''}
@@ -222,6 +221,7 @@ export async function getWalletInteractionsForContract(
         owner: i.node.owner.address,
         sortKey: i.node.sortKey,
       });
+
       // if we have a sort key filter, we can stop here
       if (i.node.sortKey === sortKeyFilter) {
         break;
@@ -231,6 +231,7 @@ export async function getWalletInteractionsForContract(
       data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ?? undefined;
     hasNextPage = data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
+
   return {
     interactions,
   };

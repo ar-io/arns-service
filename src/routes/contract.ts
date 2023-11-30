@@ -16,6 +16,7 @@
  */
 
 import {
+  ArNSInteraction,
   ContractRecordResponse,
   ContractReservedResponse,
   KoaContext,
@@ -79,29 +80,45 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         blockHeight,
       }),
     ]);
-  const mappedInteractions = [...interactions.keys()].map((id: string) => {
-    const interaction = interactions.get(id);
-    // found in graphql but not by warp
-    if (interaction && !Object.keys(validity).includes(id)) {
-      logger.debug('Interaction found via GraphQL but not evaluated by warp', {
-        contractTxId,
-        interaction: id,
-      });
-      mismatchedInteractionCount.inc();
-    }
-    return {
-      ...interaction,
-      valid: validity[id] ?? false,
-      ...(errorMessages[id] ? { error: errorMessages[id] } : {}),
-      id,
-    };
-  });
 
-  // TODO: maybe add a check here that gql and warp returned the same number of interactions
+  const mappedInteractions = Array.from(interactions)
+    .map(
+      ([id, interaction]: [
+        string,
+        Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>,
+      ]) => {
+        // found in graphql but not by warp
+        if (!Object.keys(validity).includes(id)) {
+          logger.debug(
+            'Interaction found via GraphQL but not evaluated by warp',
+            {
+              contractTxId,
+              interaction: id,
+            },
+          );
+          mismatchedInteractionCount.inc();
+        }
+        return {
+          ...interaction,
+          valid: validity[id] ?? false,
+          error: errorMessages[id],
+          id,
+        };
+      },
+    )
+    // sort them in descending order
+    .sort((a, b) => {
+      // prioritize sort key if it exists
+      if (a.sortKey && b.sortKey) {
+        return b.sortKey.localeCompare(a.sortKey);
+      }
+      return b.height - a.height;
+    });
+
   ctx.body = {
     contractTxId,
     interactions: mappedInteractions,
-    ...(address ? { address } : {}), // only include address if it was provided
+    address,
     evaluationOptions,
   };
 }
