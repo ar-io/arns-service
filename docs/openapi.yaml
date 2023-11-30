@@ -7,6 +7,45 @@ servers:
   - url: '/v1'
 
 components:
+  parameters:
+    contractTxId:
+      in: path
+      name: contractTxId
+      required: true
+      description: Transaction ID of the contract.
+      schema:
+        type: string
+        example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+    walletAddress:
+      in: path
+      name: walletAddress
+      required: true
+      description: The wallet address.
+      schema:
+        type: string
+        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+    name:
+      in: path
+      name: name
+      required: true
+      description: The name of the record to return.
+      schema:
+        type: string
+        example: 'ario'
+    blockHeight:
+      name: blockHeight
+      in: query
+      required: false
+      description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
+      schema:
+        type: number
+    sortKey:
+      name: sortKey
+      in: query
+      required: false
+      description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
+      schema:
+        type: string
   schemas:
     ArNsContractState:
       type: object
@@ -32,7 +71,6 @@ components:
         balances:
           type: object
           description: The balances in the contract.
-
     EvaluationOptions:
       type: object
       properties:
@@ -46,8 +84,6 @@ components:
         remoteStateSyncEnabled:
           type: boolean
         waitForConfirmation:
-          type: boolean
-        updateCacheForEachInteraction:
           type: boolean
         maxInteractionEvaluationTimeSeconds:
           type: integer
@@ -77,25 +113,9 @@ paths:
       summary: Fetches a contract state by its transaction id using Warp
       description: Fetches a contract state by its transaction id using Warp
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -126,13 +146,7 @@ paths:
       summary: Get the result of a contract read interaction with input parameters
       description: Retrieves the result for a specific contract read interaction with given parameters. Use query params for input parameters.
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-          description: Unique identifier of the contract.
+        - $ref: '#/components/parameters/contractTxId'
         - in: path
           name: functionName
           required: true
@@ -167,13 +181,8 @@ paths:
       summary: Get contract price for interaction and input
       description: Retrieves the price for a specific contract based on given parameters.
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-          description: Unique identifier of the contract.
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/name'
         - in: query
           name: interactionName
           required: true
@@ -181,13 +190,6 @@ paths:
             type: string
             example: 'extendRecord'
           description: Name of the interaction, e.g., 'buyRecord', 'extendRecord', 'increaseUndernameCount', 'submitAuctionBid'.
-        - in: query
-          name: name
-          required: true
-          schema:
-            type: string
-            example: '1984'
-          description: Name associated with the record.
         - in: query
           name: years
           required: false
@@ -241,32 +243,9 @@ paths:
       summary: Returns the field in the contract state for a given transaction id
       description: Returns the field in the contract state for a given transaction id
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: field
-          required: true
-          description: The field of the state to return.
-          schema:
-            type: string
-            example: 'owner'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -295,32 +274,9 @@ paths:
     get:
       summary: Returns the record objects for a given contract, who's object parameters match query parameters
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: ID of the root contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: query
-          name: contractTxId
-          required: true
-          description: The contractTxID for the records to return
-          schema:
-            type: string
-            example: 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -367,32 +323,10 @@ paths:
     get:
       summary: Returns the record object for a given contract and name
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: name
-          required: true
-          description: The name of the record to return.
-          schema:
-            type: string
-            example: 'ario'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/name'
       responses:
         '200':
           description: OK
@@ -442,32 +376,10 @@ paths:
     get:
       summary: Returns the balance given contract and wallet address
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: walletAddress
-          required: true
-          description: The wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
@@ -500,25 +412,9 @@ paths:
       summary: Returns the interactions for a given contract sorted in descending order
       description: Returns the interactions for a given contract sorted in descending order
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -548,32 +444,10 @@ paths:
     get:
       summary: Returns the interactions for a given contract created by a given wallet address
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: walletAddress
-          required: true
-          description: The wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-        - in: query
-          name: blockHeight
-          required: false
-          description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
-          schema:
-            type: number
-        - in: query
-          name: sortKey
-          required: false
-          description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
@@ -614,18 +488,12 @@ paths:
         '503':
           description: Internal server error.
 
-  /wallet/{address}/contracts:
+  /wallet/{walletAddress}/contracts:
     get:
       summary: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
       description: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
       parameters:
-        - in: path
-          name: address
-          required: true
-          description: Public Arweave wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
