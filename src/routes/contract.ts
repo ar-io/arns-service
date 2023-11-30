@@ -220,8 +220,6 @@ export async function contractRecordHandler(ctx: KoaContext) {
     );
   }
 
-  console.log(blockHeight);
-
   const response: ContractRecordResponse = {
     contractTxId,
     name,
