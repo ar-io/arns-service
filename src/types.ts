@@ -70,6 +70,7 @@ export type ContractType = (typeof allowedContractTypes)[number];
 export type ContractBaseResponse = {
   contractTxId: string;
   evaluationOptions?: Partial<EvaluationOptions>;
+  sortKey: string;
 };
 
 export type ContractRecordResponse = ContractBaseResponse & {

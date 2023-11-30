@@ -93,6 +93,20 @@ paths:
           schema:
             type: string
             example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height.
+          schema:
+            type: number
+            example: 1307087
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key.
+          schema:
+            type: string
+            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -111,6 +125,8 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          description: Bad request if query parameters are invalid.
         '404':
           description: Contract not found.
         '503':
@@ -250,6 +266,20 @@ paths:
           schema:
             type: string
             example: 'owner'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height.
+          schema:
+            type: number
+            example: 1307087
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key.
+          schema:
+            type: string
+            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -264,6 +294,9 @@ paths:
                   field:
                     type: any
                     example: {}
+                  sortKey:
+                    type: string,
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '404':
@@ -289,6 +322,20 @@ paths:
           schema:
             type: string
             example: 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height.
+          schema:
+            type: number
+            example: 1307087
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key.
+          schema:
+            type: string
+            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -321,6 +368,9 @@ paths:
                             'endTimestamp': 1714581732,
                           },
                       ]
+                  sortKey:
+                    type: string,
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '404':
@@ -381,6 +431,9 @@ paths:
                   owner:
                     type: string
                     example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '404':
@@ -406,6 +459,20 @@ paths:
           schema:
             type: string
             example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height.
+          schema:
+            type: number
+            example: 1307087
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key.
+          schema:
+            type: string
+            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -423,6 +490,9 @@ paths:
                   balance:
                     type: number
                     example: 994963650
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '404':
@@ -442,6 +512,20 @@ paths:
           schema:
             type: string
             example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+        - in: query
+          name: blockHeight
+          required: false
+          description: Evaluate the contract up to a specific block height.
+          schema:
+            type: number
+            example: 1307087
+        - in: query
+          name: sortKey
+          required: false
+          description: Evaluate the contract at up to a specific sort key.
+          schema:
+            type: string
+            example: 000001307087,0000000000000,0cbe0824cdf7ba421c49d08ebf6cd0957d0396da8ebe78107a37baa31ed5bbe4
       responses:
         '200':
           description: OK
@@ -455,8 +539,13 @@ paths:
                     example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
                   interactions:
                     $ref: '#/components/schemas/ContractInteraction'
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          description: Bad request if query parameters are invalid.
         '404':
           description: Contract not found.
         '503':
@@ -510,6 +599,9 @@ paths:
                           'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
                         },
                       ]
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '404':
