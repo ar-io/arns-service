@@ -46,6 +46,28 @@ components:
       description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
       schema:
         type: string
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Invalid block height, must be a single integer'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Contract not found'
+    InternalServerError:
+      description: An internal server error occurred.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Internal server error'
   schemas:
     ArNsContractState:
       type: object
@@ -135,11 +157,11 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/read/{functionName}:
     get:
@@ -172,9 +194,11 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are missing or invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/price:
     get:
@@ -234,9 +258,11 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are missing or invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/{field}:
     get:
@@ -265,10 +291,12 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/records:
     get:
@@ -314,10 +342,12 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/records/{name}:
     get:
@@ -367,10 +397,12 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Record does not exist in the contract.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/balances/{walletAddress}:
     get:
@@ -402,10 +434,12 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet does not have a balance in the contract.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/interactions:
     get:
@@ -434,11 +468,11 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/interactions/{walletAddress}:
     get:
@@ -483,10 +517,12 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /wallet/{walletAddress}/contracts:
     get:
@@ -527,10 +563,12 @@ paths:
                         '-tYkDvWQKiJF8TZTKX3ccRY8Nx7rIh21r1UNbrXAB38',
                         'GmFuXgBgtXHgVf1RJtgAyuZyDx3OfRn-HXzdDGlrFe0',
                       ]
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /wallet/{address}/contract/{contractTxId}:
     get:
@@ -583,7 +621,9 @@ paths:
                       ]
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
