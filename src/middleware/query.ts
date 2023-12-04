@@ -19,7 +19,7 @@ import { KoaContext } from '../types';
 import logger from '../logger';
 import { BadRequestError } from '../errors';
 
-const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-fA-F]{64}$/;
+const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-f]{64}$/;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   const { blockHeight, sortKey } = ctx.query;
 
