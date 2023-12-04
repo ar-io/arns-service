@@ -27,10 +27,17 @@ import { NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
-  const { logger, warp, sortKey, blockHeight } = ctx.state;
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
     contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const {
     state,
@@ -40,8 +47,8 @@ export async function contractHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   ctx.body = {
     contractTxId,
@@ -56,15 +63,15 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     arweave,
     logger,
     warp,
-    sortKey: providedSortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
   logger.debug('Fetching contract interactions', {
     contractTxId,
-    sortKey: providedSortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
@@ -74,13 +81,13 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       contractTxId,
       warp,
       logger,
-      sortKey: providedSortKey,
-      blockHeight,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
     }),
     getWalletInteractionsForContract(arweave, {
       address,
       contractTxId,
-      blockHeight,
+      blockHeight: requestedBlockHeight,
     }),
   ]);
 
@@ -119,10 +126,10 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     });
 
   // filter up to provided sort key
-  if (providedSortKey) {
+  if (requestedSortKey) {
     const sortKeyIndex = mappedInteractions.findIndex(
       ({ sortKey: interactionSortKey }) =>
-        interactionSortKey === providedSortKey,
+        interactionSortKey === requestedSortKey,
     );
     mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
   }
@@ -137,13 +144,18 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
 }
 
 export async function contractFieldHandler(ctx: KoaContext) {
-  const { logger, warp, sortKey, blockHeight } = ctx.state;
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, field } = ctx.params;
   logger.debug('Fetching contract field', {
     contractTxId,
     field,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const {
     state,
@@ -153,8 +165,8 @@ export async function contractFieldHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const contractField = state[field];
 
@@ -173,13 +185,18 @@ export async function contractFieldHandler(ctx: KoaContext) {
 }
 
 export async function contractBalanceHandler(ctx: KoaContext) {
-  const { logger, warp, sortKey, blockHeight } = ctx.state;
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, address } = ctx.params;
   logger.debug('Fetching contract balance for wallet', {
     contractTxId,
     wallet: address,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const {
     state,
@@ -189,8 +206,8 @@ export async function contractBalanceHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const balance = state['balances'][address];
 
@@ -204,14 +221,19 @@ export async function contractBalanceHandler(ctx: KoaContext) {
 }
 
 export async function contractRecordHandler(ctx: KoaContext) {
-  const { warp, logger: _logger, sortKey, blockHeight } = ctx.state;
+  const {
+    warp,
+    logger: _logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, name } = ctx.params;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
 
   logger.debug('Fetching contract record');
@@ -223,8 +245,8 @@ export async function contractRecordHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const record = state['records'][name];
 
@@ -252,7 +274,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
       warp,
       logger,
       // we cannot use sort key as it is not applicable to sub contract
-      blockHeight,
+      blockHeight: requestedBlockHeight,
     });
     response['owner'] = antContract?.owner;
     response['evaluationOptions'] = evaluationOptions;
@@ -322,12 +344,19 @@ export async function contractRecordFilterHandler(ctx: KoaContext) {
 }
 
 export async function contractReservedHandler(ctx: KoaContext) {
-  const { warp, logger: _logger, sortKey, blockHeight } = ctx.state;
+  const {
+    warp,
+    logger: _logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, name } = ctx.params;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
 
   const {
@@ -338,8 +367,8 @@ export async function contractReservedHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
-    sortKey,
-    blockHeight,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const reservedName = state['reserved'][name];
 

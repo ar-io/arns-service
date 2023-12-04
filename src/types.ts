@@ -54,7 +54,7 @@ export type ArNSInteraction = {
   input: PstInput | undefined;
   height: number;
   owner: string;
-  sortKey?: string;
+  sortKey: string;
   timestamp: number;
   errorMessage?: string;
 };

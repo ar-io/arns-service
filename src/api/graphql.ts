@@ -134,16 +134,21 @@ export async function getWalletInteractionsForContract(
                 ${ownerFilter}
                 tags:[
                     {
-                        name:"Contract",
+                        name: "App-Name"
+                        values: ["SmartWeaveAction"]
+                    }
+                    {
+                        name:"Contract"
                         values:["${contractTxId}"]
                     }
                 ],
                 block: {
-                  min: 0,
+                  min: 0
                   max: ${blockHeightFilter ?? null}
-                },
-                first: ${MAX_REQUEST_SIZE},
-                bundledIn: null,
+                }
+                first: ${MAX_REQUEST_SIZE}
+                sort: HEIGHT_DESC
+                bundledIn: null
                 ${cursor ? `after: "${cursor}"` : ''}
             ) {
                 pageInfo {
@@ -192,10 +197,12 @@ export async function getWalletInteractionsForContract(
     );
     // sort them using warps sort logic and add sort keys
     validInteractions = await interactionSorter.sort(validInteractions);
+
     for (const i of validInteractions) {
       // basic validation for smartweave tags
       const inputTag = parser.getInputTag(i.node, contractTxId);
       const contractTag = parser.getContractTag(i.node);
+
       if (!inputTag || !contractTag) {
         logger.debug('Invalid tags for interaction via GQL, ignoring...', {
           contractTxId,
@@ -213,7 +220,14 @@ export async function getWalletInteractionsForContract(
         timestamp: i.node.block.timestamp,
         input: parsedInput,
         owner: i.node.owner.address,
-        sortKey: i.node.sortKey,
+        sortKey:
+          // we should already have a sort key from warp, but if not, generate one
+          i.node.sortKey ??
+          (await interactionSorter.createSortKey(
+            i.node.block.id,
+            i.node.id,
+            i.node.block.height,
+          )),
       });
     }
     cursor =
