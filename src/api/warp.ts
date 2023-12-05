@@ -52,15 +52,18 @@ const readRequestMap: Map<
 class ContractStateCacheKey {
   constructor(
     public readonly contractTxId: string,
+    public readonly sortKey: string | undefined,
+    public readonly blockHeight: number | undefined,
     public readonly evaluationOptions: Partial<EvaluationOptions>,
     public readonly warp: Warp,
     public readonly logger?: winston.Logger,
   ) {}
 
   toString(): string {
-    return `${this.contractTxId}-${createQueryParamHash(
-      this.evaluationOptions,
-    )}`;
+    return `${this.contractTxId}-${createSortKeyBlockHeightHash({
+      sortKey: this.sortKey,
+      blockHeight: this.blockHeight,
+    })}-${createQueryParamHash(this.evaluationOptions)}`;
   }
 
   // Facilitate ReadThroughPromiseCache key derivation
@@ -152,10 +155,29 @@ function createQueryParamHash(evalOptions: Partial<EvaluationOptions>): string {
   return hash.digest('hex');
 }
 
+function createSortKeyBlockHeightHash({
+  sortKey,
+  blockHeight,
+}: {
+  sortKey: string | undefined;
+  blockHeight: number | undefined;
+}) {
+  const hash = createHash('sha256');
+  hash.update(`${sortKey}-${blockHeight}`);
+  return hash.digest('hex');
+}
+
 async function readThroughToContractState(
   cacheKey: ContractStateCacheKey,
 ): Promise<EvaluatedContractState> {
-  const { contractTxId, evaluationOptions, warp, logger } = cacheKey;
+  const {
+    contractTxId,
+    evaluationOptions,
+    sortKey: providedSortKey,
+    blockHeight: providedBlockHeight,
+    warp,
+    logger,
+  } = cacheKey;
   logger?.debug('Reading through to contract state...', {
     contractTxId,
     cacheKey: cacheKey.toString(),
@@ -189,7 +211,9 @@ async function readThroughToContractState(
     .setEvaluationOptions(evaluationOptions);
 
   // set cached value for multiple requests during initial promise
-  const readStatePromise = contract.readState();
+  const readStatePromise = contract.readState(
+    providedSortKey ?? providedBlockHeight,
+  );
   stateRequestMap.set(cacheId, readStatePromise);
 
   readStatePromise
@@ -280,10 +304,14 @@ export async function getContractState({
   contractTxId,
   warp,
   logger,
+  sortKey = undefined,
+  blockHeight = undefined,
 }: {
   contractTxId: string;
   warp: Warp;
   logger: winston.Logger;
+  sortKey?: string | undefined;
+  blockHeight?: number | undefined;
 }): Promise<EvaluatedContractState> {
   try {
     // get the contract manifest eval options by default
@@ -293,7 +321,14 @@ export async function getContractState({
       );
     // Awaiting here so that promise rejection can be caught below, wrapped, and propagated
     return await contractStateCache.get(
-      new ContractStateCacheKey(contractTxId, evaluationOptions, warp, logger),
+      new ContractStateCacheKey(
+        contractTxId,
+        sortKey,
+        blockHeight,
+        evaluationOptions,
+        warp,
+        logger,
+      ),
     );
   } catch (error) {
     throw handleWarpErrors(error);
@@ -510,17 +545,23 @@ export async function validateStateAndOwnership({
   type,
   address,
   logger,
+  sortKey = undefined,
+  blockHeight = undefined,
 }: {
   contractTxId: string;
   warp: Warp;
   type?: ContractType;
   address?: string;
   logger: winston.Logger;
+  sortKey?: string | undefined;
+  blockHeight?: number | undefined;
 }): Promise<boolean> {
   const { state } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey,
+    blockHeight,
   });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =

@@ -2,12 +2,72 @@ openapi: 3.0.0
 info:
   title: ArNS Microservice
   version: 0.1.0
-  description: A koa microservice that provides API interface for fetching and retrieving ArNS related Smartweave contracts.
-
+description: A koa microservice that provides API interface for fetching and retrieving ArNS related Smartweave contracts.
 servers:
   - url: '/v1'
 
 components:
+  parameters:
+    contractTxId:
+      in: path
+      name: contractTxId
+      required: true
+      description: Transaction ID of the contract.
+      schema:
+        type: string
+        example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+    walletAddress:
+      in: path
+      name: walletAddress
+      required: true
+      description: The wallet address.
+      schema:
+        type: string
+        example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+    name:
+      in: path
+      name: name
+      required: true
+      description: The name of the record to return.
+      schema:
+        type: string
+        example: 'ario'
+    blockHeight:
+      name: blockHeight
+      in: query
+      required: false
+      description: Evaluate the contract up to a specific block height. Only applicable if sortKey is not provided.
+      schema:
+        type: number
+    sortKey:
+      name: sortKey
+      in: query
+      required: false
+      description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Invalid block height, must be a single integer'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Contract not found'
+    InternalServerError:
+      description: An internal server error occurred.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Internal server error'
   schemas:
     ArNsContractState:
       type: object
@@ -33,35 +93,24 @@ components:
         balances:
           type: object
           description: The balances in the contract.
-
     EvaluationOptions:
       type: object
       properties:
         sourceType:
           type: string
-          enum: ['arweave', 'otherSource']
-          description: The source type of the evaluation.
+          enum: ['arweave', 'other']
         internalWrites:
           type: boolean
-          description: Flag to enable or disable internal writes.
         useKVStorage:
           type: boolean
-          description: Indicates if key-value storage is used.
         remoteStateSyncEnabled:
           type: boolean
-          description: Flag for enabling remote state synchronization.
         waitForConfirmation:
           type: boolean
-          description: Whether to wait for confirmation before proceeding.
-        updateCacheForEachInteraction:
-          type: boolean
-          description: Specifies if the cache should be updated for each interaction.
         maxInteractionEvaluationTimeSeconds:
           type: integer
-          description: The maximum time in seconds for interaction evaluation.
         throwOnInternalWriteError:
           type: boolean
-          description: Indicates if an error should be thrown on internal write failure.
 
     ContractInteraction:
       type: array
@@ -86,13 +135,9 @@ paths:
       summary: Fetches a contract state by its transaction id using Warp
       description: Fetches a contract state by its transaction id using Warp
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -111,23 +156,19 @@ paths:
                     example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/read/{functionName}:
     get:
       summary: Get the result of a contract read interaction with input parameters
       description: Retrieves the result for a specific contract read interaction with given parameters. Use query params for input parameters.
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-          description: Unique identifier of the contract.
+        - $ref: '#/components/parameters/contractTxId'
         - in: path
           name: functionName
           required: true
@@ -153,22 +194,19 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are missing or invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/price:
     get:
       summary: Get contract price for interaction and input
       description: Retrieves the price for a specific contract based on given parameters.
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-          description: Unique identifier of the contract.
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/name'
         - in: query
           name: interactionName
           required: true
@@ -176,13 +214,6 @@ paths:
             type: string
             example: 'extendRecord'
           description: Name of the interaction, e.g., 'buyRecord', 'extendRecord', 'increaseUndernameCount', 'submitAuctionBid'.
-        - in: query
-          name: name
-          required: true
-          schema:
-            type: string
-            example: '1984'
-          description: Name associated with the record.
         - in: query
           name: years
           required: false
@@ -227,29 +258,20 @@ paths:
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
-          description: Bad request if query parameters are missing or invalid.
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/{field}:
     get:
       summary: Returns the field in the contract state for a given transaction id
       description: Returns the field in the contract state for a given transaction id
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: field
-          required: true
-          description: The field of the state to return.
-          schema:
-            type: string
-            example: 'owner'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -264,31 +286,25 @@ paths:
                   field:
                     type: any
                     example: {}
+                  sortKey:
+                    type: string,
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/records:
     get:
       summary: Returns the record objects for a given contract, who's object parameters match query parameters
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: ID of the root contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: query
-          name: contractTxId
-          required: true
-          description: The contractTxID for the records to return
-          schema:
-            type: string
-            example: 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -321,31 +337,26 @@ paths:
                             'endTimestamp': 1714581732,
                           },
                       ]
+                  sortKey:
+                    type: string,
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/records/{name}:
     get:
       summary: Returns the record object for a given contract and name
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: name
-          required: true
-          description: The name of the record to return.
-          schema:
-            type: string
-            example: 'ario'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/name'
       responses:
         '200':
           description: OK
@@ -381,31 +392,26 @@ paths:
                   owner:
                     type: string
                     example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Record does not exist in the contract.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/balances/{walletAddress}:
     get:
       summary: Returns the balance given contract and wallet address
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: walletAddress
-          required: true
-          description: The wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
@@ -423,25 +429,26 @@ paths:
                   balance:
                     type: number
                     example: 994963650
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet does not have a balance in the contract.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/interactions:
     get:
       summary: Returns the interactions for a given contract sorted in descending order
       description: Returns the interactions for a given contract sorted in descending order
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
       responses:
         '200':
           description: OK
@@ -455,31 +462,26 @@ paths:
                     example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
                   interactions:
                     $ref: '#/components/schemas/ContractInteraction'
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /contract/{contractTxId}/interactions/{walletAddress}:
     get:
       summary: Returns the interactions for a given contract created by a given wallet address
       parameters:
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
-        - in: path
-          name: walletAddress
-          required: true
-          description: The wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
@@ -510,25 +512,24 @@ paths:
                           'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
                         },
                       ]
+                  sortKey:
+                    type: string
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Contract not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
-  /wallet/{address}/contracts:
+  /wallet/{walletAddress}/contracts:
     get:
       summary: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
       description: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
       parameters:
-        - in: path
-          name: address
-          required: true
-          description: Public Arweave wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
+        - $ref: '#/components/parameters/walletAddress'
       responses:
         '200':
           description: OK
@@ -562,10 +563,12 @@ paths:
                         '-tYkDvWQKiJF8TZTKX3ccRY8Nx7rIh21r1UNbrXAB38',
                         'GmFuXgBgtXHgVf1RJtgAyuZyDx3OfRn-HXzdDGlrFe0',
                       ]
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'
 
   /wallet/{address}/contract/{contractTxId}:
     get:
@@ -618,7 +621,9 @@ paths:
                       ]
                   evaluationOptions:
                     $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Wallet not found.
+          $ref: '#/components/responses/NotFound'
         '503':
-          description: Internal server error.
+          $ref: '#/components/responses/InternalServerError'

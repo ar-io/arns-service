@@ -70,6 +70,7 @@ export type ContractType = (typeof allowedContractTypes)[number];
 export type ContractBaseResponse = {
   contractTxId: string;
   evaluationOptions?: Partial<EvaluationOptions>;
+  sortKey: string;
 };
 
 export type ContractRecordResponse = ContractBaseResponse & {
@@ -95,10 +96,3 @@ export type EvaluatedReadInteraction = {
   result: any;
   evaluationOptions?: Partial<EvaluationOptions>;
 };
-
-// Error types
-
-export class EvaluationError extends Error {}
-export class NotFoundError extends Error {}
-export class UnknownError extends Error {}
-export class BadRequestError extends Error {}

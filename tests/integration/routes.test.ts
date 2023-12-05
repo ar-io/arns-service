@@ -45,6 +45,7 @@ describe('Integration tests', () => {
   before(async function () {
     // set a large timeout to 10 secs
     this.timeout(10_000);
+
     ids = [
       process.env.DEPLOYED_ANT_CONTRACT_TX_ID!,
       process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID!,
@@ -74,6 +75,14 @@ describe('Integration tests', () => {
       target: address,
       qty: 1,
     };
+
+    /**
+     * TODO: there is an issue in arlocal where maxHeight of 0 is not getting respected - once resolved we can remove this call and update the /interactions tests
+     * https://github.com/textury/arlocal/issues/148
+     */
+    await arweave.api.get('mine');
+
+    // create a write interaction we can test against
     const writeInteraction = await contract.writeInteraction(
       transferInteraction,
       {
@@ -121,13 +130,14 @@ describe('Integration tests', () => {
   describe('/v1', () => {
     describe('/contract', () => {
       describe('/:contractTxId', () => {
-        it('should return the contract state and id without any evaluation options provided', async () => {
+        it('should return the contract state and id and default evaluation options', async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, state, evaluationOptions } = data;
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
           expect(contractTxId).to.equal(id);
           expect(evaluationOptions).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
           expect(state).to.include.keys([
             'balances',
             'owner',
@@ -149,6 +159,71 @@ describe('Integration tests', () => {
             '/v1/contract/kbtXub0JcZYfBn7-WUgkFQjKmZb4y5DY2nT8WovBhWY',
           );
           expect(status).to.equal(404);
+        });
+
+        it('should return a 400 on invalid block height query param', async () => {
+          // block height before the interactions were created
+          const invalidBlockHeight = 'not-a-number';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${invalidBlockHeight}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return a 400 on invalid sortKey height query param', async () => {
+          // block height before the interactions were created
+          const invalidSortKey = 'not-a-sort-key';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}/interactions?sortKey=${invalidSortKey}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return a 400 when both block height and sort key query params are provided', async () => {
+          // block height before the interactions were created
+          const validBlockHeight = 1;
+          const exampleSortKey = 'example-sort-key';
+
+          const { status } = await axios.get(
+            `/v1/contract/${id}?blockHeight=${validBlockHeight}&sortKey=${exampleSortKey}`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should return contract state evaluated up to a given block height', async () => {
+          const { height: previousBlockHeight } =
+            await arweave.blocks.getCurrent();
+          // mine a block height to ensure the contract is evaluated at previous one
+          await arweave.api.get('mine');
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}?blockHeight=${previousBlockHeight}`,
+          );
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
+          expect(status).to.equal(200);
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(state).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
+          expect(sortKey.split(',')[0]).to.equal(
+            `${previousBlockHeight}`.padStart(12, '0'),
+          );
+        });
+        it('should return contract state evaluated up to a given sort key', async () => {
+          const knownSortKey = contractInteractions[0].sortKey;
+          // mine a block height to ensure the contract is evaluated at previous one
+          await arweave.api.get('mine');
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}?sortKey=${knownSortKey}`,
+          );
+          const { contractTxId, state, evaluationOptions, sortKey } = data;
+          expect(status).to.equal(200);
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(state).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
+          expect(sortKey).to.equal(knownSortKey);
         });
       });
       describe('/:contractTxId/price', () => {
@@ -173,8 +248,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           expect(interactions).to.deep.equal(contractInteractions);
         });
 
@@ -201,9 +277,38 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           expect(Object.keys(interactions)).not.to.contain(badInteractionTx.id);
+        });
+
+        it('should only return interactions up to a provided block height', async () => {
+          // block height before the interactions were created
+          const previousInteractionHeight = 1;
+
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?blockHeight=${previousInteractionHeight}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
+          expect(interactions).to.deep.equal([]);
+        });
+
+        it('should only return interactions up to a provided sort key height', async () => {
+          const knownSortKey = contractInteractions[0].sortKey;
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?sortKey=${knownSortKey}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).to.equal(knownSortKey);
+          expect(interactions).to.deep.equal([contractInteractions[0]]);
         });
       });
 
@@ -214,8 +319,9 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { contractTxId, interactions } = data;
+          const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
           // TODO: filter out interactions specific to the wallet address
           expect(interactions).to.deep.equal(contractInteractions);
         });
@@ -238,8 +344,35 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+          });
+
+          it(`should return the correct state value for ${field} up to a given block height`, async () => {
+            const previousBlockHeight = 1;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/${field}?blockHeight=${previousBlockHeight}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+          });
+
+          it(`should return the correct state value for ${field} up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/${field}?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
             expect(data[field]).to.not.be.undefined; // we haven't created any interactions
           });
         }
@@ -258,8 +391,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(2);
           });
 
@@ -269,8 +403,9 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(1);
           });
 
@@ -280,9 +415,23 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId } = data;
+            const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
             expect(Object.keys(data['records'])).to.have.length(0);
+          });
+
+          it(`should return the correct state value for record up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(Object.keys(data['records'])).to.have.length(2);
           });
         });
 
@@ -293,11 +442,12 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, owner, record } = data;
+            const { contractTxId, owner, record, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(record).to.deep.equal({
               contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
             });
+            expect(sortKey).not.be.undefined;
             expect(owner).to.not.be.undefined;
             expect(owner).to.equal(walletAddress);
           });
@@ -308,10 +458,28 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, owner, record } = data;
+            const { contractTxId, owner, record, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(record).to.not.be.undefined;
+            expect(sortKey).not.be.undefined;
             expect(owner).to.be.undefined;
+          });
+
+          it(`should return the correct state value for record up to a given sort key`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records/example?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, record, owner } = data;
+            expect(contractTxId).to.equal(id);
+            expect(record).to.deep.equal({
+              contractTxId: process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
+            });
+            expect(sortKey).not.be.undefined;
+            expect(owner).to.not.be.undefined;
+            expect(owner).to.equal(walletAddress);
           });
 
           it('should return a 404 when the record name does not exist', async () => {
@@ -329,10 +497,17 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, reserved, details, evaluationOptions } = data;
+            const {
+              contractTxId,
+              reserved,
+              details,
+              sortKey,
+              evaluationOptions,
+            } = data;
             expect(contractTxId).to.equal(id);
             expect(reserved).to.be.true;
             expect(details).to.not.be.undefined;
+            expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
 
@@ -342,10 +517,17 @@ describe('Integration tests', () => {
             );
             expect(status).to.equal(200);
             expect(data).to.not.be.undefined;
-            const { contractTxId, reserved, details, evaluationOptions } = data;
+            const {
+              contractTxId,
+              reserved,
+              details,
+              sortKey,
+              evaluationOptions,
+            } = data;
             expect(contractTxId).to.equal(id);
             expect(reserved).to.be.false;
             expect(details).to.be.undefined;
+            expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
         });

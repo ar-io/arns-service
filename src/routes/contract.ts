@@ -16,6 +16,7 @@
  */
 
 import {
+  ArNSInteraction,
   ContractRecordResponse,
   ContractReservedResponse,
   KoaContext,
@@ -26,87 +27,146 @@ import { NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
 
 export async function contractHandler(ctx: KoaContext) {
-  const { logger, warp } = ctx.state;
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
     contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
-  const { state, evaluationOptions, sortKey } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   ctx.body = {
     contractTxId,
     state,
-    sortKey,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
 
 export async function contractInteractionsHandler(ctx: KoaContext) {
-  const { arweave, logger, warp } = ctx.state;
+  const {
+    arweave,
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
-  logger.debug('Fetching all contract interactions', {
+  logger.debug('Fetching contract interactions', {
     contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
-  const [{ validity, errorMessages, evaluationOptions }, { interactions }] =
-    await Promise.all([
-      getContractState({
-        contractTxId,
-        warp,
-        logger,
-      }),
-      getWalletInteractionsForContract(arweave, {
-        address,
-        contractTxId,
-      }),
-    ]);
-  const mappedInteractions = [...interactions.keys()].map((id: string) => {
-    const interaction = interactions.get(id);
-    if (interaction) {
-      // record the mismatch so we can debug
-      if (!Object.keys(validity).includes(id)) {
-        logger.debug(
-          'Interaction found via GraphQL but not evaluated by warp',
-          {
-            contractTxId,
-            interaction: id,
-          },
-        );
-        mismatchedInteractionCount.inc();
-      }
-      return {
-        ...interaction,
-        valid: validity[id] ?? false,
-        ...(errorMessages[id] ? { error: errorMessages[id] } : {}),
-        id,
-      };
-    }
-    return;
-  });
+  const [
+    { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
+    { interactions },
+  ] = await Promise.all([
+    getContractState({
+      contractTxId,
+      warp,
+      logger,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+    }),
+    getWalletInteractionsForContract(arweave, {
+      address,
+      contractTxId,
+      blockHeight: requestedBlockHeight,
+    }),
+  ]);
 
-  // TODO: maybe add a check here that gql and warp returned the same number of interactions
+  let mappedInteractions = Array.from(interactions)
+    .map(
+      ([id, interaction]: [
+        string,
+        Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>,
+      ]) => {
+        // found in graphql but not by warp
+        if (!Object.keys(validity).includes(id)) {
+          logger.debug(
+            'Interaction found via GraphQL but not evaluated by warp',
+            {
+              contractTxId,
+              interaction: id,
+            },
+          );
+          mismatchedInteractionCount.inc();
+        }
+        return {
+          ...interaction,
+          valid: validity[id] ?? false,
+          error: errorMessages[id],
+          id,
+        };
+      },
+    )
+    // sort them in order
+    .sort((a, b) => {
+      // prioritize sort key if it exists
+      if (a.sortKey && b.sortKey) {
+        return a.sortKey.localeCompare(b.sortKey);
+      }
+      return a.height - b.height;
+    });
+
+  // filter up to provided sort key
+  if (requestedSortKey) {
+    const sortKeyIndex = mappedInteractions.findIndex(
+      ({ sortKey: interactionSortKey }) =>
+        interactionSortKey === requestedSortKey,
+    );
+    mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
+  }
   ctx.body = {
     contractTxId,
-    interactions: mappedInteractions,
-    ...(address ? { address } : {}), // only include address if it was provided
+    // return them in descending order
+    interactions: mappedInteractions.reverse(),
+    address,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
 
 export async function contractFieldHandler(ctx: KoaContext) {
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, field } = ctx.params;
-  const { logger, warp } = ctx.state;
   logger.debug('Fetching contract field', {
     contractTxId,
     field,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
-  const { state, evaluationOptions } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const contractField = state[field];
 
@@ -119,21 +179,35 @@ export async function contractFieldHandler(ctx: KoaContext) {
   ctx.body = {
     contractTxId,
     [field]: contractField,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
 
 export async function contractBalanceHandler(ctx: KoaContext) {
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, address } = ctx.params;
-  const { logger, warp } = ctx.state;
   logger.debug('Fetching contract balance for wallet', {
     contractTxId,
     wallet: address,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
-  const { state, evaluationOptions } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const balance = state['balances'][address];
 
@@ -141,24 +215,38 @@ export async function contractBalanceHandler(ctx: KoaContext) {
     contractTxId,
     address,
     balance: balance ?? 0,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
 
 export async function contractRecordHandler(ctx: KoaContext) {
+  const {
+    warp,
+    logger: _logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, name } = ctx.params;
-  const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
 
   logger.debug('Fetching contract record');
-  const { state, evaluationOptions } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const record = state['records'][name];
 
@@ -173,6 +261,7 @@ export async function contractRecordHandler(ctx: KoaContext) {
     name,
     record,
     evaluationOptions,
+    sortKey: evaluatedSortKey,
   };
 
   // get record details and contract state if it's from the source contract
@@ -184,7 +273,8 @@ export async function contractRecordHandler(ctx: KoaContext) {
       contractTxId: record.contractTxId,
       warp,
       logger,
-      // don't set evaluation options for sub contracts - they'll be pulled on load
+      // we cannot use sort key as it is not applicable to sub contract
+      blockHeight: requestedBlockHeight,
     });
     response['owner'] = antContract?.owner;
     response['evaluationOptions'] = evaluationOptions;
@@ -194,8 +284,9 @@ export async function contractRecordHandler(ctx: KoaContext) {
 }
 
 export async function contractRecordFilterHandler(ctx: KoaContext) {
+  const { warp, logger: _logger, sortKey, blockHeight } = ctx.state;
   const { contractTxId } = ctx.params;
-  const { warp, logger: _logger } = ctx.state;
+
   // TODO: add other query filters (e.g. endTimestamp)
   const { contractTxId: filteredContractTxIds = [] } = ctx.query;
 
@@ -211,10 +302,16 @@ export async function contractRecordFilterHandler(ctx: KoaContext) {
     },
   });
 
-  const { state, evaluationOptions } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey,
+    blockHeight,
   });
 
   const { records = {} } = state;
@@ -240,24 +337,38 @@ export async function contractRecordFilterHandler(ctx: KoaContext) {
   ctx.body = {
     contractTxId,
     records: associatedRecords,
+    sortKey: evaluatedSortKey,
     // TODO: include filters in response
     evaluationOptions,
   };
 }
 
 export async function contractReservedHandler(ctx: KoaContext) {
+  const {
+    warp,
+    logger: _logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
   const { contractTxId, name } = ctx.params;
-  const { warp, logger: _logger } = ctx.state;
 
   const logger = _logger.child({
     contractTxId,
     record: name,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
 
-  const { state, evaluationOptions } = await getContractState({
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
   });
   const reservedName = state['reserved'][name];
 
@@ -267,14 +378,16 @@ export async function contractReservedHandler(ctx: KoaContext) {
     reserved: !!reservedName,
     ...(reservedName ? { details: reservedName } : {}),
     evaluationOptions,
+    sortKey: evaluatedSortKey,
   };
 
   ctx.body = response;
 }
 
+// TODO: add sortKey and blockHeight support
 export async function contractReadInteractionHandler(ctx: KoaContext) {
-  const { contractTxId, functionName } = ctx.params;
   const { warp, logger: _logger } = ctx.state;
+  const { contractTxId, functionName } = ctx.params;
   const { query: input } = ctx.request;
 
   const logger = _logger.child({
