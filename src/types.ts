@@ -96,3 +96,10 @@ export type EvaluatedReadInteraction = {
   result: any;
   evaluationOptions?: Partial<EvaluationOptions>;
 };
+
+export type GenericContractInteraction = Omit<
+  ArNSInteraction,
+  'valid' | 'errorMessage' | 'id'
+>;
+
+export type TransactionID = string;

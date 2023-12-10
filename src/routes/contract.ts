@@ -16,9 +16,9 @@
  */
 
 import {
-  ArNSInteraction,
   ContractRecordResponse,
   ContractReservedResponse,
+  GenericContractInteraction,
   KoaContext,
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
@@ -72,7 +72,9 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     contractTxId,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    address,
   });
+
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
     { interactions },
@@ -84,38 +86,42 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       sortKey: requestedSortKey,
       blockHeight: requestedBlockHeight,
     }),
-    getWalletInteractionsForContract(arweave, {
+    getWalletInteractionsForContract({
+      arweave,
       address,
       contractTxId,
       blockHeight: requestedBlockHeight,
+      logger,
     }),
   ]);
 
+  logger.debug('Mapping interactions', {
+    contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+    address,
+  });
+
   let mappedInteractions = Array.from(interactions)
-    .map(
-      ([id, interaction]: [
-        string,
-        Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>,
-      ]) => {
-        // found in graphql but not by warp
-        if (!Object.keys(validity).includes(id)) {
-          logger.debug(
-            'Interaction found via GraphQL but not evaluated by warp',
-            {
-              contractTxId,
-              interaction: id,
-            },
-          );
-          mismatchedInteractionCount.inc();
-        }
-        return {
-          ...interaction,
-          valid: validity[id] ?? false,
-          error: errorMessages[id],
-          id,
-        };
-      },
-    )
+    .map(([id, interaction]: [string, GenericContractInteraction]) => {
+      // found in graphql but not by warp
+      if (!Object.keys(validity).includes(id)) {
+        logger.debug(
+          'Interaction found via GraphQL but not evaluated by warp',
+          {
+            contractTxId,
+            interaction: id,
+          },
+        );
+        mismatchedInteractionCount.inc();
+      }
+      return {
+        ...interaction,
+        valid: validity[id] ?? false,
+        error: errorMessages[id],
+        id,
+      };
+    })
     // sort them in order
     .sort((a, b) => {
       // prioritize sort key if it exists
@@ -133,6 +139,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     );
     mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
   }
+
   ctx.body = {
     contractTxId,
     // return them in descending order

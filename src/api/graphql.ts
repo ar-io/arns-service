@@ -15,13 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import Arweave from 'arweave';
-import { ArNSInteraction } from '../types.js';
+import {
+  ArNSInteraction,
+  GenericContractInteraction,
+  TransactionID,
+} from '../types.js';
 import {
   GQLResultInterface,
   LexicographicalInteractionsSorter,
   TagsParser,
 } from 'warp-contracts';
 import logger from '../logger';
+import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
+import winston from 'winston';
 
 export const MAX_REQUEST_SIZE = 100;
 
@@ -103,22 +109,82 @@ export async function getDeployedContractsByWallet(
   };
 }
 
-export async function getWalletInteractionsForContract(
-  arweave: Arweave,
-  params: {
-    address?: string | undefined;
-    contractTxId: string;
-    blockHeight: number | undefined;
+class ContractInteractionsCacheKey {
+  constructor(
+    public readonly arweave: Arweave,
+    public readonly contractTxId: string,
+    public readonly blockHeight: number | undefined,
+    public readonly address?: string | undefined,
+    public readonly logger?: winston.Logger | undefined,
+  ) {}
+
+  toString(): string {
+    return `${this.contractTxId}-${
+      this.blockHeight ? `this.blockHeight` : 'null'
+    }${this.address ? `-${this.address}` : ''}`;
+  }
+
+  // Facilitate ReadThroughPromiseCache key derivation
+  toJSON() {
+    return { cacheKey: this.toString() };
+  }
+}
+
+// Cache contract interactions for 60 seconds since block time is around 2 minutes
+const contractInteractionsCache: ReadThroughPromiseCache<
+  ContractInteractionsCacheKey,
+  { interactions: Map<TransactionID, GenericContractInteraction> }
+> = new ReadThroughPromiseCache({
+  cacheParams: {
+    cacheCapacity: 10_000,
+    cacheTTL: 1000 * 60, // 60 seconds
   },
+  readThroughFunction: readThroughToWalletInteractionsForContract,
+});
+
+export async function getWalletInteractionsForContract({
+  arweave,
+  contractTxId,
+  address,
+  blockHeight,
+  logger,
+}: {
+  arweave: Arweave;
+  contractTxId: string;
+  address?: string | undefined;
+  blockHeight?: number | undefined;
+  logger?: winston.Logger | undefined;
+}) {
+  return contractInteractionsCache.get(
+    new ContractInteractionsCacheKey(
+      arweave,
+      contractTxId,
+      blockHeight,
+      address,
+      logger,
+    ),
+  );
+}
+
+export async function readThroughToWalletInteractionsForContract(
+  cacheKey: ContractInteractionsCacheKey,
 ): Promise<{
-  interactions: Map<
-    string,
-    Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>
-  >;
+  interactions: Map<TransactionID, GenericContractInteraction>;
 }> {
+  const {
+    arweave,
+    contractTxId,
+    address,
+    blockHeight: blockHeightFilter,
+  } = cacheKey;
+  logger?.debug('Reading through to wallet interactions for contract...', {
+    contractTxId,
+    address,
+    blockHeightFilter,
+    cacheKey: cacheKey.toString(),
+  });
   const parser = new TagsParser();
   const interactionSorter = new LexicographicalInteractionsSorter(arweave);
-  const { address, contractTxId, blockHeight: blockHeightFilter } = params;
   let hasNextPage = false;
   let cursor: string | undefined;
   const interactions = new Map<
