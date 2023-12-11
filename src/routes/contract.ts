@@ -16,9 +16,9 @@
  */
 
 import {
-  ArNSInteraction,
   ContractRecordResponse,
   ContractReservedResponse,
+  GenericContractInteraction,
   KoaContext,
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
@@ -72,7 +72,9 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     contractTxId,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    address,
   });
+
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
     { interactions },
@@ -84,55 +86,90 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       sortKey: requestedSortKey,
       blockHeight: requestedBlockHeight,
     }),
-    getWalletInteractionsForContract(arweave, {
+    getWalletInteractionsForContract({
+      arweave,
       address,
       contractTxId,
       blockHeight: requestedBlockHeight,
+      logger,
     }),
   ]);
 
-  let mappedInteractions = Array.from(interactions)
-    .map(
-      ([id, interaction]: [
-        string,
-        Omit<ArNSInteraction, 'valid' | 'errorMessage' | 'id'>,
-      ]) => {
-        // found in graphql but not by warp
-        if (!Object.keys(validity).includes(id)) {
-          logger.debug(
-            'Interaction found via GraphQL but not evaluated by warp',
-            {
-              contractTxId,
-              interaction: id,
-            },
-          );
-          mismatchedInteractionCount.inc();
-        }
-        return {
-          ...interaction,
-          valid: validity[id] ?? false,
-          error: errorMessages[id],
-          id,
-        };
-      },
-    )
-    // sort them in order
-    .sort((a, b) => {
-      // prioritize sort key if it exists
-      if (a.sortKey && b.sortKey) {
-        return a.sortKey.localeCompare(b.sortKey);
+  logger.debug('Mapping interactions', {
+    contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+    address,
+  });
+
+  let mappedInteractions = Array.from(interactions).map(
+    ([id, interaction]: [string, GenericContractInteraction]) => {
+      // found in graphql but not by warp
+      if (validity[id] === undefined) {
+        logger.debug(
+          'Interaction found via GraphQL but not evaluated by warp',
+          {
+            contractTxId,
+            interaction: id,
+          },
+        );
+        mismatchedInteractionCount.inc();
       }
-      return a.height - b.height;
-    });
+      return {
+        ...interaction,
+        valid: validity[id] ?? false,
+        error: errorMessages[id],
+        id,
+      };
+    },
+  );
+
+  logger.debug('Sorting interactions', {
+    contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+    address,
+  });
+
+  // sort them in order
+  mappedInteractions.sort((a, b) => {
+    // prioritize sort key if it exists
+    if (a.sortKey && b.sortKey) {
+      return a.sortKey.localeCompare(b.sortKey);
+    }
+    return a.height - b.height;
+  });
+
+  logger.debug('Done sorting interactions', {
+    contractTxId,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+    address,
+  });
 
   // filter up to provided sort key
   if (requestedSortKey) {
+    logger.debug('Filtering up to sort key', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      unfilteredCount: mappedInteractions.length,
+    });
     const sortKeyIndex = mappedInteractions.findIndex(
       ({ sortKey: interactionSortKey }) =>
         interactionSortKey === requestedSortKey,
     );
     mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
+    logger.debug('Done filtering up to sort key', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      filteredCount: mappedInteractions.length,
+    });
   }
+
   ctx.body = {
     contractTxId,
     // return them in descending order
