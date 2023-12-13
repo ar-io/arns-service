@@ -77,6 +77,10 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     address,
   });
 
+  /**
+   * TODO: add a read through promise cache here that uses the following logic as the resulting promise. The cache key should contain the contractTxId, sortKey, blockHeight, address, page, and pageSize.
+   */
+
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
     { interactions },
