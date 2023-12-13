@@ -152,7 +152,7 @@ components:
       properties:
         page:
           type: integer
-          description: The current page of results - 0 indexed
+          description: The current page of results - 1 indexed
           example: 1
         pageSize:
           type: integer
