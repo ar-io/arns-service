@@ -55,7 +55,8 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   }
 
   if (page) {
-    if (isNaN(+page) || +page > Number.MAX_SAFE_INTEGER || +page < 0) {
+    // for improved UX, page is 1 based
+    if (isNaN(+page) || +page > Number.MAX_SAFE_INTEGER || +page < 1) {
       logger.debug('Invalid page provided', { page });
       throw new BadRequestError(
         `Invalid page, must be a single positive integer and less than ${Number.MAX_SAFE_INTEGER}`,
@@ -65,7 +66,7 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   }
 
   if (pageSize) {
-    if (isNaN(+pageSize) || +pageSize > MAX_PAGE_LIMIT || +pageSize < 0) {
+    if (isNaN(+pageSize) || +pageSize > MAX_PAGE_LIMIT || +pageSize < 1) {
       logger.debug('Invalid pageSize provided', { pageSize });
       throw new BadRequestError(
         `Invalid pageSize, must be a single positive integer and less than ${MAX_PAGE_LIMIT}`,

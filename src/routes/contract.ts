@@ -190,10 +190,10 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       page: requestedPage,
       pageSize: requestedPageSize,
     });
-    mappedInteractions = mappedInteractions.slice(
-      requestedPage * requestedPageSize,
-      requestedPageSize,
-    );
+    // this logic is 1 based
+    const pageStartIndex = requestedPage - 1 * requestedPageSize;
+    const pageEndIndex = requestedPage * requestedPageSize;
+    mappedInteractions = mappedInteractions.slice(pageStartIndex, pageEndIndex);
     logger.debug('Done paginating interactions', {
       contractTxId,
       sortKey: requestedSortKey,
@@ -217,6 +217,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         pageSize: requestedPageSize,
         totalPages: Math.ceil(totalInteractions / requestedPageSize),
         totalItems: totalInteractions,
+        hasNextPage:
+          requestedPage < Math.ceil(totalInteractions / requestedPageSize),
       },
     }),
     evaluationOptions,

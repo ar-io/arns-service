@@ -50,20 +50,20 @@ components:
       name: page
       in: query
       required: false
-      description: The page of results to return. 0 indexed.
+      description: The page of results to return. 1 indexed. Minimum of 1, maximum of MAX_SAFE_INTEGER.
       schema:
         type: number
-        maximum: Infinity
-        minimum: 0
+        maximum: MAX_SAFE_INTEGER
+        minimum: 1
     pageSize:
       name: pageSize
       in: query
       required: false
-      description: The number of results per page. Max of 1000.
+      description: The number of results per page. Minimum of 1, maximum of 1000.
       schema:
         type: number
         maximum: 1000
-        minimum: 0
+        minimum: 1
   responses:
     BadRequest:
       description: Invalid request.
