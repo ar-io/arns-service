@@ -65,6 +65,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     warp,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    page: requestedPage,
+    pageLimit: requestedPageLimit = 100,
   } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
@@ -161,6 +163,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         interactionSortKey === requestedSortKey,
     );
     mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
+
     logger.debug('Done filtering up to sort key', {
       contractTxId,
       sortKey: requestedSortKey,
@@ -170,12 +173,45 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     });
   }
 
+  // sort them in descending order
+  mappedInteractions = mappedInteractions.reverse();
+  const totalInteractions = mappedInteractions.length;
+
+  if (requestedPage !== undefined) {
+    logger.debug('Paginating interactions', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      page: requestedPage,
+      pageLimit: requestedPageLimit,
+    });
+    mappedInteractions = mappedInteractions.slice(
+      requestedPage * requestedPageLimit,
+      requestedPageLimit,
+    );
+    logger.debug('Done paginating interactions', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      page: requestedPage,
+      pageLimit: requestedPageLimit,
+      totalCount: mappedInteractions.length,
+    });
+  }
+
   ctx.body = {
     contractTxId,
-    // return them in descending order
-    interactions: mappedInteractions.reverse(),
     address,
     sortKey: evaluatedSortKey,
+    // return them in descending order
+    interactions: mappedInteractions,
+    pages: {
+      page: requestedPage,
+      pageLimit: requestedPageLimit,
+      totalCount: totalInteractions,
+    },
     evaluationOptions,
   };
 }

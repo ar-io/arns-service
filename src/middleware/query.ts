@@ -21,7 +21,7 @@ import { BadRequestError } from '../errors';
 
 const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-f]{64}$/;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
-  const { blockHeight, sortKey } = ctx.query;
+  const { blockHeight, sortKey, page, pageLimit } = ctx.query;
 
   if (blockHeight && sortKey) {
     throw new BadRequestError(
@@ -49,6 +49,24 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
     }
     logger.info('Sort key provided via query param', { sortKey });
     ctx.state.sortKey = sortKey;
+  }
+
+  if (page) {
+    if (isNaN(+page)) {
+      logger.debug('Invalid page provided', { page });
+      throw new BadRequestError('Invalid page, must be a single integer');
+    }
+    logger.info('Request includes page query param', { page });
+    ctx.state.page = +page;
+  }
+
+  if (pageLimit) {
+    if (isNaN(+pageLimit) || +pageLimit > 1000) {
+      logger.debug('Invalid page provided', { pageLimit });
+      throw new BadRequestError('Invalid page, must be a single integer');
+    }
+    logger.info('Request includes pageLimit query param', { pageLimit });
+    ctx.state.pageLimit = +pageLimit;
   }
 
   return next();
