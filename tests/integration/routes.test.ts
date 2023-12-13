@@ -384,7 +384,7 @@ describe('Integration tests', () => {
           expect(status).to.equal(404);
         });
 
-        describe('/records?contractTxId', () => {
+        describe('/records', () => {
           it('should return all records if no filter provided', async () => {
             const { status, data } = await axios.get(
               `/v1/contract/${id}/records`,
@@ -536,90 +536,121 @@ describe('Integration tests', () => {
 
     describe('/wallet', () => {
       describe('/:address/contracts', () => {
-        describe('no query params provided', () => {
-          it('should return the list of contracts owned or controlled by a wallet', async () => {
-            const { status, data } = await axios.get(
-              `/v1/wallet/${walletAddress}/contracts`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { address, contractTxIds } = data;
-            expect(address).to.equal(walletAddress);
-            expect(contractTxIds).to.not.be.undefined;
-            expect(contractTxIds).to.deep.equal(ids);
-          });
-          it('should return a 404 for an invalid wallet address', async () => {
-            const { status } = await axios.get(
-              `/v1/wallet/non-matching-regex/contracts`,
-            );
-            expect(status).to.equal(404);
-          });
-
-          describe('a transferred contract', () => {
-            it('should return the transferred contract for the original owner', async () => {
-              const { status, data } = await axios.get(
-                `/v1/wallet/${walletAddress}/contracts`,
-              );
-              expect(status).to.equal(200);
-              expect(data).to.not.be.undefined;
-              const { address, contractTxIds } = data;
-              expect(address).to.equal(walletAddress);
-              expect(contractTxIds).to.not.be.undefined;
-              expect(contractTxIds).to.deep.equal(ids);
-            });
-
-            it('should return the transferred contract for the new owner', async () => {
-              const { status, data } = await axios.get(
-                `/v1/wallet/${transferToAddress}/contracts`,
-              );
-              expect(status).to.equal(200);
-              expect(data).to.not.be.undefined;
-              const { address, contractTxIds } = data;
-              expect(address).to.equal(transferToAddress);
-              expect(contractTxIds).to.not.be.undefined;
-              expect(contractTxIds).to.deep.equal([
-                process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID,
-              ]);
-            });
-          });
+        it('should return the list of contracts owned or controlled by a wallet', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contracts`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxIds } = data;
+          expect(address).to.equal(walletAddress);
+          expect(contractTxIds).to.not.be.undefined;
+          expect(contractTxIds).to.deep.equal(ids);
+        });
+        it('should return a 404 for an invalid wallet address', async () => {
+          const { status } = await axios.get(
+            `/v1/wallet/non-matching-regex/contracts`,
+          );
+          expect(status).to.equal(404);
         });
 
-        describe('?type=', () => {
-          it('should return the list of contracts owned or controlled by a wallet and of a specific ant type', async () => {
-            const { status, data } = await axios.get(
-              `/v1/wallet/${walletAddress}/contracts?type=ant`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { address, contractTxIds } = data;
-            expect(address).to.equal(walletAddress);
-            expect(contractTxIds).to.not.be.undefined;
-            expect(contractTxIds).to.deep.equal([
-              process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
-            ]);
-          });
+        it('should return the transferred contract for the original owner', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contracts`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxIds } = data;
+          expect(address).to.equal(walletAddress);
+          expect(contractTxIds).to.not.be.undefined;
+          expect(contractTxIds).to.deep.equal(ids);
+        });
 
-          it('should return return a 400 when an invalid type is provided', async () => {
-            const { status, data } = await axios.get(
-              `/v1/wallet/${walletAddress}/contracts?type=invalid`,
-            );
-            expect(status).to.equal(400);
-            expect(data).to.contain('Invalid type.');
-          });
+        it('should return the transferred contract for the new owner', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${transferToAddress}/contracts`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxIds } = data;
+          expect(address).to.equal(transferToAddress);
+          expect(contractTxIds).to.not.be.undefined;
+          expect(contractTxIds).to.deep.equal([
+            process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID,
+          ]);
+        });
+        it('should return the list of contracts owned or controlled by a wallet and of a specific ant type', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contracts?type=ant`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxIds } = data;
+          expect(address).to.equal(walletAddress);
+          expect(contractTxIds).to.not.be.undefined;
+          expect(contractTxIds).to.deep.equal([
+            process.env.DEPLOYED_ANT_CONTRACT_TX_ID,
+          ]);
+        });
+
+        it('should return return a 400 when an invalid type is provided', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contracts?type=invalid`,
+          );
+          expect(status).to.equal(400);
+          expect(data).to.contain('Invalid type.');
         });
       });
 
       describe('/:address/contracts/:contractTxId/interactions', () => {
-        it('should return the all the wallets contract interactions', async () => {
+        it('should return the all the wallets contract interactions when page is not provided', async () => {
           const { status, data } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${id}`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
-          const { address, contractTxId, interactions } = data;
+          const { address, contractTxId, interactions, sortKey, pages } = data;
           expect(address).to.equal(walletAddress);
+          expect(sortKey).to.not.be.undefined;
+          expect(pages).to.be.undefined;
           expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal(contractInteractions);
+        });
+        it('should return the first page of interactions when page and page limit are provided', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contract/${id}?page=0&pageLimit=1`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxId, interactions, sortKey, pages } = data;
+          expect(address).to.equal(walletAddress);
+          expect(sortKey).to.not.be.undefined;
+          expect(pages).to.deep.equal({
+            page: 0,
+            pageLimit: 1,
+            totalPages: 1,
+            totalItems: contractInteractions.length,
+          });
+          expect(contractTxId).to.equal(id);
+          expect(interactions).to.deep.equal([contractInteractions[0]]);
+        });
+        it('should return the second page of interactions when page and page limit are provided', async () => {
+          const { status, data } = await axios.get(
+            `/v1/wallet/${walletAddress}/contract/${id}?page=1&pageLimit=1`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { address, contractTxId, interactions, sortKey, pages } = data;
+          expect(address).to.equal(walletAddress);
+          expect(sortKey).to.not.be.undefined;
+          expect(pages).to.deep.equal({
+            page: 1,
+            pageLimit: 1,
+            totalPages: 1,
+            totalItems: contractInteractions.length,
+          });
+          expect(contractTxId).to.equal(id);
+          expect(interactions).to.deep.equal([]);
         });
       });
     });

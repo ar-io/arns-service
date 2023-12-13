@@ -205,13 +205,16 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     contractTxId,
     address,
     sortKey: evaluatedSortKey,
-    // return them in descending order
     interactions: mappedInteractions,
-    pages: {
-      page: requestedPage,
-      pageLimit: requestedPageLimit,
-      totalCount: totalInteractions,
-    },
+    // only include page information if params were provided
+    ...(requestedPage !== undefined && {
+      pages: {
+        page: requestedPage,
+        pageLimit: requestedPageLimit,
+        totalPages: Math.ceil(totalInteractions / requestedPageLimit),
+        totalItems: totalInteractions,
+      },
+    }),
     evaluationOptions,
   };
 }
