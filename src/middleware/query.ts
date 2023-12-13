@@ -20,8 +20,13 @@ import logger from '../logger';
 import { BadRequestError } from '../errors';
 
 const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-f]{64}$/;
+const MAX_PAGE_LIMIT = 1000;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   const { blockHeight, sortKey, page, pageLimit } = ctx.query;
+
+  logger.debug('Query params provided', {
+    ...ctx.query,
+  });
 
   if (blockHeight && sortKey) {
     throw new BadRequestError(
@@ -36,7 +41,6 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
         'Invalid block height, must be a single integer',
       );
     }
-    logger.info('Block height provided via query param', { blockHeight });
     ctx.state.blockHeight = +blockHeight;
   }
 
@@ -47,25 +51,26 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
         `Invalid sort key, must be a single string and match ${WARP_SORT_KEY_REGEX}`,
       );
     }
-    logger.info('Sort key provided via query param', { sortKey });
     ctx.state.sortKey = sortKey;
   }
 
   if (page) {
-    if (isNaN(+page)) {
+    if (isNaN(+page) || +page > Number.MAX_SAFE_INTEGER || +page < 0) {
       logger.debug('Invalid page provided', { page });
-      throw new BadRequestError('Invalid page, must be a single integer');
+      throw new BadRequestError(
+        `Invalid page, must be a single positive integer and less than ${Number.MAX_SAFE_INTEGER}`,
+      );
     }
-    logger.info('Request includes page query param', { page });
     ctx.state.page = +page;
   }
 
   if (pageLimit) {
-    if (isNaN(+pageLimit) || +pageLimit > 1000) {
-      logger.debug('Invalid page provided', { pageLimit });
-      throw new BadRequestError('Invalid page, must be a single integer');
+    if (isNaN(+pageLimit) || +pageLimit > MAX_PAGE_LIMIT || +pageLimit < 0) {
+      logger.debug('Invalid pageLimit provided', { pageLimit });
+      throw new BadRequestError(
+        `Invalid pageLimit, must be a single positive integer and less than ${MAX_PAGE_LIMIT}`,
+      );
     }
-    logger.info('Request includes pageLimit query param', { pageLimit });
     ctx.state.pageLimit = +pageLimit;
   }
 
