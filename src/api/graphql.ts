@@ -25,7 +25,6 @@ import {
   LexicographicalInteractionsSorter,
   TagsParser,
 } from 'warp-contracts';
-import logger from '../logger';
 import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
 import winston from 'winston';
 
@@ -120,7 +119,7 @@ class ContractInteractionsCacheKey {
 
   toString(): string {
     return `${this.contractTxId}-${
-      this.blockHeight ? `this.blockHeight` : 'null'
+      this.blockHeight ? this.blockHeight : 'null'
     }${this.address ? `-${this.address}` : ''}`;
   }
 
@@ -176,6 +175,7 @@ export async function readThroughToWalletInteractionsForContract(
     contractTxId,
     address,
     blockHeight: blockHeightFilter,
+    logger,
   } = cacheKey;
   logger?.debug('Reading through to wallet interactions for contract...', {
     contractTxId,
@@ -270,7 +270,7 @@ export async function readThroughToWalletInteractionsForContract(
       const contractTag = parser.getContractTag(i.node);
 
       if (!inputTag || !contractTag) {
-        logger.debug('Invalid tags for interaction via GQL, ignoring...', {
+        logger?.debug('Invalid tags for interaction via GQL, ignoring...', {
           contractTxId,
           interactionId: i.node.id,
           inputTag,
