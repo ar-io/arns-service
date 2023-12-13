@@ -66,7 +66,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
     page: requestedPage,
-    pageLimit: requestedPageLimit = 100,
+    pageSize: requestedPageSize = 100,
   } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
@@ -184,11 +184,11 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       blockHeight: requestedBlockHeight,
       address,
       page: requestedPage,
-      pageLimit: requestedPageLimit,
+      pageSize: requestedPageSize,
     });
     mappedInteractions = mappedInteractions.slice(
-      requestedPage * requestedPageLimit,
-      requestedPageLimit,
+      requestedPage * requestedPageSize,
+      requestedPageSize,
     );
     logger.debug('Done paginating interactions', {
       contractTxId,
@@ -196,7 +196,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       blockHeight: requestedBlockHeight,
       address,
       page: requestedPage,
-      pageLimit: requestedPageLimit,
+      pageSize: requestedPageSize,
       totalCount: mappedInteractions.length,
     });
   }
@@ -210,8 +210,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     ...(requestedPage !== undefined && {
       pages: {
         page: requestedPage,
-        pageLimit: requestedPageLimit,
-        totalPages: Math.ceil(totalInteractions / requestedPageLimit),
+        pageSize: requestedPageSize,
+        totalPages: Math.ceil(totalInteractions / requestedPageSize),
         totalItems: totalInteractions,
       },
     }),

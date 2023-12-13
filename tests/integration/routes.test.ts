@@ -313,7 +313,7 @@ describe('Integration tests', () => {
 
         it('should return the first page of contract interactions when page and page limit are provided', async () => {
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/interactions?page=0&pageLimit=1`,
+            `/v1/contract/${id}/interactions?page=0&pageSize=1`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -321,7 +321,7 @@ describe('Integration tests', () => {
           expect(sortKey).to.not.be.undefined;
           expect(pages).to.deep.equal({
             page: 0,
-            pageLimit: 1,
+            pageSize: 1,
             totalPages: 1,
             totalItems: contractInteractions.length,
           });
@@ -331,7 +331,7 @@ describe('Integration tests', () => {
 
         it('should return an empty array of contract interactions when page is greater than the total number of pages', async () => {
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/interactions?page=100&pageLimit=1`,
+            `/v1/contract/${id}/interactions?page=100&pageSize=1`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -339,7 +339,7 @@ describe('Integration tests', () => {
           expect(sortKey).to.not.be.undefined;
           expect(pages).to.deep.equal({
             page: 100,
-            pageLimit: 1,
+            pageSize: 1,
             totalPages: 1,
             totalItems: contractInteractions.length,
           });
@@ -348,7 +348,7 @@ describe('Integration tests', () => {
         });
         it('should return a bad request error when invalid page limit is provided', async () => {
           const { status } = await axios.get(
-            `/v1/contract/${id}/interactions?page=0&pageLimit=-1`,
+            `/v1/contract/${id}/interactions?page=0&pageSize=-1`,
           );
           expect(status).to.equal(400);
         });
@@ -666,7 +666,7 @@ describe('Integration tests', () => {
         });
         it('should return the first page of interactions when page and page limit are provided', async () => {
           const { status, data } = await axios.get(
-            `/v1/wallet/${walletAddress}/contract/${id}?page=0&pageLimit=1`,
+            `/v1/wallet/${walletAddress}/contract/${id}?page=0&pageSize=1`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -675,7 +675,7 @@ describe('Integration tests', () => {
           expect(sortKey).to.not.be.undefined;
           expect(pages).to.deep.equal({
             page: 0,
-            pageLimit: 1,
+            pageSize: 1,
             totalPages: 1,
             totalItems: contractInteractions.length,
           });
@@ -684,7 +684,7 @@ describe('Integration tests', () => {
         });
         it('should return the second page of interactions when page and page limit are provided', async () => {
           const { status, data } = await axios.get(
-            `/v1/wallet/${walletAddress}/contract/${id}?page=1&pageLimit=1`,
+            `/v1/wallet/${walletAddress}/contract/${id}?page=1&pageSize=1`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -693,7 +693,7 @@ describe('Integration tests', () => {
           expect(sortKey).to.not.be.undefined;
           expect(pages).to.deep.equal({
             page: 1,
-            pageLimit: 1,
+            pageSize: 1,
             totalPages: 1,
             totalItems: contractInteractions.length,
           });
@@ -702,7 +702,7 @@ describe('Integration tests', () => {
         });
         it('should return a bad request error when invalid page limit is provided', async () => {
           const { status } = await axios.get(
-            `/v1/wallet/${walletAddress}/contract/${id}?page=0&pageLimit=-1`,
+            `/v1/wallet/${walletAddress}/contract/${id}?page=0&pageSize=-1`,
           );
           expect(status).to.equal(400);
         });

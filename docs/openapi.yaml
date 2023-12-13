@@ -46,6 +46,24 @@ components:
       description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
       schema:
         type: string
+    page:
+      name: page
+      in: query
+      required: false
+      description: The page of results to return. 0 indexed.
+      schema:
+        type: number
+        maximum: Infinity
+        minimum: 0
+    pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: The number of results per page. Max of 1000.
+      schema:
+        type: number
+        maximum: 1000
+        minimum: 0
   responses:
     BadRequest:
       description: Invalid request.
@@ -111,7 +129,6 @@ components:
           type: integer
         throwOnInternalWriteError:
           type: boolean
-
     ContractInteraction:
       type: array
       description: The interactions for a contract, including their validity
@@ -129,6 +146,26 @@ components:
             'id': '2wszuZi_rwoOFjowdH7GLbgdeIZBaGbMLXiOuIV-6_0',
           },
         ]
+    PagesContext:
+      type: object
+      description: The context for paginated results
+      properties:
+        page:
+          type: integer
+          description: The current page of results - 0 indexed
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of results per page
+          example: 10
+        totalItems:
+          type: integer
+          description: The total number of results
+          example: 100
+        totalPages:
+          type: integer
+          description: The total number of pages
+          example: 10
 paths:
   /contract/{contractTxId}:
     get:
@@ -449,6 +486,8 @@ paths:
         - $ref: '#/components/parameters/contractTxId'
         - $ref: '#/components/parameters/blockHeight'
         - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         '200':
           description: OK
@@ -482,6 +521,8 @@ paths:
         - $ref: '#/components/parameters/blockHeight'
         - $ref: '#/components/parameters/sortKey'
         - $ref: '#/components/parameters/walletAddress'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         '200':
           description: OK
@@ -570,25 +611,15 @@ paths:
         '503':
           $ref: '#/components/responses/InternalServerError'
 
-  /wallet/{address}/contract/{contractTxId}:
+  /wallet/{walletAddress}/contract/{contractTxId}:
     get:
       summary: Returns the interactions on a given contract for a given wallet address
       description: Returns the interactions on a given contract for a given wallet address
       parameters:
-        - in: path
-          name: address
-          required: true
-          description: Public Arweave wallet address.
-          schema:
-            type: string
-            example: 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'
-        - in: path
-          name: contractTxId
-          required: true
-          description: Transaction ID of the contract.
-          schema:
-            type: string
-            example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/walletAddress'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         '200':
           description: OK
