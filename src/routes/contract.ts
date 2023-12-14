@@ -191,7 +191,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       pageSize: requestedPageSize,
     });
     // this logic is 1 based
-    const pageStartIndex = requestedPage - 1 * requestedPageSize;
+    const pageStartIndex = (requestedPage - 1) * requestedPageSize;
     const pageEndIndex = requestedPage * requestedPageSize;
     mappedInteractions = mappedInteractions.slice(pageStartIndex, pageEndIndex);
     logger.debug('Done paginating interactions', {
@@ -201,6 +201,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       address,
       page: requestedPage,
       pageSize: requestedPageSize,
+      pageStartIndex,
+      pageEndIndex,
       totalCount: mappedInteractions.length,
     });
   }
