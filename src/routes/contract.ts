@@ -65,6 +65,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     warp,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    page: requestedPage,
+    pageSize: requestedPageSize = 100,
   } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
@@ -74,6 +76,10 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     blockHeight: requestedBlockHeight,
     address,
   });
+
+  /**
+   * TODO: add a read through promise cache here that uses the following logic as the resulting promise. The cache key should contain the contractTxId, sortKey, blockHeight, address, page, and pageSize.
+   */
 
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
@@ -161,6 +167,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         interactionSortKey === requestedSortKey,
     );
     mappedInteractions = mappedInteractions.slice(0, sortKeyIndex + 1);
+
     logger.debug('Done filtering up to sort key', {
       contractTxId,
       sortKey: requestedSortKey,
@@ -170,12 +177,50 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     });
   }
 
+  // sort them in descending order
+  mappedInteractions = mappedInteractions.reverse();
+  const totalInteractions = mappedInteractions.length;
+
+  if (requestedPage !== undefined) {
+    logger.debug('Paginating interactions', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      page: requestedPage,
+      pageSize: requestedPageSize,
+    });
+    // this logic is 1 based
+    const pageStartIndex = requestedPage - 1 * requestedPageSize;
+    const pageEndIndex = requestedPage * requestedPageSize;
+    mappedInteractions = mappedInteractions.slice(pageStartIndex, pageEndIndex);
+    logger.debug('Done paginating interactions', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      page: requestedPage,
+      pageSize: requestedPageSize,
+      totalCount: mappedInteractions.length,
+    });
+  }
+
   ctx.body = {
     contractTxId,
-    // return them in descending order
-    interactions: mappedInteractions.reverse(),
     address,
     sortKey: evaluatedSortKey,
+    interactions: mappedInteractions,
+    // only include page information if params were provided
+    ...(requestedPage !== undefined && {
+      pages: {
+        page: requestedPage,
+        pageSize: requestedPageSize,
+        totalPages: Math.ceil(totalInteractions / requestedPageSize),
+        totalItems: totalInteractions,
+        hasNextPage:
+          requestedPage < Math.ceil(totalInteractions / requestedPageSize),
+      },
+    }),
     evaluationOptions,
   };
 }

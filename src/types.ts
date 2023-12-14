@@ -26,12 +26,20 @@ import {
 import { allowedContractTypes } from './constants';
 
 // Koa types
-export type KoaState = {
+export type QueryState = {
+  blockHeight?: number;
+  sortKey?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ArnsState = {
   logger: winston.Logger;
   warp: Warp;
   arweave: Arweave;
-} & DefaultState;
+};
 
+export type KoaState = ArnsState & QueryState & DefaultState;
 export type KoaContext = ParameterizedContext<KoaState>;
 
 // ArNS types
