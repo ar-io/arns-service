@@ -16,7 +16,12 @@
  */
 import { KoaContext } from '../types';
 import { Next } from 'koa';
-import { BadRequestError, EvaluationError, NotFoundError } from '../errors';
+import {
+  BadRequestError,
+  EvaluationError,
+  EvaluationTimeoutError,
+  NotFoundError,
+} from '../errors';
 
 // globally handle errors and return proper status based on their type
 export async function errorMiddleware(ctx: KoaContext, next: Next) {
@@ -32,6 +37,9 @@ export async function errorMiddleware(ctx: KoaContext, next: Next) {
       ctx.body = error.message;
     } else if (error instanceof NotFoundError) {
       ctx.status = 404;
+      ctx.body = error.message;
+    } else if (error instanceof EvaluationTimeoutError) {
+      ctx.status = 408;
       ctx.body = error.message;
     } else {
       // log full stack trace when 503s are returned to client to help with debugging

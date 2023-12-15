@@ -20,8 +20,11 @@ import {
   getContractsTransferredToOrControlledByWallet,
   getDeployedContractsByWallet,
 } from '../api/graphql';
-import { isValidContractType, validateStateWithTimeout } from '../api/warp';
-import { allowedContractTypes } from '../constants';
+import { isValidContractType, validateStateAndOwnership } from '../api/warp';
+import {
+  SUB_CONTRACT_EVALUATION_TIMEOUT_MS,
+  allowedContractTypes,
+} from '../constants';
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
 
@@ -72,12 +75,14 @@ export async function walletContractHandler(ctx: KoaContext) {
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) =>
         // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
-        (await validateStateWithTimeout({
+        (await validateStateAndOwnership({
           contractTxId: id,
           warp,
           type,
           address,
           logger,
+          // shorten our timeout to 10 seconds for sub-contracts
+          signal: AbortSignal.timeout(SUB_CONTRACT_EVALUATION_TIMEOUT_MS),
         }))
           ? id
           : null,
