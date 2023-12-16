@@ -22,7 +22,7 @@ import {
 } from '../api/graphql';
 import { isValidContractType, validateStateAndOwnership } from '../api/warp';
 import {
-  SUB_CONTRACT_EVALUATION_TIMEOUT_MS,
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import * as _ from 'lodash';
@@ -44,10 +44,16 @@ export async function walletContractHandler(ctx: KoaContext) {
     address,
   });
 
+  // synchronize our abort signals
+  const abortSignal = AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS);
   const [{ ids: deployedContractTxIds }, { ids: controlledOrOwnedIds }] =
     await Promise.all([
-      getDeployedContractsByWallet(arweave, { address }),
-      getContractsTransferredToOrControlledByWallet(arweave, { address }),
+      getDeployedContractsByWallet(arweave, { address }, abortSignal),
+      getContractsTransferredToOrControlledByWallet(
+        arweave,
+        { address },
+        abortSignal,
+      ),
     ]);
 
   // merge them
@@ -66,10 +72,7 @@ export async function walletContractHandler(ctx: KoaContext) {
     },
   );
 
-  // NOTE: this may take a long time since it must evaluate all contract states.
-  // We use a wrapper to limit the amount of time evaluating each contract.
-  // This will basically cap the total amount of time we'll evaluate states before
-  // returning.
+  // this may take a long time since it must evaluate all contract states so we provide the abort signal used above to timeout if the request takes too long
   const startTime = Date.now();
   const validContractsOfType = (
     await Promise.allSettled(
@@ -81,8 +84,7 @@ export async function walletContractHandler(ctx: KoaContext) {
           type,
           address,
           logger,
-          // shorten our timeout to 10 seconds for sub-contracts
-          signal: AbortSignal.timeout(SUB_CONTRACT_EVALUATION_TIMEOUT_MS),
+          signal: abortSignal,
         }))
           ? id
           : null,
