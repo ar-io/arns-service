@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: we could put a prometheus metric here to help fine tune what our evaluation limit should be
 export class BaseError extends Error {
   super(message: string) {
     this.message = message;
@@ -24,7 +23,8 @@ export class BaseError extends Error {
 }
 export class EvaluationTimeoutError extends BaseError {
   constructor() {
-    super(`Evaluation timed out for contract.`);
+    super(`Evaluation timed out.`);
+    // TODO: we could put a prometheus metric here to help fine tune what our evaluation limit should be
   }
 }
 export class EvaluationError extends BaseError {}

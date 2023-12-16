@@ -60,7 +60,7 @@ class ContractStateCacheKey {
     public readonly blockHeight: number | undefined,
     public readonly evaluationOptions: Partial<EvaluationOptions>,
     public readonly warp: Warp,
-    public readonly signal: AbortSignal,
+    public readonly signal?: AbortSignal,
     public readonly logger?: winston.Logger,
   ) {}
 
@@ -300,7 +300,7 @@ export function handleWarpErrors(error: unknown): Error {
   ) {
     return new NotFoundError(`Contract not found. ${error}`);
   } else if (error instanceof Error) {
-    // likely an error thrown directly by warp, so just rethrow it
+    // likely an error thrown directly by warp, so just rethrow it, or an error thrown by us (EvaluationTimeoutError)
     return error;
   } else {
     // something gnarly happened
@@ -308,8 +308,6 @@ export function handleWarpErrors(error: unknown): Error {
       `Unknown error occurred evaluating contract. ${error}`,
     );
   }
-
-  // TODO: catch abort signal errors and return EvaluationTimeoutError
 }
 
 // TODO: we can put this in a interface/class and update the resolved type
@@ -393,6 +391,7 @@ export async function readThroughToContractReadInteraction(
     .setEvaluationOptions(evaluationOptions);
 
   // set cached value for multiple requests during initial promise
+  // TODO: add abort signal when view state supports it
   const readInteractionPromise = contract.viewState({
     function: functionName,
     ...input,

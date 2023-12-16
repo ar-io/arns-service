@@ -27,12 +27,14 @@ import {
 } from 'warp-contracts';
 import { ReadThroughPromiseCache } from '@ardrive/ardrive-promise-cache';
 import winston from 'winston';
+import { EvaluationTimeoutError } from '../errors';
 
 export const MAX_REQUEST_SIZE = 100;
 
 export async function getDeployedContractsByWallet(
   arweave: Arweave,
   params: { address: string },
+  signal?: AbortSignal,
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
@@ -71,9 +73,16 @@ export async function getDeployedContractsByWallet(
       }`,
     };
 
+    if (signal?.aborted) {
+      throw new EvaluationTimeoutError();
+    }
+
     const { status, ...response } = await arweave.api.post(
       '/graphql',
       queryObject,
+      {
+        signal,
+      },
     );
     if (status !== 200) {
       throw Error(
@@ -115,6 +124,7 @@ class ContractInteractionsCacheKey {
     public readonly blockHeight: number | undefined,
     public readonly address?: string | undefined,
     public readonly logger?: winston.Logger | undefined,
+    public readonly signal?: AbortSignal | undefined,
   ) {}
 
   toString(): string {
@@ -147,11 +157,13 @@ export async function getWalletInteractionsForContract({
   address,
   blockHeight,
   logger,
+  signal,
 }: {
   arweave: Arweave;
   contractTxId: string;
   address?: string | undefined;
   blockHeight?: number | undefined;
+  signal?: AbortSignal;
   logger?: winston.Logger | undefined;
 }) {
   return contractInteractionsCache.get(
@@ -161,6 +173,7 @@ export async function getWalletInteractionsForContract({
       blockHeight,
       address,
       logger,
+      signal,
     ),
   );
 }
@@ -176,6 +189,7 @@ export async function readThroughToWalletInteractionsForContract(
     address,
     blockHeight: blockHeightFilter,
     logger,
+    signal,
   } = cacheKey;
   logger?.debug('Reading through to wallet interactions for contract...', {
     contractTxId,
@@ -242,9 +256,16 @@ export async function readThroughToWalletInteractionsForContract(
         }`,
     };
 
+    if (signal?.aborted) {
+      throw new EvaluationTimeoutError();
+    }
+
     const { status, data } = await arweave.api.post<GQLResultInterface>(
       '/graphql',
       queryObject,
+      {
+        signal,
+      },
     );
 
     if (status !== 200) {
@@ -309,6 +330,7 @@ export async function readThroughToWalletInteractionsForContract(
 export async function getContractsTransferredToOrControlledByWallet(
   arweave: Arweave,
   params: { address: string },
+  signal?: AbortSignal,
 ): Promise<{ ids: string[] }> {
   const { address } = params;
   let hasNextPage = false;
@@ -406,9 +428,16 @@ export async function getContractsTransferredToOrControlledByWallet(
           }`,
     };
 
+    if (signal?.aborted) {
+      throw new EvaluationTimeoutError();
+    }
+
     const { status, ...response } = await arweave.api.post(
       '/graphql',
       queryObject,
+      {
+        signal,
+      },
     );
     if (status !== 200) {
       throw Error(
