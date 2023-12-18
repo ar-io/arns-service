@@ -25,6 +25,7 @@ import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
 import { NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
+import { DEFAULT_STATE_EVALUATION_TIMEOUT_MS } from '../constants';
 
 export async function contractHandler(ctx: KoaContext) {
   const {
@@ -81,6 +82,8 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
    * TODO: add a read through promise cache here that uses the following logic as the resulting promise. The cache key should contain the contractTxId, sortKey, blockHeight, address, page, and pageSize.
    */
 
+  // use a synchronized abort signal to stop execution of both when either times out
+  const abortSignal = AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS);
   const [
     { validity, errorMessages, evaluationOptions, sortKey: evaluatedSortKey },
     { interactions },
@@ -91,6 +94,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       logger,
       sortKey: requestedSortKey,
       blockHeight: requestedBlockHeight,
+      signal: abortSignal,
     }),
     getWalletInteractionsForContract({
       arweave,
@@ -98,6 +102,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       contractTxId,
       blockHeight: requestedBlockHeight,
       logger,
+      signal: abortSignal,
     }),
   ]);
 

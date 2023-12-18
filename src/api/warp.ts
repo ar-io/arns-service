@@ -24,13 +24,17 @@ import {
 } from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
-  EVALUATION_TIMEOUT_MS,
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
-import { EvaluationError, NotFoundError, UnknownError } from '../errors';
+import {
+  EvaluationError,
+  EvaluationTimeoutError,
+  NotFoundError,
+  UnknownError,
+} from '../errors';
 import * as _ from 'lodash';
-import { EvaluationTimeoutError } from '../errors';
 import { createHash } from 'crypto';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
@@ -56,6 +60,7 @@ class ContractStateCacheKey {
     public readonly blockHeight: number | undefined,
     public readonly evaluationOptions: Partial<EvaluationOptions>,
     public readonly warp: Warp,
+    public readonly signal?: AbortSignal,
     public readonly logger?: winston.Logger,
   ) {}
 
@@ -177,6 +182,7 @@ async function readThroughToContractState(
     blockHeight: providedBlockHeight,
     warp,
     logger,
+    signal,
   } = cacheKey;
   logger?.debug('Reading through to contract state...', {
     contractTxId,
@@ -211,8 +217,11 @@ async function readThroughToContractState(
     .setEvaluationOptions(evaluationOptions);
 
   // set cached value for multiple requests during initial promise
+  // TODO: change this to `readStateBatch` one it supports sortKeys/blockHeights
   const readStatePromise = contract.readState(
     providedSortKey ?? providedBlockHeight,
+    undefined,
+    signal,
   );
   stateRequestMap.set(cacheId, readStatePromise);
 
@@ -279,6 +288,8 @@ export function handleWarpErrors(error: unknown): Error {
       error.message.includes('Use contract.setEvaluationOptions'))
   ) {
     return new EvaluationError(error.message);
+  } else if (error instanceof Error && error.name === 'AbortError') {
+    return new EvaluationTimeoutError();
   } else if (error instanceof Error && error.message.includes('404')) {
     return new NotFoundError(error.message);
   } else if (
@@ -289,7 +300,7 @@ export function handleWarpErrors(error: unknown): Error {
   ) {
     return new NotFoundError(`Contract not found. ${error}`);
   } else if (error instanceof Error) {
-    // likely an error thrown directly by warp, so just rethrow it
+    // likely an error thrown directly by warp, so just rethrow it, or an error thrown by us (EvaluationTimeoutError)
     return error;
   } else {
     // something gnarly happened
@@ -306,12 +317,14 @@ export async function getContractState({
   logger,
   sortKey = undefined,
   blockHeight = undefined,
+  signal = AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS),
 }: {
   contractTxId: string;
   warp: Warp;
   logger: winston.Logger;
   sortKey?: string | undefined;
   blockHeight?: number | undefined;
+  signal?: AbortSignal;
 }): Promise<EvaluatedContractState> {
   try {
     // get the contract manifest eval options by default
@@ -327,6 +340,7 @@ export async function getContractState({
         blockHeight,
         evaluationOptions,
         warp,
+        signal,
         logger,
       ),
     );
@@ -377,6 +391,7 @@ export async function readThroughToContractReadInteraction(
     .setEvaluationOptions(evaluationOptions);
 
   // set cached value for multiple requests during initial promise
+  // TODO: add abort signal when view state supports it
   const readInteractionPromise = contract.viewState({
     function: functionName,
     ...input,
@@ -508,36 +523,6 @@ export function tagsToObject(tags: Tag[]): {
   }, {});
 }
 
-export async function validateStateWithTimeout({
-  contractTxId,
-  warp,
-  type,
-  address,
-  logger,
-}: {
-  contractTxId: string;
-  warp: Warp;
-  type?: ContractType;
-  address?: string;
-  logger: winston.Logger;
-}): Promise<unknown> {
-  return Promise.race([
-    validateStateAndOwnership({
-      contractTxId,
-      warp,
-      type,
-      address,
-      logger,
-    }),
-    new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new EvaluationTimeoutError()),
-        EVALUATION_TIMEOUT_MS,
-      ),
-    ),
-  ]);
-}
-
 // TODO: this could be come a generic and return the full state of contract once validated
 export async function validateStateAndOwnership({
   contractTxId,
@@ -545,6 +530,7 @@ export async function validateStateAndOwnership({
   type,
   address,
   logger,
+  signal,
   sortKey = undefined,
   blockHeight = undefined,
 }: {
@@ -553,6 +539,7 @@ export async function validateStateAndOwnership({
   type?: ContractType;
   address?: string;
   logger: winston.Logger;
+  signal: AbortSignal;
   sortKey?: string | undefined;
   blockHeight?: number | undefined;
 }): Promise<boolean> {
@@ -562,6 +549,7 @@ export async function validateStateAndOwnership({
     logger,
     sortKey,
     blockHeight,
+    signal,
   });
   // TODO: use json schema validation schema logic. For now, these are just raw checks.
   const validateType =

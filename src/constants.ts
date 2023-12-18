@@ -18,7 +18,11 @@ import { EvaluationOptions } from 'warp-contracts';
 
 export const ARNS_CONTRACT_ID_REGEX = '([a-zA-Z0-9-_s+]{43})';
 export const ARNS_NAME_REGEX = '([a-zA-Z0-9-s+]{1,51})';
-export const EVALUATION_TIMEOUT_MS = 10_000; // 10 sec state timeout
+export const SUB_CONTRACT_EVALUATION_TIMEOUT_MS = 10_000; // 10 sec state timeout - non configurable
+export const DEFAULT_STATE_EVALUATION_TIMEOUT_MS = process.env
+  .EVALUATION_TIMEOUT_MS
+  ? +process.env.EVALUATION_TIMEOUT_MS
+  : 1000 * 60 * 2; // 2 min state timeout (should be <= koa request timeout)
 export const allowedContractTypes = ['ant'] as const;
 export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {
   maxInteractionEvaluationTimeSeconds: 3600, // one hour

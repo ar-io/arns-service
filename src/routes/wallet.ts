@@ -20,8 +20,11 @@ import {
   getContractsTransferredToOrControlledByWallet,
   getDeployedContractsByWallet,
 } from '../api/graphql';
-import { isValidContractType, validateStateWithTimeout } from '../api/warp';
-import { allowedContractTypes } from '../constants';
+import { isValidContractType, validateStateAndOwnership } from '../api/warp';
+import {
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
+  allowedContractTypes,
+} from '../constants';
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
 
@@ -41,10 +44,16 @@ export async function walletContractHandler(ctx: KoaContext) {
     address,
   });
 
+  // synchronize our abort signals
+  const abortSignal = AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS);
   const [{ ids: deployedContractTxIds }, { ids: controlledOrOwnedIds }] =
     await Promise.all([
-      getDeployedContractsByWallet(arweave, { address }),
-      getContractsTransferredToOrControlledByWallet(arweave, { address }),
+      getDeployedContractsByWallet(arweave, { address }, abortSignal),
+      getContractsTransferredToOrControlledByWallet(
+        arweave,
+        { address },
+        abortSignal,
+      ),
     ]);
 
   // merge them
@@ -63,21 +72,19 @@ export async function walletContractHandler(ctx: KoaContext) {
     },
   );
 
-  // NOTE: this may take a long time since it must evaluate all contract states.
-  // We use a wrapper to limit the amount of time evaluating each contract.
-  // This will basically cap the total amount of time we'll evaluate states before
-  // returning.
+  // this may take a long time since it must evaluate all contract states so we provide the abort signal used above to timeout if the request takes too long
   const startTime = Date.now();
   const validContractsOfType = (
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) =>
         // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
-        (await validateStateWithTimeout({
+        (await validateStateAndOwnership({
           contractTxId: id,
           warp,
           type,
           address,
           logger,
+          signal: abortSignal,
         }))
           ? id
           : null,
