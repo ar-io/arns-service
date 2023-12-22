@@ -1235,7 +1235,7 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
-"@types/koa@^2.13.6", "@types/koa@^2.13.8":
+"@types/koa@^2.13.8":
   version "2.13.8"
   resolved "https://registry.yarnpkg.com/@types/koa/-/koa-2.13.8.tgz#4302d2f2712348aadb6c0b03eb614f30afde486b"
   integrity sha512-Ugmxmgk/yPRW3ptBTh9VjOLwsKWJuGbymo1uGX0qdaqqL18uJiiG1ZoV0rxCOYSaDGhvEp5Ece02Amx0iwaxQQ==
@@ -3824,7 +3824,7 @@ graphql@^16.2.0:
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-16.6.0.tgz#c2dcffa4649db149f6282af726c8c83f1c7c5fdb"
   integrity sha512-KPIBPDlW7NxrbT/eh4qPXz5FiFdL5UbaA0XUNz2Rp3Z3hqBSkbj0GVjwFDztsWVauZUWsbKHgMg++sk8UX0bkw==
 
-handlebars@^4.7.7:
+handlebars@^4.7.8:
   version "4.7.8"
   resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.7.8.tgz#41c42c18b1be2365439188c77c6afae71c0cd9e9"
   integrity sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==
@@ -4524,15 +4524,14 @@ koa-router@^12.0.0:
     methods "^1.1.2"
     path-to-regexp "^6.2.1"
 
-koa2-swagger-ui@^5.8.0:
-  version "5.8.0"
-  resolved "https://registry.yarnpkg.com/koa2-swagger-ui/-/koa2-swagger-ui-5.8.0.tgz#fcd04af620c0a913f0b2749a35e31dda96b4155b"
-  integrity sha512-uVHh2hajX5Q/6+BkRrK0Rrf84Duc6dB73WIU1mb3cLfellMR1klAIYEX1p1bOsNjB97uqCwyn/cz3Sfi1/IxcQ==
+koa2-swagger-ui@^5.10.0:
+  version "5.10.0"
+  resolved "https://registry.yarnpkg.com/koa2-swagger-ui/-/koa2-swagger-ui-5.10.0.tgz#2079aa96415a4ffac66e765affe30ae5b07cfba3"
+  integrity sha512-UEktDUyWP5BvBB8glVWHN14246IH6WZC8sryONC+v9Rm6FA3/8V+CgXpRuHkAEy0KntMwp2sJ5CutTu6ODtC3w==
   dependencies:
-    "@types/koa" "^2.13.6"
-    handlebars "^4.7.7"
+    handlebars "^4.7.8"
     lodash "^4.17.21"
-    read-pkg-up "^7.0.1"
+    read-pkg-up "7.0.1"
 
 koa@^2.13.4, koa@^2.14.2:
   version "2.14.2"
@@ -5859,7 +5858,7 @@ rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-read-pkg-up@^7.0.1:
+read-pkg-up@7.0.1, read-pkg-up@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/read-pkg-up/-/read-pkg-up-7.0.1.tgz#f3a6135758459733ae2b95638056e1854e7ef507"
   integrity sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==
@@ -6997,10 +6996,10 @@ warp-contracts-sqlite@^1.0.2:
     better-sqlite3 "^8.3.0"
     safe-stable-stringify "^2.4.3"
 
-warp-contracts@1.4.28:
-  version "1.4.28"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.28.tgz#ee8d5331acff3031d2813a8e2372e47daa580cf2"
-  integrity sha512-l6n2Ph2eWVWFHh+ivi6UvZt7RVYIZc07m1FrvkC9L6MZzMoOFeQDPNOinPy1Z7dNZRjlq3q0NI9zgGtgZZFtYA==
+warp-contracts@^1.4.31:
+  version "1.4.31"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.31.tgz#b8d4b14f976d2e8955f745500746da4e65e777e2"
+  integrity sha512-ep8LsbKkjvbPnWJUdlItI6fg5NqIQi/EDe4xRJgMFzFv2dvafeF7/7V0jul6kuuiMTcqHt2cXErnZIFL7Ne9Ew==
   dependencies:
     archiver "^5.3.0"
     arweave "1.13.7"
