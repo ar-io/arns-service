@@ -28,6 +28,7 @@ import {
 import logger from './logger';
 import { uncaughtExceptionError } from './metrics';
 import { queryMiddleware } from './middleware/query';
+import { DEFAULT_REQUEST_TIMEOUT_MS } from './constants';
 
 const app = new Koa();
 
@@ -60,8 +61,8 @@ process.on('SIGINT', () => {
 
 const serverConfigs = {
   port: +(process.env.PORT || 3000),
-  keepAliveTimeout: 120_000, // two minute timeout for connections
-  requestTimeout: 120_000, // two minute timeout for requests
+  keepAliveTimeout: DEFAULT_REQUEST_TIMEOUT_MS,
+  requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS,
 };
 
 app.listen(serverConfigs, () => {
