@@ -26,4 +26,5 @@ export const DEFAULT_STATE_EVALUATION_TIMEOUT_MS = process.env
 export const allowedContractTypes = ['ant'] as const;
 export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {
   maxInteractionEvaluationTimeSeconds: 3600, // one hour
+  updateCacheForEachInteraction: true,
 };
