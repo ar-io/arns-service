@@ -20,7 +20,7 @@ import { prefetchContractTxIds } from './config';
 import logger from './logger';
 import { warp } from './middleware';
 
-export const hydrateArnsContractState = () => {
+export const prefetchContracts = () => {
   // non-blocking call to load arns contract state
   logger.info('Pre-fetching contracts...', {
     contractTxIds: prefetchContractTxIds,

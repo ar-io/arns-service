@@ -33,8 +33,8 @@ import * as system from './system';
 
 const app = new Koa();
 
-// load arns contract state
-system.hydrateArnsContractState();
+// load arns contract state on startup
+system.prefetchContracts();
 
 // attach middlewares
 app.use(loggerMiddleware);
