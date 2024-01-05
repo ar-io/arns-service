@@ -213,7 +213,7 @@ async function readThroughToContractState(
     .setEvaluationOptions(evaluationOptions);
 
   // only use batch read if no block height provided (it does not currently support block heights)
-  const doBatchRead = providedBlockHeight === undefined;
+  const doBatchRead = providedSortKey || providedBlockHeight === undefined;
   logger?.debug('Evaluating contract state...', {
     contractTxId,
     cacheKey: cacheKey.toString(),
