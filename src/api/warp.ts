@@ -222,7 +222,8 @@ async function readThroughToContractState(
   });
 
   const readStatePromise = doBatchRead
-    ? contract.readStateBatch(DEFAULT_PAGES_PER_BATCH, providedSortKey, signal)
+    ? // NOTE: there is a bug in warp where `readStateBatch` returns null when a contract does not have any interactions on it. we handle it below by falling back to read state if we get `null`
+      contract.readStateBatch(DEFAULT_PAGES_PER_BATCH, providedSortKey, signal)
     : contract.readState(providedBlockHeight, undefined, signal);
 
   // set cached value for multiple requests during initial promise
@@ -245,7 +246,14 @@ async function readThroughToContractState(
     });
 
   // await the response
-  const stateEvaluationResult = await stateRequestMap.get(cacheId);
+  const stateEvaluationResult =
+    (await stateRequestMap.get(cacheId)) ??
+    // the temporary workaround for warp bug where it doesn't return a result for the readStateBatch when a contract has no interactions
+    (await contract.readState(
+      providedSortKey || providedBlockHeight,
+      undefined,
+      signal,
+    ));
   if (!stateEvaluationResult) {
     logger?.error('Contract state did not return a result!', {
       contractTxId,
