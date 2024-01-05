@@ -25,7 +25,6 @@ import {
 import {
   DEFAULT_EVALUATION_OPTIONS,
   DEFAULT_PAGES_PER_BATCH,
-  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
@@ -328,7 +327,7 @@ export async function getContractState({
   logger,
   sortKey = undefined,
   blockHeight = undefined,
-  signal = AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS),
+  signal,
 }: {
   contractTxId: string;
   warp: Warp;
