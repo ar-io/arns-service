@@ -21,17 +21,26 @@ import logger from './logger';
 import { warp } from './middleware';
 
 export const prefetchContracts = () => {
-  // non-blocking call to load arns contract state
-  logger.info('Pre-fetching contracts...', {
-    contractTxIds: prefetchContractTxIds,
-  });
   // don't wait - just fire and forget
   Promise.all(
-    prefetchContractTxIds.map((contractTxId: string) =>
-      getContractState({ contractTxId, warp, logger })
+    prefetchContractTxIds.map((contractTxId: string) => {
+      const startTimestamp = Date.now();
+      logger.info('Pre-fetching contract state...', {
+        contractTxId,
+        startTimestamp,
+      });
+      return getContractState({
+        contractTxId,
+        warp,
+        logger: logger.child({ prefetch: true }),
+      })
         .then(() => {
+          const endTimestamp = Date.now();
           logger.info('Successfully prefetched contract state', {
             contractTxId,
+            startTimestamp,
+            endTimestamp,
+            durationMs: endTimestamp - startTimestamp,
           });
         })
         .catch((err: unknown) => {
@@ -39,7 +48,7 @@ export const prefetchContracts = () => {
             err,
             contractTxId,
           });
-        }),
-    ),
+        });
+    }),
   );
 };
