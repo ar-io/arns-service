@@ -61,7 +61,7 @@ components:
       name: pageSize
       in: query
       required: false
-      default: 100.
+      default: 100
       description: The number of results per page. Minimum of 1, maximum of 1000.
       schema:
         type: number

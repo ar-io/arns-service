@@ -653,7 +653,7 @@ describe('Integration tests', () => {
       });
 
       describe('/:address/contracts/:contractTxId', () => {
-        it('should return the all the wallets contract interactions when page is not provided', async () => {
+        it('should return the the first page wallets contract interactions by default, with default page size of 100', async () => {
           const { status, data } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${id}`,
           );
