@@ -29,8 +29,12 @@ import logger from './logger';
 import { uncaughtExceptionError } from './metrics';
 import { queryMiddleware } from './middleware/query';
 import { DEFAULT_REQUEST_TIMEOUT_MS } from './constants';
+import * as system from './system';
 
 const app = new Koa();
+
+// load arns contract state
+system.hydrateArnsContractState();
 
 // attach middlewares
 app.use(loggerMiddleware);
