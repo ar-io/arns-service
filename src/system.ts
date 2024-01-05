@@ -43,10 +43,15 @@ export const prefetchContracts = () => {
             durationMs: endTimestamp - startTimestamp,
           });
         })
-        .catch((err: unknown) => {
+        .catch((error: unknown) => {
+          const endTimestamp = Date.now();
+          const message = error instanceof Error ? error.message : error;
           logger.error('Failed to prefetch contract state', {
-            err,
+            error: message,
             contractTxId,
+            startTimestamp,
+            endTimestamp,
+            durationMs: endTimestamp - startTimestamp,
           });
         });
     }),
