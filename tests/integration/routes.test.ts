@@ -662,7 +662,7 @@ describe('Integration tests', () => {
           const { address, contractTxId, interactions, sortKey, pages } = data;
           expect(address).to.equal(walletAddress);
           expect(sortKey).to.not.be.undefined;
-          expect(pages).to.be.equal({
+          expect(pages).to.deep.equal({
             page: 1,
             pageSize: 100,
             totalPages: 1,
