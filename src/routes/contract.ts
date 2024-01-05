@@ -50,6 +50,7 @@ export async function contractHandler(ctx: KoaContext) {
     logger,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    signal: AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS),
   });
   ctx.body = {
     contractTxId,

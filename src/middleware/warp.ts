@@ -32,7 +32,7 @@ LoggerFactory.INST.logLevel(
 /**
  * TODO: consider using warp-contracts-postgres cache for distributed state caching across instances
  */
-const warp = WarpFactory.forMainnet(
+export const warp = WarpFactory.forMainnet(
   {
     ...defaultCacheOptions,
   },
