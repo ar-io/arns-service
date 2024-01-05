@@ -22,7 +22,7 @@ import { BadRequestError } from '../errors';
 const WARP_SORT_KEY_REGEX = /^[0-9]{12},[0-9]{13},[0-9a-f]{64}$/;
 const MAX_PAGE_LIMIT = 1000;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
-  const { blockHeight, sortKey, page, pageSize } = ctx.query;
+  const { blockHeight, sortKey, page = 1, pageSize } = ctx.query;
 
   logger.debug('Query params provided', {
     ...ctx.query,
