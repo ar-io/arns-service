@@ -653,7 +653,7 @@ describe('Integration tests', () => {
       });
 
       describe('/:address/contracts/:contractTxId', () => {
-        it('should return the all the wallets contract interactions when page is not provided', async () => {
+        it('should return the the first page wallets contract interactions by default, with default page size of 100', async () => {
           const { status, data } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${id}`,
           );
@@ -662,7 +662,13 @@ describe('Integration tests', () => {
           const { address, contractTxId, interactions, sortKey, pages } = data;
           expect(address).to.equal(walletAddress);
           expect(sortKey).to.not.be.undefined;
-          expect(pages).to.be.undefined;
+          expect(pages).to.deep.equal({
+            page: 1,
+            pageSize: 100,
+            totalPages: 1,
+            totalItems: contractInteractions.length,
+            hasNextPage: false,
+          });
           expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal(contractInteractions);
         });

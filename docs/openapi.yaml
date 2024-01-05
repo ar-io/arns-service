@@ -51,6 +51,7 @@ components:
       name: page
       in: query
       required: false
+      default: 1
       description: The page of results to return. 1 indexed. Minimum of 1, maximum of MAX_SAFE_INTEGER.
       schema:
         type: number
@@ -60,6 +61,7 @@ components:
       name: pageSize
       in: query
       required: false
+      default: 100
       description: The number of results per page. Minimum of 1, maximum of 1000.
       schema:
         type: number
