@@ -25,6 +25,7 @@ export const DEFAULT_STATE_EVALUATION_TIMEOUT_MS = process.env
   ? +process.env.EVALUATION_TIMEOUT_MS
   : DEFAULT_REQUEST_TIMEOUT_MS; // 3 min state timeout (should be <= koa request timeout)
 export const allowedContractTypes = ['ant'] as const;
+export const DEFAULT_PAGES_PER_BATCH = 10; // TODO: refine this number
 export const DEFAULT_EVALUATION_OPTIONS: Partial<EvaluationOptions> = {
   maxInteractionEvaluationTimeSeconds: 3600, // one hour
   updateCacheForEachInteraction: true,
