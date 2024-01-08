@@ -474,7 +474,6 @@ export async function contractReservedHandler(ctx: KoaContext) {
   ctx.body = response;
 }
 
-// TODO: add sortKey and blockHeight support
 const queryParamsCastedToNumbers = ['qty', 'years'];
 export async function contractReadInteractionHandler(ctx: KoaContext) {
   const { warp, logger: _logger } = ctx.state;
