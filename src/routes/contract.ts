@@ -474,7 +474,7 @@ export async function contractReservedHandler(ctx: KoaContext) {
   ctx.body = response;
 }
 
-// TODO: add sortKey and blockHeight support
+const queryParamsCastedToNumbers = ['qty', 'years'];
 export async function contractReadInteractionHandler(ctx: KoaContext) {
   const { warp, logger: _logger } = ctx.state;
   const { contractTxId, functionName } = ctx.params;
@@ -487,8 +487,12 @@ export async function contractReadInteractionHandler(ctx: KoaContext) {
 
   const parsedInput = Object.entries(input).reduce(
     (parsedParams: { [x: string]: any }, [key, value]) => {
-      // parse known integer values
-      if (typeof value === 'string' && !isNaN(+value)) {
+      // parse known integer values for parameters we care about
+      if (
+        queryParamsCastedToNumbers.includes(key) &&
+        typeof value === 'string' &&
+        !isNaN(+value)
+      ) {
         parsedParams[key] = +value;
         return parsedParams;
       }
