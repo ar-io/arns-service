@@ -116,6 +116,7 @@ export async function mochaGlobalSetup() {
   // set in the environment
   process.env.DEPLOYED_REGISTRY_CONTRACT_TX_ID = contractTxId;
   process.env.DEPLOYED_ANT_CONTRACT_TX_ID = antContractTxId;
+  process.env.ARNS_CONTRACT_TX_ID = contractTxId;
   console.log(
     `Successfully setup ArLocal and deployed contracts.\nRegistry: ${contractTxId}\nANT: ${antContractTxId}`,
   );
