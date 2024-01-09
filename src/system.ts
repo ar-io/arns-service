@@ -63,7 +63,14 @@ export const prefetchContracts = async () => {
           return false;
         });
     }),
-  );
+  ).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : error;
+    logger.error('Failed to prefetch contract state', {
+      error: message,
+      contractTxIds: prefetchContractTxIds,
+    });
+    return [false];
+  });
   // update our healthcheck flag
   successfullyPrefetchedContracts = prefetchResults.every(
     (result) => result === true,
