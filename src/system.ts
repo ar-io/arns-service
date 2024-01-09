@@ -21,12 +21,20 @@ import logger from './logger';
 import { warp } from './middleware';
 
 let successfullyPrefetchedContracts = false;
-
+const prefetchRequired = process.env.PREFETCH_CONTRACTS === 'true';
 export const getPrefetchStatusCode = () => {
+  if (!prefetchRequired) {
+    return 200;
+  }
   return successfullyPrefetchedContracts ? 200 : 503;
 };
 
 export const prefetchContracts = async () => {
+  if (!prefetchRequired) {
+    logger.info('Skipping pre-fetching contracts');
+    return;
+  }
+
   // don't wait - just fire and forget
   const prefetchResults = await Promise.all(
     prefetchContractTxIds.map((contractTxId: string) => {

@@ -17,6 +17,7 @@ services:
       GATEWAY_HOST: ${GATEWAY_HOST:-arlocal}
       GATEWAY_PORT: ${GATEWAY_PORT:-1984}
       GATEWAY_PROTOCOL: ${GATEWAY_PROTOCOL:-http}
+      PREFETCH_CONTRACTS: ${PREFETCH_CONTRACTS:-false}
     ports:
       - '3000:3000'
 
