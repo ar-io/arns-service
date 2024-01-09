@@ -20,9 +20,15 @@ import { prefetchContractTxIds } from './config';
 import logger from './logger';
 import { warp } from './middleware';
 
-export const prefetchContracts = () => {
+let successfullyPrefetchedContracts = false;
+
+export const getPrefetchStatusCode = () => {
+  return successfullyPrefetchedContracts ? 200 : 503;
+};
+
+export const prefetchContracts = async () => {
   // don't wait - just fire and forget
-  Promise.all(
+  const prefetchResults = await Promise.all(
     prefetchContractTxIds.map((contractTxId: string) => {
       const startTimestamp = Date.now();
       logger.info('Pre-fetching contract state...', {
@@ -42,6 +48,7 @@ export const prefetchContracts = () => {
             endTimestamp,
             durationMs: endTimestamp - startTimestamp,
           });
+          return true;
         })
         .catch((error: unknown) => {
           const endTimestamp = Date.now();
@@ -53,7 +60,16 @@ export const prefetchContracts = () => {
             endTimestamp,
             durationMs: endTimestamp - startTimestamp,
           });
+          return false;
         });
     }),
   );
+  // update our healthcheck flag
+  successfullyPrefetchedContracts = prefetchResults.every(
+    (result) => result === true,
+  );
+  logger.info('Finished pre-fetching contracts', {
+    success: successfullyPrefetchedContracts,
+    contractTxIds: prefetchContractTxIds,
+  });
 };
