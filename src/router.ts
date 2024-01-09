@@ -31,6 +31,7 @@ import {
 import { swaggerDocs } from './routes/swagger';
 import { KoaContext } from './types';
 import { getPrefetchStatusCode } from './system';
+import { prefetchContractTxIds } from './config';
 
 const router: Router = new Router();
 
@@ -38,9 +39,9 @@ const router: Router = new Router();
 router.get('/healthcheck', (ctx) => {
   ctx.body = {
     timestamp: new Date(),
-    status: getPrefetchStatusCode(),
-    message: 'Hello world.',
+    prefetchContractTxIds,
   };
+  ctx.status = getPrefetchStatusCode();
 });
 
 // V1 endpoints
