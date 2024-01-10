@@ -474,7 +474,7 @@ export async function contractReservedHandler(ctx: KoaContext) {
   ctx.body = response;
 }
 
-const queryParamsCastedToNumbers = ['qty', 'years'];
+const queryParamsCastedToNumbers = ['qty', 'years', 'height'];
 export async function contractReadInteractionHandler(ctx: KoaContext) {
   const { warp, logger: _logger } = ctx.state;
   const { contractTxId, functionName } = ctx.params;
