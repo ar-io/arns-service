@@ -94,22 +94,17 @@ export async function getDeployedContractsByWallet(
       continue;
     }
     response.data.data.transactions.edges
-      .map(
-        (e: {
-          cursor: string;
-          node: { id: string };
-          pageInfo?: { hasNextPage: boolean };
-        }) => ({
-          id: e.node.id,
-          cursor: e.cursor,
-          hasNextPage: e.pageInfo?.hasNextPage,
-        }),
-      )
-      .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
+      .map((e: { node: { id: string } }) => ({
+        id: e.node.id,
+      }))
+      .forEach((c: { id: string; cursor: string }) => {
         ids.add(c.id);
-        cursor = c.cursor;
-        hasNextPage = c.hasNextPage ?? false;
       });
+    cursor =
+      response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
+      undefined;
+    hasNextPage =
+      response.data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
 
   return {
@@ -452,9 +447,7 @@ export async function getContractsTransferredToOrControlledByWallet(
     response.data.data.transactions.edges
       .map(
         (e: {
-          cursor: string;
           node: { id: string; tags: { name: string; value: string }[] };
-          pageInfo?: { hasNextPage: boolean };
         }) => {
           // get the contract id of the interaction
           const contractTag = e.node.tags.find(
@@ -463,16 +456,17 @@ export async function getContractsTransferredToOrControlledByWallet(
           // we want to preserve the cursor here, so add even if a duplicate and the set will handle removing the contract if its a duplicate
           return {
             id: contractTag?.value,
-            cursor: e.cursor,
-            hasNextPage: e.pageInfo?.hasNextPage,
           };
         },
       )
       .forEach((c: { id: string; cursor: string; hasNextPage: boolean }) => {
         ids.add(c.id);
-        cursor = c.cursor;
-        hasNextPage = c.hasNextPage ?? false;
       });
+    cursor =
+      response.data.data.transactions.edges[MAX_REQUEST_SIZE - 1]?.cursor ??
+      undefined;
+    hasNextPage =
+      response.data.data.transactions.pageInfo?.hasNextPage ?? false;
   } while (hasNextPage);
 
   return {
