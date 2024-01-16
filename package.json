@@ -13,6 +13,7 @@
   "private": false,
   "scripts": {
     "start:dev": "nodemon",
+    "start:watch": "nodemon",
     "start:prod": "yarn build && node dist/app.js",
     "build": "yarn clean && yarn && npx tsc --project ./tsconfig.json",
     "clean": "rimraf [ node_modules dist cache ]",
