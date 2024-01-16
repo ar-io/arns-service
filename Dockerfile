@@ -17,18 +17,11 @@ WORKDIR /usr/src/app
 
 # Add shell
 COPY --from=busybox:1.35.0-uclibc /bin/sh /bin/sh
-COPY --from=busybox:1.35.0-uclibc /bin/addgroup /bin/addgroup
-COPY --from=busybox:1.35.0-uclibc /bin/adduser /bin/adduser
 COPY --from=busybox:1.35.0-uclibc /bin/chown /bin/chown
-
-# Create user
-RUN addgroup -g 1000 node \
-  && adduser -u 1000 -G node -s /bin/sh -D node
-RUN chown -R node ./
-USER node
+COPY --from=busybox:1.35.0-uclibc /bin/chmod /bin/chmod
 
 # Copy build files
-COPY --from=builder --chown=node /usr/src/app .
+COPY --from=builder /usr/src/app .
 
 # Setup port
 EXPOSE 3000

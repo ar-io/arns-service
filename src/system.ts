@@ -68,7 +68,8 @@ export const prefetchContracts = async () => {
             endTimestamp,
             durationMs: endTimestamp - startTimestamp,
           });
-          return false;
+          // don't fail the entire prefetch operation if one contract fails
+          return true;
         });
     }),
   ).catch((error: unknown) => {
@@ -77,6 +78,7 @@ export const prefetchContracts = async () => {
       error: message,
       contractTxIds: prefetchContractTxIds,
     });
+    // fail if anything throws
     return [false];
   });
   // update our healthcheck flag
