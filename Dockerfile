@@ -30,7 +30,10 @@ USER node
 # Copy build files
 COPY --from=builder --chown=node /usr/src/app .
 
+# Setup port
+EXPOSE 3000
+
+# Add labels
 LABEL org.opencontainers.image.title="ar.io - ArNS Service"
 
-EXPOSE 3000
-CMD ["./dist/app.js"]
+ENTRYPOINT [ "/bin/sh", "entrypoint.sh" ]
