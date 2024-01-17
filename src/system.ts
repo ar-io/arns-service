@@ -79,6 +79,7 @@ export const prefetchContracts = async () => {
           logger.error('Failed to prefetch contract state', {
             error: message,
             contractTxId,
+            stack: error instanceof Error ? error.stack : undefined,
             durationMs: endTimestamp - startTimestamp,
           });
           // don't fail the entire prefetch operation if one contract fails

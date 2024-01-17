@@ -24,6 +24,7 @@ import {
 } from 'warp-contracts';
 import { arweave } from './arweave';
 import { SqliteContractCache } from 'warp-contracts-sqlite';
+import { LmdbCache } from 'warp-contracts-lmdb';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
@@ -38,18 +39,26 @@ export const warp = WarpFactory.forMainnet(
   },
   true,
   arweave,
-).useStateCache(
-  new SqliteContractCache(
-    {
-      ...defaultCacheOptions,
-      dbLocation: `./cache/warp/sqlite/state`,
-    },
-    {
-      maxEntriesPerContract: 10_000_000,
-    },
-  ),
-);
-// TODO: useContractCache when they support custom gateways
+)
+  .useStateCache(
+    new SqliteContractCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/sqlite/state`,
+      },
+      {
+        maxEntriesPerContract: 1_000_000,
+      },
+    ),
+  )
+  .useKVStorageFactory(
+    (contractTxId: string) =>
+      new LmdbCache({
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/lmdb/kv/${contractTxId}`,
+      }),
+  );
+// TODO: useContractCache when they support custom gateways (ref: https://github.com/warp-contracts/warp/pull/501)
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
