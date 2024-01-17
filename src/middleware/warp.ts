@@ -42,7 +42,6 @@ export const warp = WarpFactory.forMainnet(
   new SqliteContractCache(
     {
       ...defaultCacheOptions,
-      inMemory: false,
       dbLocation: `./cache/warp/sqlite/state`,
     },
     {
@@ -50,6 +49,7 @@ export const warp = WarpFactory.forMainnet(
     },
   ),
 );
+// TODO: useContractCache when they support custom gateways
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
