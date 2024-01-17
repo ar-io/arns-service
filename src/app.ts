@@ -34,7 +34,7 @@ import * as system from './system';
 const app = new Koa();
 
 // load arns contract state on startup
-system.prefetchContracts();
+system.bootstrapCache();
 
 // attach middlewares
 app.use(loggerMiddleware);

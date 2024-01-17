@@ -16,6 +16,8 @@
  */
 import { EvaluationOptions } from 'warp-contracts';
 
+export const PREFETCH_CONTRACTS = process.env.PREFETCH_CONTRACTS === 'true';
+export const BOOTSTRAP_CACHE = process.env.BOOTSTRAP_CACHE === 'true';
 export const ARNS_CONTRACT_ID_REGEX = '([a-zA-Z0-9-_s+]{43})';
 export const ARNS_NAME_REGEX = '([a-zA-Z0-9-s+]{1,51})';
 export const SUB_CONTRACT_EVALUATION_TIMEOUT_MS = 10_000; // 10 sec state timeout - non configurable
