@@ -120,6 +120,16 @@ yarn test:integration:local
 
 or entirely via docker compose:
 
+1. Update the `.env` file to (or remove it entirely):
+
+```shell
+GATEWAY_HOST=arlocal
+GATEWAY_PORT=1984
+GATEWAY_PROTOCOL=http
+```
+
+2. Spin up docker containers and run the integration tests:
+
 ```shell
 yarn test:docker
 ```
