@@ -22,7 +22,7 @@ export async function blocklistMiddleware(ctx: KoaContext, next: Next) {
   const { contractTxId } = ctx.params;
   if (BLOCKLISTED_CONTRACTS.includes(contractTxId)) {
     ctx.status = 403;
-    ctx.message = 'Contract is blocklisted';
+    ctx.message = 'Contract is blocklisted.';
     return;
   }
 

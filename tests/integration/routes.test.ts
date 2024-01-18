@@ -132,11 +132,12 @@ describe('Integration tests', () => {
       describe('/:contractTxId', () => {
         it('should not evaluate blocklisted contracts', async () => {
           const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
-          const { status, data } = await axios.get(
+          const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}`,
           );
           expect(status).to.equal(403);
-          expect(data.message).to.equal('Contract is blocklisted.');
+          expect(data).to.equal('Contract is blocklisted.');
+          expect(statusText).to.equal('Contract is blocklisted.');
         });
         it('should return the contract state and id and default evaluation options', async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
@@ -237,11 +238,12 @@ describe('Integration tests', () => {
       describe('/:contractTxId/price', () => {
         it('should not evaluate blocklisted contracts', async () => {
           const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
-          const { status, data } = await axios.get(
+          const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}/price`,
           );
           expect(status).to.equal(403);
-          expect(data.message).to.equal('Contract is blocklisted.');
+          expect(data).to.equal('Contract is blocklisted.');
+          expect(statusText).to.equal('Contract is blocklisted.');
         });
 
         it('should properly handle price interaction inputs', async () => {
@@ -261,11 +263,12 @@ describe('Integration tests', () => {
       describe('/:contractTxId/interactions', () => {
         it('should not evaluate blocklisted contracts', async () => {
           const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
-          const { status, data } = await axios.get(
+          const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}/interactions`,
           );
           expect(status).to.equal(403);
-          expect(data.message).to.equal('Contract is blocklisted.');
+          expect(data).to.equal('Contract is blocklisted.');
+          expect(statusText).to.equal('Contract is blocklisted.');
         });
 
         it('should return the contract interactions when no query params are provided', async () => {
@@ -416,11 +419,12 @@ describe('Integration tests', () => {
         ]) {
           it('should not evaluate blocklisted contracts', async () => {
             const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
-            const { status, data } = await axios.get(
+            const { status, data, statusText } = await axios.get(
               `/v1/contract/${blocklistedContractTxId}/${field}`,
             );
             expect(status).to.equal(403);
-            expect(data.message).to.equal('Contract is blocklisted.');
+            expect(data).to.equal('Contract is blocklisted.');
+            expect(statusText).to.equal('Contract is blocklisted.');
           });
 
           it(`should return the correct state value for ${field}`, async () => {
@@ -690,11 +694,12 @@ describe('Integration tests', () => {
       describe('/:address/contracts/:contractTxId', () => {
         it('should not evaluate blocklisted contracts', async () => {
           const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
-          const { status, data } = await axios.get(
+          const { status, data, statusText } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${blocklistedContractTxId}`,
           );
           expect(status).to.equal(403);
-          expect(data.message).to.equal('Contract is blocklisted.');
+          expect(data).to.equal('Contract is blocklisted.');
+          expect(statusText).to.equal('Contract is blocklisted.');
         });
 
         it('should return the the first page wallets contract interactions by default, with default page size of 100', async () => {
