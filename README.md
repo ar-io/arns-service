@@ -98,15 +98,40 @@ You can `cp .env.sample .env` and modify them locally.
 
 Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
 
+1. Set `.env` to:
+
 ```shell
-docker compose up arns-service -d --build
+GATEWAY_HOST=localhost
+GATEWAY_PORT=1984
+GATEWAY_PROTOCOL=http
+```
+
+2. Run the service locally:
+
+```shell
+yarn start:watch
+```
+
+3. Run the integration tests:
+
+```shell
 yarn test:integration:local
 ```
 
 or entirely via docker compose:
 
+1. Update the `.env` file to (or remove it entirely):
+
 ```shell
-yarn docker:integration
+GATEWAY_HOST=arlocal
+GATEWAY_PORT=1984
+GATEWAY_PROTOCOL=http
+```
+
+2. Spin up docker containers and run the integration tests:
+
+```shell
+yarn test:docker
 ```
 
 ## Swagger
