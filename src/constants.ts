@@ -18,8 +18,8 @@ import { EvaluationOptions } from 'warp-contracts';
 
 export const PREFETCH_CONTRACTS = process.env.PREFETCH_CONTRACTS === 'true';
 export const BOOTSTRAP_CACHE = process.env.BOOTSTRAP_CACHE === 'true';
-export const BLOCKLISTED_CONTRACTS = process.env.BLOCKLISTED_CONTRACTS
-  ? process.env.BLOCKLISTED_CONTRACTS.split(',')
+export const BLOCKLISTED_CONTRACT_IDS = process.env.BLOCKLISTED_CONTRACT_IDS
+  ? process.env.BLOCKLISTED_CONTRACT_IDS.split(',')
   : ['fbU8Y4NMKKzP4rmAYeYj6tDrVDo9XNbdyq5IZPA31WQ'];
 export const ARWEAVE_TX_ID_REGEX = '([a-zA-Z0-9-_s+]{43})';
 export const ARNS_NAME_REGEX = '([a-zA-Z0-9-s+]{1,51})';

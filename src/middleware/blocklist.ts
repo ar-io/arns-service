@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import { Next } from 'koa';
-import { BLOCKLISTED_CONTRACTS } from '../constants';
+import { BLOCKLISTED_CONTRACT_IDS } from '../constants';
 import { KoaContext } from '../types';
 import logger from '../logger';
 import { blockListedContractCount } from '../metrics';
 
 export async function blocklistMiddleware(ctx: KoaContext, next: Next) {
   const { contractTxId } = ctx.params;
-  if (BLOCKLISTED_CONTRACTS.includes(contractTxId)) {
+  if (BLOCKLISTED_CONTRACT_IDS.includes(contractTxId)) {
     blockListedContractCount
       .labels({
         contractTxId,
