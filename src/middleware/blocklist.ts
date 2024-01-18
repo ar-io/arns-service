@@ -22,7 +22,7 @@ import { blockListedContractCount } from '../metrics';
 
 export async function blocklistMiddleware(ctx: KoaContext, next: Next) {
   const { contractTxId } = ctx.params;
-  if (BLOCKLISTED_CONTRACT_IDS.includes(contractTxId)) {
+  if (BLOCKLISTED_CONTRACT_IDS.has(contractTxId)) {
     blockListedContractCount
       .labels({
         contractTxId,

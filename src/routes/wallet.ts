@@ -80,7 +80,7 @@ export async function walletContractHandler(ctx: KoaContext) {
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) => {
         // do not evaluate any blocklisted contracts
-        if (BLOCKLISTED_CONTRACT_IDS.includes(id)) {
+        if (BLOCKLISTED_CONTRACT_IDS.has(id)) {
           logger.debug('Skipping blocklisted contract.', {
             contractTxId: id,
           });
