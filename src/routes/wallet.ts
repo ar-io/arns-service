@@ -28,6 +28,7 @@ import {
 } from '../constants';
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
+import { blockListedContractCount } from '../metrics';
 
 export async function walletContractHandler(ctx: KoaContext) {
   const { address } = ctx.params;
@@ -83,6 +84,11 @@ export async function walletContractHandler(ctx: KoaContext) {
           logger.debug('Skipping blocklisted contract.', {
             contractTxId: id,
           });
+          blockListedContractCount
+            .labels({
+              contractTxId: id,
+            })
+            .inc();
           return null;
         }
 
