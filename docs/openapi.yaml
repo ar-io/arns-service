@@ -89,6 +89,13 @@ components:
           schema:
             type: string
             example: 'Internal server error'
+    BlocklistedContract:
+      description: The requested contract is blocklisted.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: 'Contract is blocklisted'
   schemas:
     ArNsContractState:
       type: object
@@ -198,6 +205,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -235,6 +244,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -299,6 +310,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -333,6 +346,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -384,6 +399,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -439,6 +456,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -476,6 +495,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -511,6 +532,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -563,6 +586,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
@@ -570,8 +595,8 @@ paths:
 
   /wallet/{walletAddress}/contracts:
     get:
-      summary: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
-      description: Returns the contracts deployed, transferred to, or controlled by by a given wallet address
+      summary: Returns the contracts deployed, transferred to, or controlled by by a given wallet address, excluding any blocklisted contracts.
+      description: Returns the contracts deployed, transferred to, or controlled by by a given wallet address, excluding any blocklisted contracts.
       parameters:
         - $ref: '#/components/parameters/walletAddress'
       responses:
@@ -657,6 +682,8 @@ paths:
                     $ref: '#/components/schemas/EvaluationOptions'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
         '404':
           $ref: '#/components/responses/NotFound'
         '503':
