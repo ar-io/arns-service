@@ -14,21 +14,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import * as promClient from 'prom-client';
+import { Next } from 'koa';
+import { BLOCKLISTED_CONTRACTS } from '../constants';
+import { KoaContext } from '../types';
+import logger from '../logger';
+import { blockListedContractCount } from '../metrics';
 
-// prometheus metric for errors
-export const uncaughtExceptionError = new promClient.Counter({
-  name: 'errors_total',
-  help: 'Total uncaught exception error',
-});
+export async function blocklistMiddleware(ctx: KoaContext, next: Next) {
+  const { contractTxId } = ctx.params;
+  if (BLOCKLISTED_CONTRACTS.includes(contractTxId)) {
+    blockListedContractCount
+      .labels({
+        contractTxId,
+      })
+      .inc();
+    logger.debug('Blocking contract evaluation', {
+      contractTxId,
+    });
+    ctx.status = 403;
+    ctx.message = 'Contract is blocklisted.';
+    return;
+  }
 
-export const mismatchedInteractionCount = new promClient.Counter({
-  name: 'mismatched_interactions_count',
-  help: 'An interaction found via GQL was not evaluated by warp for a contract',
-});
-
-export const blockListedContractCount = new promClient.Counter({
-  name: 'blocklisted_contract_count',
-  help: 'A contract was blocklisted',
-  labelNames: ['contractTxId'],
-});
+  return next();
+}

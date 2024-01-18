@@ -22,11 +22,13 @@ import {
 } from '../api/graphql';
 import { isValidContractType, validateStateAndOwnership } from '../api/warp';
 import {
+  BLOCKLISTED_CONTRACTS,
   DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
+import { blockListedContractCount } from '../metrics';
 
 export async function walletContractHandler(ctx: KoaContext) {
   const { address } = ctx.params;
@@ -76,9 +78,22 @@ export async function walletContractHandler(ctx: KoaContext) {
   const startTime = Date.now();
   const validContractsOfType = (
     await Promise.allSettled(
-      [...deployedOrOwned].map(async (id: string) =>
+      [...deployedOrOwned].map(async (id: string) => {
+        // do not evaluate any blocklisted contracts
+        if (BLOCKLISTED_CONTRACTS.includes(id)) {
+          logger.debug('Skipping blocklisted contract.', {
+            contractTxId: id,
+          });
+          blockListedContractCount
+            .labels({
+              contractTxId: id,
+            })
+            .inc();
+          return null;
+        }
+
         // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
-        (await validateStateAndOwnership({
+        return (await validateStateAndOwnership({
           contractTxId: id,
           warp,
           type,
@@ -87,8 +102,8 @@ export async function walletContractHandler(ctx: KoaContext) {
           signal: abortSignal,
         }))
           ? id
-          : null,
-      ),
+          : null;
+      }),
     )
   ).map((i) => (i.status === 'fulfilled' ? i.value : null));
   logger.info(`Finished evaluating contracts.`, {
