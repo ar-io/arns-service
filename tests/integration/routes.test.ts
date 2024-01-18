@@ -131,7 +131,7 @@ describe('Integration tests', () => {
     describe('/contract', () => {
       describe('/:contractTxId', () => {
         it('should not evaluate blocklisted contracts', async () => {
-          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
+          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACT_IDS;
           const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}`,
           );
@@ -237,7 +237,7 @@ describe('Integration tests', () => {
       });
       describe('/:contractTxId/price', () => {
         it('should not evaluate blocklisted contracts', async () => {
-          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
+          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACT_IDS;
           const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}/price`,
           );
@@ -262,7 +262,7 @@ describe('Integration tests', () => {
 
       describe('/:contractTxId/interactions', () => {
         it('should not evaluate blocklisted contracts', async () => {
-          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
+          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACT_IDS;
           const { status, data, statusText } = await axios.get(
             `/v1/contract/${blocklistedContractTxId}/interactions`,
           );
@@ -418,7 +418,8 @@ describe('Integration tests', () => {
           'reserved',
         ]) {
           it('should not evaluate blocklisted contracts', async () => {
-            const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
+            const blocklistedContractTxId =
+              process.env.BLOCKLISTED_CONTRACT_IDS;
             const { status, data, statusText } = await axios.get(
               `/v1/contract/${blocklistedContractTxId}/${field}`,
             );
@@ -693,7 +694,7 @@ describe('Integration tests', () => {
 
       describe('/:address/contracts/:contractTxId', () => {
         it('should not evaluate blocklisted contracts', async () => {
-          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACTS;
+          const blocklistedContractTxId = process.env.BLOCKLISTED_CONTRACT_IDS;
           const { status, data, statusText } = await axios.get(
             `/v1/wallet/${walletAddress}/contract/${blocklistedContractTxId}`,
           );

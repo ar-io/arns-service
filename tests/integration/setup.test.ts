@@ -118,8 +118,8 @@ export async function mochaGlobalSetup() {
   process.env.DEPLOYED_ANT_CONTRACT_TX_ID = antContractTxId;
 
   // blocklisted contract
-  process.env.BLOCKLISTED_CONTRACTS =
-    process.env.BLOCKLISTED_CONTRACTS ||
+  process.env.BLOCKLISTED_CONTRACT_IDS =
+    process.env.BLOCKLISTED_CONTRACT_IDS ||
     'fbU8Y4NMKKzP4rmAYeYj6tDrVDo9XNbdyq5IZPA31WQ';
   console.log(
     `Successfully setup ArLocal and deployed contracts.\nRegistry: ${contractTxId}\nANT: ${antContractTxId}`,

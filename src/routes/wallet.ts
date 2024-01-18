@@ -22,7 +22,7 @@ import {
 } from '../api/graphql';
 import { isValidContractType, validateStateAndOwnership } from '../api/warp';
 import {
-  BLOCKLISTED_CONTRACTS,
+  BLOCKLISTED_CONTRACT_IDS,
   DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
@@ -80,7 +80,7 @@ export async function walletContractHandler(ctx: KoaContext) {
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) => {
         // do not evaluate any blocklisted contracts
-        if (BLOCKLISTED_CONTRACTS.includes(id)) {
+        if (BLOCKLISTED_CONTRACT_IDS.includes(id)) {
           logger.debug('Skipping blocklisted contract.', {
             contractTxId: id,
           });

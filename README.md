@@ -86,6 +86,11 @@ The service can be configured using environment variables. The following environ
 - `GATEWAY_HOST`: the gateway used to evaluate Smartcontract state.
 - `LOG_LEVEL`: the log level to display (using [Winston] log levels - e.g. `info`, `debug`)
 - `LOG_FORMAT`: the log format to use when printing logs (e.g. `json`, `simple`)
+- `PREFETCH_CONTRACTS`: boolean to enable/disable prefetching of contracts on startup. Defaults to `true`.
+- `PREFETCH_CONTRACT_IDS`: comma separated list of contract IDs to prefetch on startup
+- `ARNS_CONTRACT_TX_ID`: the ArNS contract transaction ID. Defaults to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U` and when `PREFETCH_CONTRACTS` is `true`, will be prefetched on startup.
+- `BOOTSTRAP_CACHE`: loads warp cache from S3 on startup. Defaults to `false`.
+- `BLOCKLISTED_CONTRACT_IDS`: comma separated list of contract IDs to block evaluation. These contracts will return `403` when requested.
 
 You can `cp .env.sample .env` and modify them locally.
 
