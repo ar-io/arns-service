@@ -17,10 +17,20 @@
 import { Next } from 'koa';
 import { BLOCKLISTED_CONTRACTS } from '../constants';
 import { KoaContext } from '../types';
+import logger from '../logger';
+import { blockListedContractCount } from '../metrics';
 
 export async function blocklistMiddleware(ctx: KoaContext, next: Next) {
   const { contractTxId } = ctx.params;
   if (BLOCKLISTED_CONTRACTS.includes(contractTxId)) {
+    blockListedContractCount
+      .labels({
+        contractTxId,
+      })
+      .inc();
+    logger.debug('Blocking contract evaluation', {
+      contractTxId,
+    });
     ctx.status = 403;
     ctx.message = 'Contract is blocklisted.';
     return;

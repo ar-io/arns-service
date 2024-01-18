@@ -26,3 +26,9 @@ export const mismatchedInteractionCount = new promClient.Counter({
   name: 'mismatched_interactions_count',
   help: 'An interaction found via GQL was not evaluated by warp for a contract',
 });
+
+export const blockListedContractCount = new promClient.Counter({
+  name: 'blocklisted_contract_count',
+  help: 'A contract was blocklisted',
+  labelNames: ['contractTxId'],
+});
