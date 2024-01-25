@@ -25,7 +25,7 @@ const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_PAGE = 1;
 export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   const {
-    blockHeight = 1344484,
+    blockHeight,
     sortKey,
     page = DEFAULT_PAGE,
     pageSize = DEFAULT_PAGE_SIZE,
