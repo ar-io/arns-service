@@ -73,6 +73,28 @@ router.get(
   contractRecordFilterHandler,
 );
 router.get(
+  // calls the read interaction handler with the function name set to gateways
+  `/v1/contract/:contractTxId${ARWEAVE_TX_ID_REGEX}/gateways`,
+  blocklistMiddleware,
+  (ctx: KoaContext) => {
+    ctx.params.functionName = 'gateways';
+    return contractReadInteractionHandler(ctx);
+  },
+);
+router.get(
+  // calls the read interaction handler with the function name set to gateway and target set to the path param
+  `/v1/contract/:contractTxId${ARWEAVE_TX_ID_REGEX}/gateways/:address${ARWEAVE_TX_ID_REGEX}`,
+  blocklistMiddleware,
+  (ctx: KoaContext) => {
+    ctx.params.functionName = 'gateway';
+    ctx.query = {
+      ...ctx.query,
+      target: ctx.params.address,
+    };
+    return contractReadInteractionHandler(ctx);
+  },
+);
+router.get(
   `/v1/contract/:contractTxId${ARWEAVE_TX_ID_REGEX}/balances/:address${ARWEAVE_TX_ID_REGEX}`,
   blocklistMiddleware,
   contractBalanceHandler,

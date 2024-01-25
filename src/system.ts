@@ -63,6 +63,7 @@ export const prefetchContracts = async () => {
       return getContractState({
         contractTxId,
         warp,
+        blockHeight: 1344484,
         logger: logger.child({ prefetch: true }),
       })
         .then(() => {
