@@ -29,6 +29,7 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
     sortKey,
     page = DEFAULT_PAGE,
     pageSize = DEFAULT_PAGE_SIZE,
+    validity,
   } = ctx.query;
 
   logger.debug('Query params provided', {
@@ -80,6 +81,11 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
       );
     }
     ctx.state.pageSize = +pageSize;
+  }
+
+  if (validity) {
+    logger.debug('Validity provided', { validity });
+    ctx.state.validity = validity === 'true' || validity === '1';
   }
 
   return next();

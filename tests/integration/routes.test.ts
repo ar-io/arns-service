@@ -139,7 +139,7 @@ describe('Integration tests', () => {
           expect(data).to.equal('Contract is blocklisted.');
           expect(statusText).to.equal('Contract is blocklisted.');
         });
-        it('should return the contract state and id and default evaluation options', async () => {
+        it('should return the contract state and id and default evaluation options without validity', async () => {
           const { status, data } = await axios.get(`/v1/contract/${id}`);
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
@@ -147,6 +147,29 @@ describe('Integration tests', () => {
           expect(contractTxId).to.equal(id);
           expect(evaluationOptions).not.to.be.undefined;
           expect(sortKey).not.be.undefined;
+          expect(state).to.include.keys([
+            'balances',
+            'owner',
+            'name',
+            'records',
+            'ticker',
+            'owner',
+            'controller',
+          ]);
+        });
+
+        it('should return the contract state and id and default evaluation options when validity is provided', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}?validity=true`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, state, evaluationOptions, sortKey, validity } =
+            data;
+          expect(contractTxId).to.equal(id);
+          expect(evaluationOptions).not.to.be.undefined;
+          expect(sortKey).not.be.undefined;
+          expect(validity).not.to.be.undefined;
           expect(state).to.include.keys([
             'balances',
             'owner',
