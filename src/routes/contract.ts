@@ -33,6 +33,7 @@ export async function contractHandler(ctx: KoaContext) {
     warp,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    validity: requestedValidity,
   } = ctx.state;
   const { contractTxId } = ctx.params;
   logger.debug('Fetching contract state', {
@@ -42,6 +43,7 @@ export async function contractHandler(ctx: KoaContext) {
   });
   const {
     state,
+    validity,
     evaluationOptions,
     sortKey: evaluatedSortKey,
   } = await getContractState({
@@ -57,6 +59,7 @@ export async function contractHandler(ctx: KoaContext) {
     state,
     sortKey: evaluatedSortKey,
     evaluationOptions,
+    ...(requestedValidity && { validity }),
   };
 }
 
