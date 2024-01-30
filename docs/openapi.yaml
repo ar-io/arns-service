@@ -17,6 +17,22 @@ components:
       schema:
         type: string
         example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+    field:
+      in: path
+      name: field
+      required: true
+      description: Top level field for a contract.
+      schema:
+        type: string
+        example: 'records'
+    nestedPath:
+      in: path
+      name: nestedPath
+      required: true
+      description: The path to the object in the state
+      schema:
+        type: string
+        example: 'records/1984'
     walletAddress:
       in: path
       name: walletAddress
@@ -319,12 +335,14 @@ paths:
 
   /contract/{contractTxId}/{field}:
     get:
-      summary: Returns the field in the contract state for a given transaction id
-      description: Returns the field in the contract state for a given transaction id
+      deprecated: true
+      summary: Returns the field in the contract state for a given transaction id. For traversing contract state, use /contract/{contractTxId}/state/{nestedPath}
+      description: Returns the field in the contract state for a given transaction id. For traversing contract state, use /contract/{contractTxId}/state/{nestedPath}
       parameters:
         - $ref: '#/components/parameters/contractTxId'
         - $ref: '#/components/parameters/blockHeight'
         - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/field'
       responses:
         '200':
           description: OK
@@ -337,6 +355,43 @@ paths:
                     type: string
                     example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
                   field:
+                    type: any
+                    example: {}
+                  sortKey:
+                    type: string,
+                    example: '000001301946,0000000000000,d2efe5278648460ed160e1d8a28fb86ab686e36cf14a3321d0a2b10c6851ea99'
+                  evaluationOptions:
+                    $ref: '#/components/schemas/EvaluationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/BlocklistedContract'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/InternalServerError'
+
+  /contract/{contractTxId}/state/{nestedPath}:
+    get:
+      summary: Returns the field in the contract state for a given transaction id. Allows traversing up to 3 levels deep in the contract state.
+      description: Returns the field in the contract state for a given transaction id. Allows traversing up to 3 levels deep in the contract state.
+      parameters:
+        - $ref: '#/components/parameters/contractTxId'
+        - $ref: '#/components/parameters/blockHeight'
+        - $ref: '#/components/parameters/sortKey'
+        - $ref: '#/components/parameters/nestedPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractTxId:
+                    type: string
+                    example: 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U'
+                  result:
                     type: any
                     example: {}
                   sortKey:
