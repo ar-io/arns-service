@@ -33,6 +33,8 @@ const axios = axiosPackage.create({
   baseURL: serviceURL,
   validateStatus: () => true, // don't throw errors
 });
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 describe('Integration tests', () => {
   let ids: string[] = [];
   let id: string;
@@ -62,14 +64,14 @@ describe('Integration tests', () => {
     ) as unknown as JWKInterface;
 
     expect(id).to.not.be.undefined;
-    expect(id!.length).to.equal(43);
+    expect(id?.length).to.equal(43);
     expect(walletAddress).to.not.be.undefined;
-    expect(walletAddress!.length).to.equal(43);
+    expect(walletAddress?.length).to.equal(43);
     expect(walletJWK).to.not.be.undefined;
 
     // create a transfer interaction
     const { address } = await createLocalWallet(arweave);
-    const contract = warp.contract(id!).connect(walletJWK!);
+    const contract = warp.contract(id).connect(walletJWK);
     const transferInteraction = {
       function: 'transfer',
       target: address,
@@ -460,7 +462,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).not.be.undefined;
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
 
           it(`should return the correct state value for ${field} up to a given block height`, async () => {
@@ -473,7 +475,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).not.be.undefined;
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
 
           it(`should return the correct state value for ${field} up to a given block height`, async () => {
@@ -486,7 +488,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).to.equal(knownSortKey);
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
         }
 
