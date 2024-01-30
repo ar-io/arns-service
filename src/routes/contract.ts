@@ -23,9 +23,12 @@ import {
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
-import { NotFoundError } from '../errors';
+import { BadRequestError, NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
-import { DEFAULT_STATE_EVALUATION_TIMEOUT_MS } from '../constants';
+import {
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
+  MAX_PATH_DEPTH,
+} from '../constants';
 import { traverseObject } from '../utils';
 
 export async function contractHandler(ctx: KoaContext) {
@@ -294,6 +297,12 @@ export async function contractRecursiveFieldHandler(ctx: KoaContext) {
     blockHeight: requestedBlockHeight,
   } = ctx.state;
   const { contractTxId, path } = ctx.params;
+  const nestedFields = path.split('/');
+  if (nestedFields.length > MAX_PATH_DEPTH) {
+    throw new BadRequestError(
+      `Unable to fetch state for '${path}'. Maximum path depth of ${MAX_PATH_DEPTH} exceed. Shorten your path and try again.`,
+    );
+  }
   logger.debug('Fetching contract field recursively', {
     contractTxId,
     path,
@@ -311,8 +320,6 @@ export async function contractRecursiveFieldHandler(ctx: KoaContext) {
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
   });
-  // break up the nested fields, we'll traverse the object to get the value if it's defined, otherwise through a NotFoundError
-  const nestedFields = path.split('/');
   const result = traverseObject({
     object: state,
     path: nestedFields,

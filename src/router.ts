@@ -120,7 +120,7 @@ router.get(
 );
 // dynamic route that traverses JSON data based on path segments in the, it will return the nested state - allows up to 3 levels deep
 router.get(
-  '/v1/contract/:contractTxId/state/:path((?:[^/]+/?){1,3})',
+  '/v1/contract/:contractTxId/state/:path(.*)',
   blocklistMiddleware,
   contractRecursiveFieldHandler,
 );

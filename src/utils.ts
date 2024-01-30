@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import { MAX_PATH_DEPTH } from './constants';
 export function traverseObject<T>({
   object,
   path,
@@ -21,8 +22,12 @@ export function traverseObject<T>({
   object: any; // TODO: scope this to a type that can be traversed
   path: string[];
 }): T {
-  //  base case - lowest we can go
-  if (path.length === 0 || object === undefined) {
+  //  base case - protect against endless recursion and/or return the object if we've reached the end of the path
+  if (
+    path.length > MAX_PATH_DEPTH ||
+    path.length === 0 ||
+    object === undefined
+  ) {
     return object;
   }
   return traverseObject<T>({

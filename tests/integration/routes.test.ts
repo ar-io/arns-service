@@ -550,6 +550,64 @@ describe('Integration tests', () => {
           });
         });
 
+        it('should return a 404 for an invalid field', async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}/invalid-field`,
+          );
+          expect(status).to.equal(404);
+        });
+
+        describe('/records', () => {
+          it('should return all records if no filter provided', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(Object.keys(data['records'])).to.have.length(2);
+          });
+
+          it('should return records that have contractTxId matching the query filter', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?contractTxId=${process.env.DEPLOYED_ANT_CONTRACT_TX_ID}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(Object.keys(data['records'])).to.have.length(1);
+          });
+
+          it('should return empty records if the contractTxId does not match any record object', async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?contractTxId=not-a-real-tx-id`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(Object.keys(data['records'])).to.have.length(0);
+          });
+
+          it(`should return the correct state value for record up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/records?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(Object.keys(data['records'])).to.have.length(2);
+          });
+        });
+
         describe('/records/:name', () => {
           it('should return the owner of record name when available', async () => {
             const { status, data } = await axios.get(
@@ -645,6 +703,79 @@ describe('Integration tests', () => {
             expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
+        });
+      });
+
+      describe('/:contractTxId/state/:nestedPath', () => {
+        for (const nestedPath of [
+          'owner',
+          'name',
+          'ticker',
+          'balances',
+          'records',
+          'auctions',
+          'records/example',
+          'auctions/auction-name',
+          'reserved/reserved-name',
+        ]) {
+          it('should not evaluate blocklisted contracts', async () => {
+            const blocklistedContractTxId =
+              process.env.BLOCKLISTED_CONTRACT_IDS;
+            const { status, data, statusText } = await axios.get(
+              `/v1/contract/${blocklistedContractTxId}/${nestedPath}`,
+            );
+            expect(status).to.equal(403);
+            expect(data).to.equal('Contract is blocklisted.');
+            expect(statusText).to.equal('Contract is blocklisted.');
+          });
+
+          it(`should return the correct nested state value for ${nestedPath}`, async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(result).to.not.be.undefined;
+          });
+
+          it(`should return the correct state value for ${nestedPath} up to a given block height`, async () => {
+            const previousBlockHeight = 1;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}?blockHeight=${previousBlockHeight}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(result).to.not.be.undefined;
+          });
+
+          it(`should return the correct state value for ${nestedPath} up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(result).to.not.be.undefined;
+          });
+        }
+
+        it('should return a 400 if the path is too deep', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/state/path/too/deep/for/state`,
+          );
+          expect(status).to.equal(400);
+          expect(data).to.equal(
+            `Unable to fetch state for 'path/too/deep/for/state'. Maximum path depth of 3 exceed. Shorten your path and try again.`,
+          );
         });
       });
     });
