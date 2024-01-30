@@ -102,7 +102,9 @@ export async function mochaGlobalSetup() {
           [address]: 1,
         },
         auctions: {
-          'auction-name': {},
+          'auction-name': {
+            contractTxId: antContractTxId,
+          },
         },
         reserved: {
           'reserved-name': {

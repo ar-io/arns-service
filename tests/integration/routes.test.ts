@@ -550,64 +550,6 @@ describe('Integration tests', () => {
           });
         });
 
-        it('should return a 404 for an invalid field', async () => {
-          const { status } = await axios.get(
-            `/v1/contract/${id}/invalid-field`,
-          );
-          expect(status).to.equal(404);
-        });
-
-        describe('/records', () => {
-          it('should return all records if no filter provided', async () => {
-            const { status, data } = await axios.get(
-              `/v1/contract/${id}/records`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { contractTxId, sortKey } = data;
-            expect(contractTxId).to.equal(id);
-            expect(sortKey).not.be.undefined;
-            expect(Object.keys(data['records'])).to.have.length(2);
-          });
-
-          it('should return records that have contractTxId matching the query filter', async () => {
-            const { status, data } = await axios.get(
-              `/v1/contract/${id}/records?contractTxId=${process.env.DEPLOYED_ANT_CONTRACT_TX_ID}`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { contractTxId, sortKey } = data;
-            expect(contractTxId).to.equal(id);
-            expect(sortKey).not.be.undefined;
-            expect(Object.keys(data['records'])).to.have.length(1);
-          });
-
-          it('should return empty records if the contractTxId does not match any record object', async () => {
-            const { status, data } = await axios.get(
-              `/v1/contract/${id}/records?contractTxId=not-a-real-tx-id`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { contractTxId, sortKey } = data;
-            expect(contractTxId).to.equal(id);
-            expect(sortKey).not.be.undefined;
-            expect(Object.keys(data['records'])).to.have.length(0);
-          });
-
-          it(`should return the correct state value for record up to a given block height`, async () => {
-            const knownSortKey = contractInteractions[0].sortKey;
-            const { status, data } = await axios.get(
-              `/v1/contract/${id}/records?sortKey=${knownSortKey}`,
-            );
-            expect(status).to.equal(200);
-            expect(data).to.not.be.undefined;
-            const { contractTxId, sortKey } = data;
-            expect(contractTxId).to.equal(id);
-            expect(sortKey).to.equal(knownSortKey);
-            expect(Object.keys(data['records'])).to.have.length(2);
-          });
-        });
-
         describe('/records/:name', () => {
           it('should return the owner of record name when available', async () => {
             const { status, data } = await axios.get(
@@ -715,14 +657,17 @@ describe('Integration tests', () => {
           'records',
           'auctions',
           'records/example',
+          'records/example/contractTxId',
           'auctions/auction-name',
+          'auctions/auction-name/contractTxId',
           'reserved/reserved-name',
+          'reserved/reserved-name/target',
         ]) {
           it('should not evaluate blocklisted contracts', async () => {
             const blocklistedContractTxId =
               process.env.BLOCKLISTED_CONTRACT_IDS;
             const { status, data, statusText } = await axios.get(
-              `/v1/contract/${blocklistedContractTxId}/${nestedPath}`,
+              `/v1/contract/${blocklistedContractTxId}/state/${nestedPath}`,
             );
             expect(status).to.equal(403);
             expect(data).to.equal('Contract is blocklisted.');
@@ -776,6 +721,13 @@ describe('Integration tests', () => {
           expect(data).to.equal(
             `Unable to fetch state for 'path/too/deep/for/state'. Maximum path depth of 3 exceed. Shorten your path and try again.`,
           );
+        });
+
+        it('should return a 404 if the nested path does not exist on the state', async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}/state/records/non-existent-name/contractTxId`,
+          );
+          expect(status).to.equal(404);
         });
       });
     });
