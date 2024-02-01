@@ -557,10 +557,13 @@ export async function validateStateAndOwnership({
   const validateType =
     !type ||
     (type && type === 'ant' && state['records'] && state['records']['@']);
+
+  const controllers = state['controllers'] ?? [];
   const validateOwnership =
     !address ||
     (address && state['owner'] === address) ||
-    state['controller'] === address;
+    state['controller'] === address ||
+    controllers.includes(address);
   return validateType && validateOwnership;
 }
 
