@@ -101,7 +101,11 @@ export async function mochaGlobalSetup() {
         balances: {
           [address]: 1,
         },
-        auctions: {},
+        auctions: {
+          'auction-name': {
+            contractTxId: antContractTxId,
+          },
+        },
         reserved: {
           'reserved-name': {
             target: 'a-fake-transaction-id',

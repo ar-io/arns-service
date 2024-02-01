@@ -19,6 +19,7 @@ import { ARWEAVE_TX_ID_REGEX, ARNS_NAME_REGEX } from './constants';
 import {
   contractBalanceHandler,
   contractFieldHandler,
+  contractRecursiveFieldHandler,
   contractHandler,
   contractInteractionsHandler,
   contractReadInteractionHandler,
@@ -111,11 +112,17 @@ router.get(
   blocklistMiddleware,
   contractReservedHandler,
 );
-// fallback for any other contract fields that don't include additional logic (i.e. this just returns partial contract state)
+// fallback for any other contract fields that don't include additional logic (i.e. this just returns partial contract state) - Note: the 'state' route below is ideal for traversing contract state
 router.get(
   `/v1/contract/:contractTxId${ARWEAVE_TX_ID_REGEX}/:field`,
   blocklistMiddleware,
   contractFieldHandler,
+);
+// dynamic route that traverses JSON data based on path segments in the, it will return the nested state - allows up to 3 levels deep
+router.get(
+  '/v1/contract/:contractTxId/state/:path(.*)',
+  blocklistMiddleware,
+  contractRecursiveFieldHandler,
 );
 router.get(
   `/v1/wallet/:address${ARWEAVE_TX_ID_REGEX}/contracts`,

@@ -23,9 +23,13 @@ import {
 } from '../types';
 import { getContractReadInteraction, getContractState } from '../api/warp';
 import { getWalletInteractionsForContract } from '../api/graphql';
-import { NotFoundError } from '../errors';
+import { BadRequestError, NotFoundError } from '../errors';
 import { mismatchedInteractionCount } from '../metrics';
-import { DEFAULT_STATE_EVALUATION_TIMEOUT_MS } from '../constants';
+import {
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
+  MAX_PATH_DEPTH,
+} from '../constants';
+import { traverseObject } from '../utils';
 
 export async function contractHandler(ctx: KoaContext) {
   const {
@@ -236,6 +240,10 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
   };
 }
 
+/**
+ * Deprecated endpoint, use /v1/contract/:contractTxId/state/:path instead
+ * @param ctx
+ */
 export async function contractFieldHandler(ctx: KoaContext) {
   const {
     logger,
@@ -261,9 +269,9 @@ export async function contractFieldHandler(ctx: KoaContext) {
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
   });
-  const contractField = state[field];
+  const result = state[field];
 
-  if (!contractField) {
+  if (result === undefined) {
     throw new NotFoundError(
       `Field '${field}' not found on contract '${contractTxId}'.`,
     );
@@ -271,7 +279,61 @@ export async function contractFieldHandler(ctx: KoaContext) {
 
   ctx.body = {
     contractTxId,
-    [field]: contractField,
+    [field]: result,
+    sortKey: evaluatedSortKey,
+    evaluationOptions,
+  };
+}
+
+/**
+ * Recursively traverse a contract's state to get a nested field.
+ * @param ctx
+ */
+export async function contractRecursiveFieldHandler(ctx: KoaContext) {
+  const {
+    logger,
+    warp,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  } = ctx.state;
+  const { contractTxId, path } = ctx.params;
+  const nestedFields = path.split('/');
+  if (nestedFields.length > MAX_PATH_DEPTH) {
+    throw new BadRequestError(
+      `Unable to fetch state for '${path}'. Maximum path depth of ${MAX_PATH_DEPTH} exceed. Shorten your path and try again.`,
+    );
+  }
+  logger.debug('Fetching contract field recursively', {
+    contractTxId,
+    path,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  });
+  const {
+    state,
+    evaluationOptions,
+    sortKey: evaluatedSortKey,
+  } = await getContractState({
+    contractTxId,
+    warp,
+    logger,
+    sortKey: requestedSortKey,
+    blockHeight: requestedBlockHeight,
+  });
+  const result = traverseObject({
+    object: state,
+    path: nestedFields,
+  });
+
+  if (result === undefined) {
+    throw new NotFoundError(
+      `Field '${path}' not found on contract '${contractTxId}'.`,
+    );
+  }
+
+  ctx.body = {
+    contractTxId,
+    result,
     sortKey: evaluatedSortKey,
     evaluationOptions,
   };

@@ -33,6 +33,8 @@ const axios = axiosPackage.create({
   baseURL: serviceURL,
   validateStatus: () => true, // don't throw errors
 });
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 describe('Integration tests', () => {
   let ids: string[] = [];
   let id: string;
@@ -62,14 +64,14 @@ describe('Integration tests', () => {
     ) as unknown as JWKInterface;
 
     expect(id).to.not.be.undefined;
-    expect(id!.length).to.equal(43);
+    expect(id?.length).to.equal(43);
     expect(walletAddress).to.not.be.undefined;
-    expect(walletAddress!.length).to.equal(43);
+    expect(walletAddress?.length).to.equal(43);
     expect(walletJWK).to.not.be.undefined;
 
     // create a transfer interaction
     const { address } = await createLocalWallet(arweave);
-    const contract = warp.contract(id!).connect(walletJWK!);
+    const contract = warp.contract(id).connect(walletJWK);
     const transferInteraction = {
       function: 'transfer',
       target: address,
@@ -460,7 +462,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).not.be.undefined;
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
 
           it(`should return the correct state value for ${field} up to a given block height`, async () => {
@@ -473,7 +475,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).not.be.undefined;
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
 
           it(`should return the correct state value for ${field} up to a given block height`, async () => {
@@ -486,7 +488,7 @@ describe('Integration tests', () => {
             const { contractTxId, sortKey } = data;
             expect(contractTxId).to.equal(id);
             expect(sortKey).to.equal(knownSortKey);
-            expect(data[field]).to.not.be.undefined; // we haven't created any interactions
+            expect(data[field]).to.not.be.undefined;
           });
         }
 
@@ -643,6 +645,89 @@ describe('Integration tests', () => {
             expect(sortKey).to.not.be.undefined;
             expect(evaluationOptions).to.not.be.undefined;
           });
+        });
+      });
+
+      describe('/:contractTxId/state/:nestedPath', () => {
+        for (const nestedPath of [
+          'owner',
+          'name',
+          'ticker',
+          'balances',
+          'records',
+          'auctions',
+          'records/example',
+          'records/example/contractTxId',
+          'auctions/auction-name',
+          'auctions/auction-name/contractTxId',
+          'reserved/reserved-name',
+          'reserved/reserved-name/target',
+        ]) {
+          it('should not evaluate blocklisted contracts', async () => {
+            const blocklistedContractTxId =
+              process.env.BLOCKLISTED_CONTRACT_IDS;
+            const { status, data, statusText } = await axios.get(
+              `/v1/contract/${blocklistedContractTxId}/state/${nestedPath}`,
+            );
+            expect(status).to.equal(403);
+            expect(data).to.equal('Contract is blocklisted.');
+            expect(statusText).to.equal('Contract is blocklisted.');
+          });
+
+          it(`should return the correct nested state value for ${nestedPath}`, async () => {
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(result).to.not.be.undefined;
+          });
+
+          it(`should return the correct state value for ${nestedPath} up to a given block height`, async () => {
+            const previousBlockHeight = 1;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}?blockHeight=${previousBlockHeight}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).not.be.undefined;
+            expect(result).to.not.be.undefined;
+          });
+
+          it(`should return the correct state value for ${nestedPath} up to a given block height`, async () => {
+            const knownSortKey = contractInteractions[0].sortKey;
+            const { status, data } = await axios.get(
+              `/v1/contract/${id}/state/${nestedPath}?sortKey=${knownSortKey}`,
+            );
+            expect(status).to.equal(200);
+            expect(data).to.not.be.undefined;
+            const { contractTxId, sortKey, result } = data;
+            expect(contractTxId).to.equal(id);
+            expect(sortKey).to.equal(knownSortKey);
+            expect(result).to.not.be.undefined;
+          });
+        }
+
+        it('should return a 400 if the path is too deep', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/state/path/too/deep/for/state`,
+          );
+          expect(status).to.equal(400);
+          expect(data).to.equal(
+            `Unable to fetch state for 'path/too/deep/for/state'. Maximum path depth of 3 exceed. Shorten your path and try again.`,
+          );
+        });
+
+        it('should return a 404 if the nested path does not exist on the state', async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}/state/records/non-existent-name/contractTxId`,
+          );
+          expect(status).to.equal(404);
         });
       });
     });
