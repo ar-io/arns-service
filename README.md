@@ -98,21 +98,13 @@ You can `cp .env.sample .env` and modify them locally.
 
 Integration tests are used to validate endpoints and response payloads. Then can be run locally via:
 
-1. Set `.env` to:
+1. Run the service locally against the test environment:
 
 ```shell
-GATEWAY_HOST=localhost
-GATEWAY_PORT=1984
-GATEWAY_PROTOCOL=http
+yarn dotenv -e .env.test yarn start:watch
 ```
 
-2. Run the service locally:
-
-```shell
-yarn start:watch
-```
-
-3. Run the integration tests:
+2. In a separate terminal, run the integration tests:
 
 ```shell
 yarn test:integration:local
