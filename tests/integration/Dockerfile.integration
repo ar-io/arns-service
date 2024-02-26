@@ -3,8 +3,6 @@ ARG  NODE_VERSION
 FROM node:${NODE_VERSION}-bullseye-slim
 WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y git
-COPY package.json yarn.lock tsconfig.json .mocharc.json ./
-COPY tests/integration tests/integration
-COPY src/types.ts src/types.ts
+COPY . .
 RUN yarn 
 CMD yarn test:integration
