@@ -207,9 +207,16 @@ async function readThroughToContractState(
   }
 
   // use the combined evaluation options
-  const contract = warp
-    .contract(contractTxId)
-    .setEvaluationOptions(evaluationOptions);
+  const contract = warp.contract(contractTxId).setEvaluationOptions({
+    ...evaluationOptions,
+    // Temporary fix: protect against setting a maxInteractionEvaluationTimeSeconds that is too large, warp should do this on all evaluation options
+    // Reference: https://github.com/warp-contracts/warp/issues/509
+    maxInteractionEvaluationTimeSeconds: Math.min(
+      Number.MAX_SAFE_INTEGER,
+      evaluationOptions.maxInteractionEvaluationTimeSeconds ||
+        DEFAULT_EVALUATION_OPTIONS.maxInteractionEvaluationTimeSeconds,
+    ),
+  });
 
   // only use batch read if no block height provided (it does not currently support block heights)
   const doBatchRead = providedSortKey || providedBlockHeight === undefined;
