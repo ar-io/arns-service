@@ -25,6 +25,7 @@ import {
 import * as path from 'path';
 import * as fs from 'fs';
 import { ArNSInteraction } from '../../src/types';
+import { MAX_PATH_DEPTH } from '../../src/constants';
 
 const HOST = process.env.HOST ?? '127.0.0.1';
 const PORT = process.env.PORT ?? 3000;
@@ -714,12 +715,13 @@ describe('Integration tests', () => {
         }
 
         it('should return a 400 if the path is too deep', async () => {
+          const path = 'path/too/deep/for/state/variable';
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/state/path/too/deep/for/state`,
+            `/v1/contract/${id}/state/${path}`,
           );
           expect(status).to.equal(400);
           expect(data).to.equal(
-            `Unable to fetch state for 'path/too/deep/for/state'. Maximum path depth of 3 exceed. Shorten your path and try again.`,
+            `Unable to fetch state for '${path}'. Maximum path depth of ${MAX_PATH_DEPTH} exceed. Shorten your path and try again.`,
           );
         });
 
