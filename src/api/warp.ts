@@ -24,7 +24,7 @@ import {
 } from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
-  DEFAULT_PAGES_PER_BATCH,
+  // DEFAULT_PAGES_PER_BATCH,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
@@ -219,17 +219,20 @@ async function readThroughToContractState(
   });
 
   // only use batch read if no block height provided (it does not currently support block heights)
-  const doBatchRead = providedSortKey || providedBlockHeight === undefined;
+  const doBatchRead = !!providedSortKey || providedBlockHeight === undefined;
   logger?.debug('Evaluating contract state...', {
     contractTxId,
     cacheKey: cacheKey.toString(),
-    doBatchRead,
+    doBatchRead, // there is a bug in warp where readStateBatch is not properly using sortKeys
     evaluationOptions,
   });
 
-  const readStatePromise = doBatchRead
-    ? contract.readStateBatch(DEFAULT_PAGES_PER_BATCH, providedSortKey, signal)
-    : contract.readState(providedBlockHeight, undefined, signal);
+  // TODO: re-enable readStateBatch after sortKey is fixed
+  const readStatePromise = contract.readState(
+    providedSortKey || providedBlockHeight,
+    undefined,
+    signal,
+  );
 
   // set cached value for multiple requests during initial promise
   stateRequestMap.set(cacheId, readStatePromise);
@@ -256,20 +259,22 @@ async function readThroughToContractState(
     logger?.error('Contract state did not return a result!', {
       contractTxId,
       cacheKey: cacheKey.toString(),
+      sortKey: providedSortKey,
     });
     throw new UnknownError(`Unknown error occurred evaluating contract state.`);
   }
 
-  const { cachedValue, sortKey } = stateEvaluationResult;
+  const { cachedValue, sortKey: evaluatedSortKey } = stateEvaluationResult;
   logger?.debug('Successfully evaluated contract state.', {
     contractTxId,
     cacheKey: cacheKey.toString(),
-    sortKey,
+    evaluatedSortKey,
+    providedSortKey,
   });
 
   return {
     ...cachedValue,
-    sortKey,
+    sortKey: evaluatedSortKey,
     evaluationOptions,
   };
 }
