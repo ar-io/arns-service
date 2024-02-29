@@ -541,7 +541,7 @@ export async function contractReservedHandler(ctx: KoaContext) {
 
 const queryParamsCastedToNumbers = ['qty', 'years', 'height'];
 export async function contractReadInteractionHandler(ctx: KoaContext) {
-  const { warp, logger: _logger } = ctx.state;
+  const { warp, logger: _logger, sortKey: requestedSortKey } = ctx.state;
   const { contractTxId, functionName } = ctx.params;
   const { query: input } = ctx.request;
 
@@ -549,6 +549,8 @@ export async function contractReadInteractionHandler(ctx: KoaContext) {
     contractTxId,
     functionName,
   });
+
+  // TODO: compute sortKey from blockHeight when provided
 
   const parsedInput = Object.entries(input).reduce(
     (parsedParams: { [x: string]: any }, [key, value]) => {
@@ -571,6 +573,7 @@ export async function contractReadInteractionHandler(ctx: KoaContext) {
     contractTxId,
     warp,
     logger,
+    sortKey: requestedSortKey,
     functionName,
     input: parsedInput,
   });
@@ -578,6 +581,7 @@ export async function contractReadInteractionHandler(ctx: KoaContext) {
   ctx.body = {
     contractTxId,
     result,
+    sortKey: requestedSortKey,
     evaluationOptions,
   };
 }
