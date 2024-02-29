@@ -24,7 +24,7 @@ import {
 } from 'warp-contracts';
 import {
   DEFAULT_EVALUATION_OPTIONS,
-  // DEFAULT_PAGES_PER_BATCH,
+  DEFAULT_PAGES_PER_BATCH,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
@@ -218,8 +218,8 @@ async function readThroughToContractState(
     ),
   });
 
-  // only use batch read if no block height provided (it does not currently support block heights)
-  const doBatchRead = !!providedSortKey || providedBlockHeight === undefined;
+  // only use batch read if no block height or sort key provided
+  const doBatchRead = !providedSortKey && !providedBlockHeight;
   logger?.debug('Evaluating contract state...', {
     contractTxId,
     cacheKey: cacheKey.toString(),
@@ -227,12 +227,13 @@ async function readThroughToContractState(
     evaluationOptions,
   });
 
-  // TODO: re-enable readStateBatch after sortKey is fixed
-  const readStatePromise = contract.readState(
-    providedSortKey || providedBlockHeight,
-    undefined,
-    signal,
-  );
+  const readStatePromise = doBatchRead
+    ? contract.readStateBatch(DEFAULT_PAGES_PER_BATCH, undefined, signal)
+    : contract.readState(
+        providedSortKey || providedBlockHeight,
+        undefined,
+        signal,
+      );
 
   // set cached value for multiple requests during initial promise
   stateRequestMap.set(cacheId, readStatePromise);
