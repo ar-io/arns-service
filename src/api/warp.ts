@@ -25,6 +25,7 @@ import {
 import {
   DEFAULT_EVALUATION_OPTIONS,
   DEFAULT_PAGES_PER_BATCH,
+  DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
@@ -110,13 +111,16 @@ class ContractReadInteractionCacheKey {
     public readonly input: any,
     public readonly warp: Warp,
     public readonly evaluationOptions: Partial<EvaluationOptions>,
+    public readonly sortKey?: string,
     public readonly logger?: winston.Logger,
   ) {}
 
   toString(): string {
-    return `${this.contractTxId}-${this.functionName}-${createQueryParamHash(
-      this.input,
-    )}-${createQueryParamHash(this.evaluationOptions)}`;
+    return `${this.contractTxId}-${this.functionName}-${
+      this.sortKey || 'latest'
+    }-${createQueryParamHash(this.input)}-${createQueryParamHash(
+      this.evaluationOptions,
+    )}`;
   }
 
   // Facilitate ReadThroughPromiseCache key derivation
@@ -368,14 +372,23 @@ export async function readThroughToContractReadInteraction(
   cacheKey: ContractReadInteractionCacheKey,
 ): Promise<{
   result: unknown;
+  sortKey: string | undefined;
   evaluationOptions: Partial<EvaluationOptions>;
   input: unknown;
 }> {
-  const { contractTxId, evaluationOptions, warp, logger, functionName, input } =
-    cacheKey;
+  const {
+    contractTxId,
+    evaluationOptions,
+    sortKey,
+    warp,
+    logger,
+    functionName,
+    input,
+  } = cacheKey;
   logger?.debug('Reading through to contract read interaction...', {
     contractTxId,
     cacheKey: cacheKey.toString(),
+    sortKey,
   });
   const cacheId = cacheKey.toString();
 
@@ -386,11 +399,13 @@ export async function readThroughToContractReadInteraction(
     logger?.debug('Deduplicating in flight requests for read interaction...', {
       contractTxId,
       cacheKey: cacheKey.toString(),
+      sortKey,
     });
     const { result } = await inFlightRequest;
     return {
       result,
       input,
+      sortKey,
       evaluationOptions,
     };
   }
@@ -406,11 +421,17 @@ export async function readThroughToContractReadInteraction(
     .setEvaluationOptions(evaluationOptions);
 
   // set cached value for multiple requests during initial promise
-  // TODO: add abort signal when view state supports it
-  const readInteractionPromise = contract.viewState({
-    function: functionName,
-    ...input,
-  });
+  const readInteractionPromise = contract.viewState(
+    {
+      function: functionName,
+      ...input,
+    },
+    undefined, // tags
+    undefined, // transfer
+    undefined, // caller
+    AbortSignal.timeout(DEFAULT_STATE_EVALUATION_TIMEOUT_MS),
+    sortKey,
+  );
   readRequestMap.set(cacheId, readInteractionPromise);
 
   readInteractionPromise
@@ -418,6 +439,7 @@ export async function readThroughToContractReadInteraction(
       logger?.debug('Failed to evaluate read interaction on contract!', {
         contractTxId,
         cacheKey: cacheKey.toString(),
+        sortKey,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     })
@@ -436,6 +458,7 @@ export async function readThroughToContractReadInteraction(
   if (!readInteractionResult) {
     logger?.error('Read interaction did not return a result!', {
       contractTxId,
+      sortKey,
       cacheKey: cacheKey.toString(),
       input,
     });
@@ -451,6 +474,7 @@ export async function readThroughToContractReadInteraction(
       contractTxId,
       cacheKey: cacheKey.toString(),
       input,
+      sortKey,
       error,
       errorMessage,
     });
@@ -459,12 +483,15 @@ export async function readThroughToContractReadInteraction(
 
   logger?.debug('Successfully evaluated read interaction on contract.', {
     contractTxId,
+    sortKey,
+
     cacheKey: cacheKey.toString(),
   });
 
   return {
     result,
     input,
+    sortKey,
     evaluationOptions,
   };
 }
@@ -475,12 +502,14 @@ export async function getContractReadInteraction({
   logger,
   functionName,
   input,
+  sortKey,
 }: {
   contractTxId: string;
   warp: Warp;
   logger: winston.Logger;
   functionName: string;
   input: ParsedUrlQuery;
+  sortKey?: string | undefined;
 }): Promise<{
   result: any;
   evaluationOptions: Partial<EvaluationOptions>;
@@ -498,6 +527,7 @@ export async function getContractReadInteraction({
         input,
         warp,
         evaluationOptions,
+        sortKey,
         logger,
       ),
     );

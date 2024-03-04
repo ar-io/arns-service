@@ -649,6 +649,50 @@ describe('Integration tests', () => {
         });
       });
 
+      describe('/:contractTxId/read/:readInteraction', () => {
+        it('should return the read interaction for the provided contract and read interaction id', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/read/priceForInteraction`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, result } = data;
+          expect(contractTxId).to.equal(id);
+          expect(result).not.to.be.undefined;
+        });
+
+        it('should return a 400 for an invalid read interaction id', async () => {
+          const { status } = await axios.get(
+            `/v1/contract/${id}/read/non-existent-read-api`,
+          );
+          expect(status).to.equal(400);
+        });
+
+        it('should properly evaluate state for a read interaction at a provided sortKey', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/read/priceForInteraction?sortKey=${contractInteractions[0].sortKey}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, sortKey, result } = data;
+          expect(contractTxId).to.equal(id);
+          expect(result).not.to.be.undefined;
+          expect(sortKey).to.equal(contractInteractions[0].sortKey);
+        });
+
+        it('should properly evaluate state for a read interaction at a provided block height', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/read/priceForInteraction?blockHeight=${contractInteractions[0].height}`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, sortKey, result } = data;
+          expect(contractTxId).to.equal(id);
+          expect(result).not.to.be.undefined;
+          expect(sortKey).to.equal(contractInteractions[0].sortKey);
+        });
+      });
+
       describe('/:contractTxId/state/:nestedPath', () => {
         for (const nestedPath of [
           'owner',
