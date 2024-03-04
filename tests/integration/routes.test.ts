@@ -677,7 +677,7 @@ describe('Integration tests', () => {
           const { contractTxId, sortKey, result } = data;
           expect(contractTxId).to.equal(id);
           expect(result).not.to.be.undefined;
-          expect(sortKey).not.be.undefined;
+          expect(sortKey).to.equal(contractInteractions[0].sortKey);
         });
 
         it('should properly evaluate state for a read interaction at a provided block height', async () => {
@@ -689,7 +689,7 @@ describe('Integration tests', () => {
           const { contractTxId, sortKey, result } = data;
           expect(contractTxId).to.equal(id);
           expect(result).not.to.be.undefined;
-          expect(sortKey).not.be.undefined;
+          expect(sortKey).to.equal(contractInteractions[0].sortKey);
         });
       });
 

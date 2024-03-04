@@ -3040,10 +3040,20 @@ arweave-stream-tx@^1.1.0:
   dependencies:
     exponential-backoff "^3.1.0"
 
-arweave@1.13.7, arweave@^1.10.13, arweave@^1.10.5, arweave@^1.11.4, arweave@^1.13.7:
-  version "1.13.7"
-  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.13.7.tgz#cda8534c833baec372a7052c61f53b4e39a886d7"
-  integrity sha512-Hv+x2bSI6UyBHpuVbUDMMpMje1ETfpJWj52kKfz44O0IqDRi/LukOkkDUptup1p6OT6KP1/DdpnUnsNHoskFeA==
+arweave@1.14.4, arweave@^1.14.4:
+  version "1.14.4"
+  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.14.4.tgz#5ba22136aa0e7fd9495258a3931fb770c9d6bf21"
+  integrity sha512-tmqU9fug8XAmFETYwgUhLaD3WKav5DaM4p1vgJpEj/Px2ORPPMikwnSySlFymmL2qgRh2ZBcZsg11+RXPPGLsA==
+  dependencies:
+    arconnect "^0.4.2"
+    asn1.js "^5.4.1"
+    base64-js "^1.5.1"
+    bignumber.js "^9.0.2"
+
+arweave@^1.10.13, arweave@^1.10.5, arweave@^1.11.4, arweave@^1.13.7:
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.14.0.tgz#a4424455a4137b7708cdc627b5bda1881d6881b5"
+  integrity sha512-P2g9FjbJZQfk0Q3a5R2aCyPP3jen3ZN6Oxh6p6BlwEGHn5M5O0KvZSaiNV4X/PENgnZA4+afOf9MR3ySGcR3JQ==
   dependencies:
     arconnect "^0.4.2"
     asn1.js "^5.4.1"
@@ -8223,13 +8233,13 @@ warp-contracts-sqlite@^1.0.2:
     better-sqlite3 "^8.3.0"
     safe-stable-stringify "^2.4.3"
 
-warp-contracts@^1.4.36:
-  version "1.4.36"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.36.tgz#dfdb69a34e314b2be5cb2ea8e51078a064c2fcff"
-  integrity sha512-2UeRxkry/wm0jme4d4CXvxUef+G3o3Al6Q2Tj2PQ5cvvK5GOfRfFiooaQIik88E6ZQNC9NJlvFUYBMVS9837CA==
+warp-contracts@^1.4.37:
+  version "1.4.37"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.37.tgz#d22d34750bb50638188ca40d53015207688d1f58"
+  integrity sha512-jDQQF4FqRCy6OAnsb87d9LMzVp18eRTFyDQp9QirLD2C7IwBAH2DVrfpVcyPeZuxw4bNz3CSVemdMS+oFJIldQ==
   dependencies:
     archiver "^5.3.0"
-    arweave "1.13.7"
+    arweave "1.14.4"
     async-mutex "^0.4.0"
     bignumber.js "9.1.1"
     events "3.3.0"
