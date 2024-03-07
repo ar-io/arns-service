@@ -82,7 +82,7 @@ export async function walletContractHandler(ctx: KoaContext) {
   const validContractsOfType = (
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) => {
-        parallelLimit(() => {
+        return parallelLimit(() => {
           // do not evaluate any blocklisted contracts
           if (BLOCKLISTED_CONTRACT_IDS.has(id)) {
             logger.debug('Skipping blocklisted contract.', {
@@ -104,7 +104,7 @@ export async function walletContractHandler(ctx: KoaContext) {
             address,
             logger,
             signal: abortSignal,
-          }).then((result) => (result ? id : null));
+          }).then((result: boolean) => (result ? id : null));
         });
       }),
     )
