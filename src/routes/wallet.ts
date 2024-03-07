@@ -29,7 +29,9 @@ import {
 import * as _ from 'lodash';
 import { BadRequestError } from '../errors';
 import { blockListedContractCount } from '../metrics';
+import pLimit from 'p-limit';
 
+const CONCURRENT_CONTRACT_EVALUATION_LIMIT = 10;
 export async function walletContractHandler(ctx: KoaContext) {
   const { address } = ctx.params;
   const { logger, arweave, warp } = ctx.state;
@@ -76,33 +78,34 @@ export async function walletContractHandler(ctx: KoaContext) {
 
   // this may take a long time since it must evaluate all contract states so we provide the abort signal used above to timeout if the request takes too long
   const startTime = Date.now();
+  const parallelLimit = pLimit(CONCURRENT_CONTRACT_EVALUATION_LIMIT);
   const validContractsOfType = (
     await Promise.allSettled(
       [...deployedOrOwned].map(async (id: string) => {
-        // do not evaluate any blocklisted contracts
-        if (BLOCKLISTED_CONTRACT_IDS.has(id)) {
-          logger.debug('Skipping blocklisted contract.', {
-            contractTxId: id,
-          });
-          blockListedContractCount
-            .labels({
+        parallelLimit(() => {
+          // do not evaluate any blocklisted contracts
+          if (BLOCKLISTED_CONTRACT_IDS.has(id)) {
+            logger.debug('Skipping blocklisted contract.', {
               contractTxId: id,
-            })
-            .inc();
-          return null;
-        }
+            });
+            blockListedContractCount
+              .labels({
+                contractTxId: id,
+              })
+              .inc();
+            return null;
+          }
 
-        // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
-        return (await validateStateAndOwnership({
-          contractTxId: id,
-          warp,
-          type,
-          address,
-          logger,
-          signal: abortSignal,
-        }))
-          ? id
-          : null;
+          // do not pass any evaluation options, the contract manifests will be fetched for each of these so they properly evaluate
+          return validateStateAndOwnership({
+            contractTxId: id,
+            warp,
+            type,
+            address,
+            logger,
+            signal: abortSignal,
+          }).then((result) => (result ? id : null));
+        });
       }),
     )
   ).map((i) => (i.status === 'fulfilled' ? i.value : null));
