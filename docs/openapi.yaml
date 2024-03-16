@@ -63,6 +63,14 @@ components:
       description: Evaluate the contract at up to a specific sort key. Only applicable if blockHeight is not provided.
       schema:
         type: string
+    function:
+      name: function
+      in: query
+      required: false
+      description: Filter contract interactions by provided function name.
+      example: 'evolve'
+      schema:
+        type: string
     page:
       name: page
       in: query
