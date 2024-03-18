@@ -30,6 +30,7 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
     page = DEFAULT_PAGE,
     pageSize = DEFAULT_PAGE_SIZE,
     validity,
+    function: fn,
   } = ctx.query;
 
   logger.debug('Query params provided', {
@@ -86,6 +87,12 @@ export const queryMiddleware = async (ctx: KoaContext, next: Next) => {
   if (validity) {
     logger.debug('Validity provided', { validity });
     ctx.state.validity = validity === 'true' || validity === '1';
+  }
+
+  // used for filtering functions on interactions
+  if (fn) {
+    logger.debug('Function provided', { fn });
+    ctx.state.fn = fn;
   }
 
   return next();

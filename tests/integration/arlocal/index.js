@@ -5,6 +5,11 @@ export function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
+  // test function
+  if (input.function === 'evolve') {
+    return { state };
+  }
+
   if (input.function === 'transfer') {
     const target = input.target;
     const qty = input.qty;

@@ -76,6 +76,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     blockHeight: requestedBlockHeight,
     page: requestedPage,
     pageSize: requestedPageSize = 100,
+    fn: requestedFunction,
   } = ctx.state;
   const { contractTxId, address } = ctx.params;
 
@@ -83,6 +84,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
     contractTxId,
     sortKey: requestedSortKey,
     blockHeight: requestedBlockHeight,
+    requestedFunction,
     address,
   });
 
@@ -134,6 +136,7 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
         );
         mismatchedInteractionCount.inc();
       }
+
       return {
         ...interaction,
         valid: validity[id] ?? false,
@@ -142,6 +145,20 @@ export async function contractInteractionsHandler(ctx: KoaContext) {
       };
     },
   );
+
+  // TODO: allow other filters
+  if (requestedFunction) {
+    logger.debug('Filtering interactions by function', {
+      contractTxId,
+      sortKey: requestedSortKey,
+      blockHeight: requestedBlockHeight,
+      address,
+      requestedFunction,
+    });
+    mappedInteractions = mappedInteractions.filter(
+      (interaction) => interaction.input?.function === requestedFunction,
+    );
+  }
 
   logger.debug('Sorting interactions', {
     contractTxId,

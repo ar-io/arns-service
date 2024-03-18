@@ -108,6 +108,35 @@ describe('Integration tests', () => {
       valid: true,
       id: writeInteraction!.originalTxId,
     });
+
+    await arweave.api.get('mine');
+
+    // another interaction to test filtering
+    const secondInteraction = await contract.writeInteraction(
+      {
+        function: 'evolve',
+      },
+      {
+        disableBundling: true,
+      },
+    );
+
+    const secondInteractionBlock = await arweave.blocks.getCurrent();
+    contractInteractions.push({
+      height: secondInteractionBlock.height,
+      input: { function: 'evolve' },
+      owner: walletAddress,
+      timestamp: Math.floor(secondInteractionBlock.timestamp / 1000),
+      sortKey: await interactionSorter.createSortKey(
+        secondInteractionBlock.indep_hash,
+        secondInteraction!.originalTxId,
+        secondInteractionBlock.height,
+      ),
+      valid: true,
+      id: secondInteraction!.originalTxId,
+    });
+    // reverse the interactions to match the service behavior
+    contractInteractions.reverse();
   });
 
   describe('general routes', () => {
@@ -354,7 +383,7 @@ describe('Integration tests', () => {
         });
 
         it('should only return interactions up to a provided sort key height', async () => {
-          const knownSortKey = contractInteractions[0].sortKey;
+          const knownSortKey = contractInteractions.slice(1)[0].sortKey;
           const { status, data } = await axios.get(
             `/v1/contract/${id}/interactions?sortKey=${knownSortKey}`,
           );
@@ -363,7 +392,7 @@ describe('Integration tests', () => {
           const { contractTxId, interactions, sortKey } = data;
           expect(contractTxId).to.equal(id);
           expect(sortKey).to.equal(knownSortKey);
-          expect(interactions).to.deep.equal([contractInteractions[0]]);
+          expect(interactions).to.deep.equal(contractInteractions.slice(1));
         });
 
         it('should return the first page of contract interactions when page and page size are provided', async () => {
@@ -377,28 +406,30 @@ describe('Integration tests', () => {
           expect(pages).to.deep.equal({
             page: 1,
             pageSize: 1,
-            totalPages: 1,
+            totalPages: contractInteractions.length,
             totalItems: contractInteractions.length,
-            hasNextPage: false,
+            hasNextPage: contractInteractions.length > 1,
           });
           expect(contractTxId).to.equal(id);
-          expect(interactions).to.deep.equal([contractInteractions[0]]);
+          expect(interactions).to.deep.equal(contractInteractions.slice(0, 1));
         });
 
         it('should return an empty array of contract interactions when page is greater than the total number of pages', async () => {
           const { status, data } = await axios.get(
-            `/v1/contract/${id}/interactions?page=2&pageSize=1`,
+            `/v1/contract/${id}/interactions?page=${
+              contractInteractions.length + 1
+            }&pageSize=1`,
           );
           expect(status).to.equal(200);
           expect(data).to.not.be.undefined;
           const { contractTxId, interactions, sortKey, pages } = data;
           expect(sortKey).to.not.be.undefined;
           expect(pages).to.deep.equal({
-            page: 2,
+            page: contractInteractions.length + 1,
             pageSize: 1,
-            totalPages: 1,
+            totalPages: contractInteractions.length,
             totalItems: contractInteractions.length,
-            hasNextPage: false,
+            hasNextPage: contractInteractions.length > 2,
           });
           expect(contractTxId).to.equal(id);
           expect(interactions).to.deep.equal([]);
@@ -415,6 +446,32 @@ describe('Integration tests', () => {
           );
           expect(status).to.equal(400);
         });
+
+        it('should return interactions that match a provided function', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?function=evolve`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
+          expect(interactions).to.deep.equal(
+            contractInteractions.filter((i) => i.input?.function === 'evolve'),
+          );
+        });
+
+        it('should return an empty array for function query parameter that does not match any interactions', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions?function=fake`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
+          expect(interactions).to.deep.equal([]);
+        });
       });
 
       describe('/:contractTxId/interactions/:address', () => {
@@ -428,7 +485,35 @@ describe('Integration tests', () => {
           expect(contractTxId).to.equal(id);
           expect(sortKey).not.be.undefined;
           // TODO: filter out interactions specific to the wallet address
-          expect(interactions).to.deep.equal(contractInteractions);
+          expect(interactions).to.deep.equal(
+            contractInteractions.sort((a, b) => b.height - a.height),
+          );
+        });
+
+        it('should return interactions that match a provided function', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions/${walletAddress}?function=evolve`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
+          expect(interactions).to.deep.equal(
+            contractInteractions.filter((i) => i.input?.function === 'evolve'),
+          );
+        });
+
+        it('should return an empty array for function query parameter that does not match any interactions', async () => {
+          const { status, data } = await axios.get(
+            `/v1/contract/${id}/interactions/${walletAddress}?function=fake`,
+          );
+          expect(status).to.equal(200);
+          expect(data).to.not.be.undefined;
+          const { contractTxId, interactions, sortKey } = data;
+          expect(contractTxId).to.equal(id);
+          expect(sortKey).not.be.undefined;
+          expect(interactions).to.deep.equal([]);
         });
       });
 
@@ -874,7 +959,9 @@ describe('Integration tests', () => {
             hasNextPage: false,
           });
           expect(contractTxId).to.equal(id);
-          expect(interactions).to.deep.equal(contractInteractions);
+          expect(interactions).to.deep.equal(
+            contractInteractions.sort((a, b) => b.height - a.height),
+          );
         });
         it('should return the first page of interactions when page and page size are provided', async () => {
           const { status, data } = await axios.get(
@@ -888,12 +975,12 @@ describe('Integration tests', () => {
           expect(pages).to.deep.equal({
             page: 1,
             pageSize: 1,
-            totalPages: 1,
+            totalPages: contractInteractions.length,
             totalItems: contractInteractions.length,
-            hasNextPage: false,
+            hasNextPage: contractInteractions.length > 1,
           });
           expect(contractTxId).to.equal(id);
-          expect(interactions).to.deep.equal([contractInteractions[0]]);
+          expect(interactions).to.deep.equal(contractInteractions.slice(0, 1));
         });
         it('should return the second page of interactions when page and page size are provided', async () => {
           const { status, data } = await axios.get(
@@ -907,12 +994,12 @@ describe('Integration tests', () => {
           expect(pages).to.deep.equal({
             page: 2,
             pageSize: 1,
-            totalPages: 1,
+            totalPages: contractInteractions.length,
             totalItems: contractInteractions.length,
-            hasNextPage: false,
+            hasNextPage: contractInteractions.length > 2,
           });
           expect(contractTxId).to.equal(id);
-          expect(interactions).to.deep.equal([]);
+          expect(interactions).to.deep.equal(contractInteractions.slice(1));
         });
         it('should return a bad request error when invalid page size is provided', async () => {
           const { status } = await axios.get(
