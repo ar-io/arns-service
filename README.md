@@ -38,7 +38,7 @@ You can run on a different port by changing the `-e PORT=3000 -p 3000:3000` to `
 
 ## Warp
 
-The service leverages `warp-sdk` to retrieve, evaluate and cache contract state. To request a contract state, run:
+The service leverages [Warp SDK] to retrieve, evaluate and cache contract state. To request a contract state, run:
 
 ```shell
 curl localhost:3000/v1/contract/${CONTRACT_ID}
@@ -54,7 +54,7 @@ For more advanced features of Warp caching and state evaluation (e.g. [D.R.E nod
 
 ### SQLite
 
-This service uses the `warp-contracts-sqlite` for storing contract state. The sqlite database is stored in the `./cache` directory. To clear the Warp cache, run:
+This service uses the [warp-contracts-sqlite] for storing contract state. The sqlite database is stored in the `./cache` directory. To clear the Warp cache, run:
 
 ```shell
 rm -rf ./cache
@@ -72,7 +72,9 @@ Similar to [D.R.E nodes], the service can be configured to sync state for a give
 const contract = await warp
   .contract(CONTRACT_TX_ID)
   .setEvaluationOptions(evaluationOptions)
-  .syncState(`https://api.arns.app/v1/contract/${CONTRACT_TX_ID}`);
+  .syncState(`https://api.arns.app/v1/contract/${CONTRACT_TX_ID}`, {
+    validity: true,
+  });
 ```
 
 ## Configuration
@@ -86,6 +88,7 @@ The service can be configured using environment variables. The following environ
 - `GATEWAY_HOST`: the gateway used to evaluate Smartcontract state.
 - `LOG_LEVEL`: the log level to display (using [Winston] log levels - e.g. `info`, `debug`)
 - `LOG_FORMAT`: the log format to use when printing logs (e.g. `json`, `simple`)
+- `WARP_LOG_LEVEL`: the log level to display for Warp SDK (using [Winston] log levels - e.g. `info`, `debug`)
 - `PREFETCH_CONTRACTS`: boolean to enable/disable prefetching of contracts on startup. Defaults to `true`.
 - `PREFETCH_CONTRACT_IDS`: comma separated list of contract IDs to prefetch on startup
 - `ARNS_CONTRACT_TX_ID`: the ArNS contract transaction ID. Defaults to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U` and when `PREFETCH_CONTRACTS` is `true`, will be prefetched on startup.
@@ -104,7 +107,7 @@ Integration tests are used to validate endpoints and response payloads. Then can
 yarn dotenv -e .env.test yarn start:watch
 ```
 
-2. In a separate terminal, run the integration tests:
+1. In a separate terminal, run the integration tests:
 
 ```shell
 yarn test:integration:local
@@ -144,4 +147,6 @@ https://api.arns.app/api-docs
 [prettier]: https://prettier.io/
 [eslint]: https://eslint.org/
 [Warp]: https://academy.warp.cc/docs/docs-intro
+[Warp SDK]: https://github.com/warp-contracts/warp
+[warp-contracts-sqlite]: https://github.com/warp-contracts/warp-contracts-sqlite
 [D.R.E nodes]: https://academy.warp.cc/docs/dre/overview
