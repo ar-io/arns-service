@@ -24,10 +24,23 @@ import {
   ListObjectsV2Command,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import fs from 'node:fs';
 import { Readable } from 'stream';
 import path from 'node:path';
-import { BOOTSTRAP_CACHE, PREFETCH_CONTRACTS } from './constants';
+import {
+  BOOTSTRAP_CACHE,
+  PREFETCH_CONTRACTS,
+  SAVE_CACHE_TO_S3,
+} from './constants';
+import pLimit from 'p-limit';
+
+const bucket = process.env.WARP_CACHE_BUCKET || 'arns-warp-cache';
+const cacheDirectory = process.env.WARP_CACHE_KEY || 'cache';
+const region = process.env.AWS_REGION || 'us-west-2';
+const s3 = new S3Client({
+  region,
+});
 
 export const bootstrapCache = async () => {
   if (BOOTSTRAP_CACHE) {
@@ -36,6 +49,11 @@ export const bootstrapCache = async () => {
 
   if (PREFETCH_CONTRACTS) {
     await prefetchContracts();
+  }
+
+  if (SAVE_CACHE_TO_S3) {
+    // save the cache on a 3 hour interval
+    setInterval(saveCacheToS3, 3 * 60 * 60 * 1000);
   }
 };
 
@@ -108,12 +126,9 @@ export const prefetchContracts = async () => {
 
 export const fetchCacheFromS3 = async () => {
   const startTimeMs = Date.now();
-  const s3 = new S3Client({
-    region: process.env.AWS_REGION,
-  });
   const params = {
-    Bucket: process.env.WARP_CACHE_BUCKET || 'arns-warp-cache',
-    Key: process.env.WARP_CACHE_KEY || 'cache',
+    Bucket: bucket,
+    Key: cacheDirectory,
   };
 
   logger.info('Bootstrapping warp cache from S3', {
@@ -169,6 +184,89 @@ export const fetchCacheFromS3 = async () => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error : new Error('Unknown error');
     logger.error('Failed to bootstrap cache from S3', {
+      error: message,
+    });
+  }
+};
+
+export const saveCacheToS3 = async () => {
+  const startTimeMs = Date.now();
+
+  logger.info('Saving warp cache to S3', {
+    bucket,
+  });
+
+  try {
+    // read files from local file system
+    const parallelLimit = pLimit(10);
+    const uploadFolder = async ({
+      folderPath,
+      bucket,
+      keyPrefix,
+    }: {
+      folderPath: string;
+      bucket: string;
+      keyPrefix: string;
+    }) => {
+      const files = fs.readdirSync(folderPath);
+      await Promise.all(
+        files.map(async (file) => {
+          // wrap in a pLimit to avoid resource exhaustion
+          return parallelLimit(() => {
+            const filePath = path.join(folderPath, file);
+            if (fs.statSync(filePath).isFile()) {
+              logger.debug('Uploading file to S3', {
+                filePath,
+                bucket,
+                keyPrefix,
+              });
+              const fileStream = fs.createReadStream(filePath);
+              const key = path.basename(filePath);
+              const upload = new Upload({
+                client: s3,
+                params: {
+                  Bucket: bucket,
+                  Key: key,
+                  Body: fileStream,
+                },
+              });
+
+              // catch errors for a single file
+              return upload.done().catch((error: unknown) => {
+                const message =
+                  error instanceof Error ? error : new Error('Unknown error');
+                logger.error('Failed to upload file to S3', {
+                  error: message,
+                  file,
+                });
+              });
+            } else {
+              // recursively upload folders
+              return uploadFolder({
+                folderPath,
+                bucket,
+                keyPrefix: keyPrefix + file + '/',
+              });
+            }
+          });
+        }),
+      );
+    };
+
+    // upload files to S3 recursively and in a pLimit to avoid resource exhaustion
+    await uploadFolder({
+      folderPath: cacheDirectory,
+      bucket,
+      keyPrefix: '',
+    });
+
+    logger.info('Successfully saved warp cache to S3', {
+      durationMs: Date.now() - startTimeMs,
+      bucket,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error : new Error('Unknown error');
+    logger.error('Failed to save cache to S3', {
       error: message,
     });
   }
