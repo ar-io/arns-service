@@ -38,6 +38,9 @@ import pLimit from 'p-limit';
 const bucket = process.env.WARP_CACHE_BUCKET || 'arns-warp-cache';
 const cacheDirectory = process.env.WARP_CACHE_KEY || 'cache';
 const region = process.env.AWS_REGION || 'us-west-2';
+const s3CacheIntervalMs = +(
+  process.env.S3_CACHE_INTERVAL_MS || 3 * 60 * 60 * 1000
+);
 const s3 = new S3Client({
   region,
 });
@@ -53,7 +56,7 @@ export const bootstrapCache = async () => {
 
   if (SAVE_CACHE_TO_S3) {
     // save the cache on a 3 hour interval
-    setInterval(saveCacheToS3, 3 * 60 * 60 * 1000);
+    setInterval(saveCacheToS3, s3CacheIntervalMs);
   }
 };
 
