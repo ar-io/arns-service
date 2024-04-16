@@ -56,7 +56,12 @@ export const bootstrapCache = async () => {
 
   if (SAVE_CACHE_TO_S3) {
     // save cache to S3 every s3CacheIntervalMs
-    setInterval(saveCacheToS3, s3CacheIntervalMs);
+    logger.info('Cache will be saved to S3 on an interval', {
+      intervalMs: s3CacheIntervalMs,
+    });
+    setInterval(async () => {
+      await saveCacheToS3();
+    }, s3CacheIntervalMs);
   }
 };
 
@@ -212,6 +217,12 @@ export const saveCacheToS3 = async () => {
       keyPrefix: string;
     }) => {
       const files = fs.readdirSync(folderPath);
+      logger.debug('Uploading folder to S3', {
+        folderPath,
+        bucket,
+        keyPrefix,
+        files: files.length,
+      });
       await Promise.all(
         files.map(async (file) => {
           // wrap in a pLimit to avoid resource exhaustion
@@ -224,29 +235,45 @@ export const saveCacheToS3 = async () => {
                 keyPrefix,
               });
               const fileStream = fs.createReadStream(filePath);
-              const key = path.basename(filePath);
               const upload = new Upload({
                 client: s3,
                 params: {
                   Bucket: bucket,
-                  Key: key,
+                  Key: filePath,
                   Body: fileStream,
                 },
               });
 
+              const fileStartTime = Date.now();
+
               // catch errors for a single file
-              return upload.done().catch((error: unknown) => {
-                const message =
-                  error instanceof Error ? error : new Error('Unknown error');
-                logger.error('Failed to upload file to S3', {
-                  error: message,
-                  file,
+              return upload
+                .done()
+                .then(() => {
+                  logger.debug('Successfully uploaded file to S3', {
+                    filePath,
+                    bucket,
+                    keyPrefix,
+                    durationMs: Date.now() - fileStartTime,
+                  });
+                })
+                .catch((error: unknown) => {
+                  const message =
+                    error instanceof Error ? error : new Error('Unknown error');
+                  logger.error('Failed to upload file to S3', {
+                    error: message,
+                    file,
+                  });
                 });
-              });
             } else {
+              logger.debug('Recursively uploading folder to S3', {
+                filePath,
+                bucket,
+                keyPrefix,
+              });
               // recursively upload folders
               return uploadFolder({
-                folderPath,
+                folderPath: filePath,
                 bucket,
                 keyPrefix: keyPrefix + file + '/',
               });
