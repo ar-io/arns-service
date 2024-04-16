@@ -19,7 +19,7 @@
     "clean": "rimraf [ node_modules dist cache ]",
     "test:docker": "docker compose --env-file=.env.test up --exit-code-from test-runner --build",
     "test:integration": "mocha --spec=tests/integration/**.test.ts",
-    "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $* ; docker compose down -v",
+    "test:integration:local": "docker compose up arlocal -d ; yarn test:integration $*; docker compose down -v",
     "docker:run": "docker compose up arns-service --build",
     "docker:integration": "docker compose up --exit-code-from test-runner --build",
     "format:fix": "yarn prettier --write .",
@@ -31,6 +31,7 @@
   "dependencies": {
     "@ardrive/ardrive-promise-cache": "^1.1.4",
     "@aws-sdk/client-s3": "^3.490.0",
+    "@aws-sdk/lib-storage": "^3.554.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "arweave": "^1.14.4",

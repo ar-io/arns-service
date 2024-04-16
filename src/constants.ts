@@ -18,6 +18,7 @@ import { EvaluationOptions } from 'warp-contracts';
 
 export const PREFETCH_CONTRACTS = process.env.PREFETCH_CONTRACTS === 'true';
 export const BOOTSTRAP_CACHE = process.env.BOOTSTRAP_CACHE === 'true';
+export const SAVE_CACHE_TO_S3 = process.env.SAVE_CACHE_TO_S3 === 'true';
 export const BLOCKLISTED_CONTRACT_IDS = new Set(
   process.env.BLOCKLISTED_CONTRACT_IDS
     ? process.env.BLOCKLISTED_CONTRACT_IDS.split(',')
