@@ -57,8 +57,17 @@ export const warp = WarpFactory.forMainnet(
         ...defaultCacheOptions,
         dbLocation: `./cache/warp/lmdb/kv/${contractTxId}`,
       }),
+  )
+  .useContractCache(
+    new SqliteContractCache({
+      ...defaultCacheOptions,
+      dbLocation: `./cache/warp/sqlite/contracts`,
+    }),
+    new LmdbCache({
+      ...defaultCacheOptions,
+      dbLocation: `./cache/warp/lmdb/source`,
+    }),
   );
-// TODO: useContractCache when they support custom gateways (ref: https://github.com/warp-contracts/warp/pull/501)
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
   ctx.state.warp = warp;
