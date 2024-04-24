@@ -24,6 +24,7 @@ export const BLOCKLISTED_CONTRACT_IDS = new Set(
     ? process.env.BLOCKLISTED_CONTRACT_IDS.split(',')
     : ['fbU8Y4NMKKzP4rmAYeYj6tDrVDo9XNbdyq5IZPA31WQ'],
 );
+export const INT_MAX_32_BIT = 2147483647;
 export const MAX_PATH_DEPTH = 5;
 export const ARWEAVE_TX_ID_REGEX = '([a-zA-Z0-9-_s+]{43})';
 export const ARNS_NAME_REGEX = '([a-zA-Z0-9-s+]{1,51})';
