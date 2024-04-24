@@ -26,6 +26,7 @@ import {
   DEFAULT_EVALUATION_OPTIONS,
   DEFAULT_PAGES_PER_BATCH,
   DEFAULT_STATE_EVALUATION_TIMEOUT_MS,
+  INT_MAX_32_BIT,
   allowedContractTypes,
 } from '../constants';
 import { ContractType, EvaluatedContractState } from '../types';
@@ -216,7 +217,7 @@ async function readThroughToContractState(
     // Temporary fix: protect against setting a maxInteractionEvaluationTimeSeconds that is too large, warp should do this on all evaluation options
     // Reference: https://github.com/warp-contracts/warp/issues/509
     maxInteractionEvaluationTimeSeconds: Math.min(
-      Number.MAX_SAFE_INTEGER,
+      INT_MAX_32_BIT,
       evaluationOptions.maxInteractionEvaluationTimeSeconds ||
         DEFAULT_EVALUATION_OPTIONS.maxInteractionEvaluationTimeSeconds,
     ),
