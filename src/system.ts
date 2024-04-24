@@ -145,7 +145,6 @@ export const fetchCacheFromS3 = async () => {
 
   try {
     const data = await s3.send(new ListObjectsV2Command(params));
-
     const parallelLimit = pLimit(10);
     const files = data.Contents || [];
 
@@ -156,6 +155,7 @@ export const fetchCacheFromS3 = async () => {
       fileKey: string;
       params: { Bucket: string; Key: string };
     }) => {
+      const fileStartTime = Date.now();
       logger.debug('Fetching file from S3', {
         fileKey,
       });
@@ -166,6 +166,7 @@ export const fetchCacheFromS3 = async () => {
       );
 
       const tmpFileDir = path.dirname(tempFilePath);
+      const finalFilePath = path.join(process.cwd(), fileKey);
 
       try {
         if (fs.existsSync(fileKey)) {
@@ -178,22 +179,28 @@ export const fetchCacheFromS3 = async () => {
 
         if (data.Body) {
           const readableStream = data.Body as Readable;
-          await fs.promises.writeFile(tempFilePath, readableStream);
-          logger.debug('Successfully saved file to local filesystem', {
+          logger.debug('Writing file to temporary location', {
             fileKey,
             tempFilePath,
           });
-          const warpCacheDir = path.dirname(fileKey);
+          await fs.promises.writeFile(tempFilePath, readableStream);
+          const warpCacheDir = path.dirname(finalFilePath);
           await fs.promises.mkdir(warpCacheDir, { recursive: true });
-          if (fs.existsSync(fileKey)) {
-            await fs.promises.unlink(fileKey);
+          if (fs.existsSync(finalFilePath)) {
+            await fs.promises.unlink(finalFilePath);
           }
+          logger.debug('Moving file to final location', {
+            fileKey,
+            finalFilePath,
+            tempFilePath,
+          });
           // moves the file from the temp location to the final location
-          await fs.promises.rename(tempFilePath, fileKey);
+          await fs.promises.rename(tempFilePath, finalFilePath);
 
           logger.debug('Successfully fetched file from S3', {
             fileKey,
-            tempFilePath,
+            finalFilePath,
+            durationMs: Date.now() - fileStartTime,
           });
         }
       } catch (error: unknown) {
@@ -205,6 +212,10 @@ export const fetchCacheFromS3 = async () => {
         });
       }
     };
+
+    logger.debug('Found files to fetch from S3', {
+      fileCount: files.length,
+    });
 
     await Promise.all(
       files.map(async (obj) => {
