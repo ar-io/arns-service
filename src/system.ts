@@ -167,10 +167,15 @@ export const fetchCacheFromS3 = async () => {
 
       const tmpFileDir = path.dirname(tempFilePath);
       const finalFilePath = path.join(process.cwd(), fileKey);
+      const warpCacheDir = path.dirname(finalFilePath);
 
       try {
-        if (fs.existsSync(fileKey)) {
+        if (!fs.existsSync(tmpFileDir)) {
           await fs.promises.mkdir(tmpFileDir, { recursive: true });
+        }
+
+        if (!fs.existsSync(warpCacheDir)) {
+          await fs.promises.mkdir(warpCacheDir, { recursive: true });
         }
 
         const data = await s3.send(
@@ -184,8 +189,6 @@ export const fetchCacheFromS3 = async () => {
             tempFilePath,
           });
           await fs.promises.writeFile(tempFilePath, readableStream);
-          const warpCacheDir = path.dirname(finalFilePath);
-          await fs.promises.mkdir(warpCacheDir, { recursive: true });
           if (fs.existsSync(finalFilePath)) {
             await fs.promises.unlink(finalFilePath);
           }
