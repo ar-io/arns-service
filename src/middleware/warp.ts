@@ -25,6 +25,7 @@ import {
 import { arweave } from './arweave';
 import { SqliteContractCache } from 'warp-contracts-sqlite';
 import { LmdbCache } from 'warp-contracts-lmdb';
+import { min } from 'lodash';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
@@ -59,14 +60,25 @@ export const warp = WarpFactory.forMainnet(
       }),
   )
   .useContractCache(
-    new SqliteContractCache({
-      ...defaultCacheOptions,
-      dbLocation: `./cache/warp/sqlite/contracts`,
-    }),
-    new LmdbCache({
-      ...defaultCacheOptions,
-      dbLocation: `./cache/warp/lmdb/source`,
-    }),
+    new SqliteContractCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/sqlite/contracts`,
+      },
+      {
+        maxEntriesPerContract: 10,
+      },
+    ),
+    new LmdbCache(
+      {
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/lmdb/source`,
+      },
+      {
+        maxEntriesPerContract: 10,
+        minEntriesPerContract: 1,
+      },
+    ),
   );
 
 export function warpMiddleware(ctx: KoaContext, next: Next) {
