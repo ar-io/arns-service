@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022-2023 Permanent Data Solutions, Inc. All Rights Reserved.
+ * Copyright (C) 2022-2024 Permanent Data Solutions, Inc. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -25,7 +25,6 @@ import {
 import { arweave } from './arweave';
 import { SqliteContractCache } from 'warp-contracts-sqlite';
 import { LmdbCache } from 'warp-contracts-lmdb';
-import { min } from 'lodash';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
