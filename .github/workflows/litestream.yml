@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Litestream
 
 # TODO: change to only in main and for litestream changes
 on: [push]
