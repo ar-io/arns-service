@@ -24,6 +24,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
+          context: litestream
           tags: |
             ghcr.io/ar-io/arns-litestream:latest
             ghcr.io/ar-io/arns-litestream:${{ github.sha }}
