@@ -1,0 +1,35 @@
+name: Litestream
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'litestream/**'
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      # Build and push container image to GCR (only on main branch)
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push container image to GitHub Container Registry
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: litestream
+          tags: |
+            ghcr.io/ar-io/arns-litestream:latest
+            ghcr.io/ar-io/arns-litestream:${{ github.sha }}
