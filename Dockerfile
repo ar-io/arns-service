@@ -19,6 +19,7 @@ WORKDIR /usr/src/app
 COPY --from=busybox:1.35.0-uclibc /bin/sh /bin/sh
 COPY --from=busybox:1.35.0-uclibc /bin/chown /bin/chown
 COPY --from=busybox:1.35.0-uclibc /bin/chmod /bin/chmod
+COPY --from=busybox:1.35.0-uclibc /bin/sleep /bin/sleep
 
 # Copy build files
 COPY --from=builder /usr/src/app .
