@@ -27,15 +27,16 @@ services:
 
   litestream:
     profiles: ['litestream']
-    build: 
+    build:
       context: litestream
     environment:
-      TVAL_LOCAL_DB_PATH: ${LOCAL_DB_PATH:-/app/data/sqlite}
-      TVAL_S3_BUCKET_PATH: ${S3_BUCKET_PATH:-}
-      TVAL_AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-      TVAL_AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      WAIT_TIME_SECONDS: ${WAIT_TIME_SECONDS:-}
-      RESTORE_FROM_BACKUP: ${RESTORE_FROM_BACKUP:-false}
+      TVAL_LOCAL_DB_PATH: ${LITESTREAM_LOCAL_DB_PATH:-/app/data/sqlite}
+      TVAL_S3_BUCKET_PATH: ${LITESTREAM_S3_BUCKET_PATH:-}
+      TVAL_S3_BUCKET: ${LITESTREAM_S3_BUCKET:-}
+      TVAL_AWS_ACCESS_KEY_ID: ${LITESTREAM_AWS_ACCESS_KEY_ID:-}
+      TVAL_AWS_SECRET_ACCESS_KEY: ${LITESTREAM_AWS_SECRET_ACCESS_KEY:-}
+      WAIT_TIME_SECONDS: ${LITESTREAM_WAIT_TIME_SECONDS:-}
+      RESTORE_FROM_BACKUP: ${LITESTREAM_RESTORE_FROM_BACKUP:-false}
     volumes:
       - ${WARP_SQLITE_CACHE_PATH:-./cache/warp/sqlite}:/app/data/sqlite
 

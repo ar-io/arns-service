@@ -19,10 +19,7 @@ import { getContractState } from './api/warp';
 import { prefetchContractTxIds } from './config';
 import logger from './logger';
 import { warp } from './middleware';
-import {
-  PREFETCH_CONTRACTS,
-} from './constants';
-
+import { PREFETCH_CONTRACTS } from './constants';
 
 export const bootstrapCache = async () => {
   if (PREFETCH_CONTRACTS) {
