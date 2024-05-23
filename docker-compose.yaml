@@ -6,7 +6,6 @@ services:
       - '1984:1984'
 
   arns-service:
-    profiles: ['test', '', 'litestream']
     build:
       context: .
       args:
