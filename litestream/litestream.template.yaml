@@ -8,11 +8,19 @@ secret-access-key: #@ data.values.AWS_SECRET_ACCESS_KEY
 dbs:
   - path: #@ data.values.LOCAL_DB_PATH + "/state.db"
     replicas:
-      - type: s3
+      - name: warp.state.db
+        type: s3
         bucket: #@ data.values.S3_BUCKET
         path: #@ data.values.S3_BUCKET_PATH
+        region: #@ data.values.S3_BUCKET_REGION
+        sync-interval: 1m
+        snapshot-interval: 6h
   - path: #@ data.values.LOCAL_DB_PATH + "/contract.db"
     replicas:
-      - type: s3
+      - name: warp.contracts.db
+        type: s3
         bucket: #@ data.values.S3_BUCKET
         path: #@ data.values.S3_BUCKET_PATH
+        region: #@ data.values.S3_BUCKET_REGION
+        sync-interval: 1m
+        snapshot-interval: 6h
