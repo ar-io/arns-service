@@ -36,6 +36,19 @@ docker run -e GATEWAY_HOST=arweave.net -p 3000:3000 ghcr.io/ar-io/arns-service:l
 
 You can run on a different port by changing the `-e PORT=3000 -p 3000:3000` to `-e PORT=4000 -p 4000:4000`, for example, or specify a `.env` file with `--env-file` flag.
 
+#### Profiles
+
+The service can be run with different profiles to facilitate different environments. The following profiles are supported:
+
+- `test`: runs the service and other containers for executing integration tests
+- `litestream`: runs the service with [Litestream] for syncing SQLite data to S3
+
+To run the service with a profile, you can use the `--profile` flag:
+
+```shell
+docker compose --env-file .env --profile litestream up --build
+```
+
 ## Warp
 
 The service leverages [Warp SDK] to retrieve, evaluate and cache contract state. To request a contract state, run:
@@ -92,7 +105,6 @@ The service can be configured using environment variables. The following environ
 - `PREFETCH_CONTRACTS`: boolean to enable/disable prefetching of contracts on startup. Defaults to `true`.
 - `PREFETCH_CONTRACT_IDS`: comma separated list of contract IDs to prefetch on startup
 - `ARNS_CONTRACT_TX_ID`: the ArNS contract transaction ID. Defaults to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U` and when `PREFETCH_CONTRACTS` is `true`, will be prefetched on startup.
-- `BOOTSTRAP_CACHE`: loads warp cache from S3 on startup. Defaults to `false`.
 - `BLOCKLISTED_CONTRACT_IDS`: comma separated list of contract IDs to block evaluation. These contracts will return `403` when requested.
 
 You can `cp .env.sample .env` and modify them locally.
@@ -127,11 +139,7 @@ yarn test:docker
 http://localhost:3000/api-docs
 ```
 
-For production, the Swagger UI is available at:
-
-```shell
-https://api.arns.app/api-docs
-```
+For production, the Swagger UI is available at [https://api.arns.app/api-docs](https://api.arns.app/api-docs)
 
 ## Contributions
 
@@ -150,3 +158,4 @@ https://api.arns.app/api-docs
 [Warp SDK]: https://github.com/warp-contracts/warp
 [warp-contracts-sqlite]: https://github.com/warp-contracts/warp-contracts-sqlite
 [D.R.E nodes]: https://academy.warp.cc/docs/dre/overview
+[Litestream]: https://litestream.io/

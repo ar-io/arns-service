@@ -1,16 +1,9 @@
-# Start with a standard Ubuntu base image
-FROM ubuntu:20.04 as builder
+FROM litestream/litestream:0.3.13
 
-# Install curl and other necessary tools
-RUN apt-get update && apt-get install -y curl
+RUN apk update && apk add --no-cache curl
 
-# Download and install ytt
-RUN curl -L https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.44.1/ytt-linux-amd64 > /usr/local/bin/ytt \
-    && chmod 755 /usr/local/bin/ytt
-
-FROM litestream/litestream:latest
-
-COPY --from=builder /usr/local/bin/ytt /usr/local/bin/ytt
+COPY install-ytt.sh /install-ytt.sh
+RUN /install-ytt.sh && rm /install-ytt.sh
 
 COPY litestream.template.yaml .
 COPY docker-entrypoint.sh .

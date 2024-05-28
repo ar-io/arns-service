@@ -1,9 +1,18 @@
 #@ load("@ytt:data", "data")
 
+#@ if data.values.AWS_ACCESS_KEY_ID != "":
+access-key-id: #@ data.values.AWS_ACCESS_KEY_ID
+secret-access-key: #@ data.values.AWS_SECRET_ACCESS_KEY
+#@ end
+
 dbs:
   - path: #@ data.values.LOCAL_DB_PATH + "/state.db"
     replicas:
-      - url: #@ data.values.S3_BUCKET_PATH
+      - type: s3
+        bucket: #@ data.values.S3_BUCKET
+        path: #@ data.values.S3_BUCKET_PATH
   - path: #@ data.values.LOCAL_DB_PATH + "/contract.db"
     replicas:
-      - url: #@ data.values.S3_BUCKET_PATH
+      - type: s3
+        bucket: #@ data.values.S3_BUCKET
+        path: #@ data.values.S3_BUCKET_PATH

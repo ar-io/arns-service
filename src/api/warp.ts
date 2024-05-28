@@ -86,7 +86,7 @@ const contractStateCache: ReadThroughPromiseCache<
 > = new ReadThroughPromiseCache({
   cacheParams: {
     cacheCapacity: 10_000,
-    cacheTTL: 1000 * 30, // 30 seconds
+    cacheTTL: 1000 * 60, // 60 seconds
   },
   readThroughFunction: readThroughToContractState,
 });
@@ -141,7 +141,7 @@ const contractReadInteractionCache: ReadThroughPromiseCache<
 > = new ReadThroughPromiseCache({
   cacheParams: {
     cacheCapacity: 1_000,
-    cacheTTL: 1000 * 30, // 30 seconds
+    cacheTTL: 1000 * 60, // 60 seconds
   },
   readThroughFunction: readThroughToContractReadInteraction,
 });
