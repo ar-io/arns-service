@@ -13,6 +13,7 @@ dbs:
         bucket: #@ data.values.S3_BUCKET
         path: #@ data.values.S3_BUCKET_PATH
         region: #@ data.values.S3_BUCKET_REGION
+        forcePathStyle: true
         sync-interval: 1m
         snapshot-interval: 6h
   - path: #@ data.values.LOCAL_DB_PATH + "/contract.db"
@@ -22,5 +23,6 @@ dbs:
         bucket: #@ data.values.S3_BUCKET
         path: #@ data.values.S3_BUCKET_PATH
         region: #@ data.values.S3_BUCKET_REGION
+        forcePathStyle: true
         sync-interval: 1m
         snapshot-interval: 6h
