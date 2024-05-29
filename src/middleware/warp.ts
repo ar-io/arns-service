@@ -25,6 +25,7 @@ import {
 import { arweave } from './arweave';
 import { SqliteContractCache } from 'warp-contracts-sqlite';
 import { LmdbCache } from 'warp-contracts-lmdb';
+import path from 'path';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
@@ -44,7 +45,7 @@ export const warp = WarpFactory.forMainnet(
     new SqliteContractCache(
       {
         ...defaultCacheOptions,
-        dbLocation: `./cache/warp/sqlite/state`,
+        dbLocation: path.join(process.cwd(), `/cache/warp/sqlite/state`),
       },
       {
         maxEntriesPerContract: 100_000,
@@ -55,14 +56,17 @@ export const warp = WarpFactory.forMainnet(
     (contractTxId: string) =>
       new LmdbCache({
         ...defaultCacheOptions,
-        dbLocation: `./cache/warp/lmdb/kv/${contractTxId}`,
+        dbLocation: path.join(
+          process.cwd(),
+          `/cache/warp/lmdb/kv/${contractTxId}`,
+        ),
       }),
   )
   .useContractCache(
     new SqliteContractCache(
       {
         ...defaultCacheOptions,
-        dbLocation: `./cache/warp/sqlite/contracts`,
+        dbLocation: path.join(process.cwd(), `/cache/warp/sqlite/contracts`),
       },
       {
         maxEntriesPerContract: 10,
@@ -71,7 +75,7 @@ export const warp = WarpFactory.forMainnet(
     new LmdbCache(
       {
         ...defaultCacheOptions,
-        dbLocation: `./cache/warp/lmdb/source`,
+        dbLocation: path.join(process.cwd(), `/cache/warp/lmdb/source`),
       },
       {
         maxEntriesPerContract: 10,
