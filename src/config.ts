@@ -19,10 +19,5 @@ export const arnsContractTxId =
   'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
 export const prefetchContractTxIds: string[] = process.env.PREFETCH_CONTRACT_IDS
-  ? [
-      ...new Set([
-        arnsContractTxId,
-        ...process.env.PREFETCH_CONTRACT_IDS.split(','),
-      ]),
-    ] // filter out any duplicates
+  ? [...new Set([...process.env.PREFETCH_CONTRACT_IDS.split(',')])] // filter out any duplicates
   : [arnsContractTxId];
