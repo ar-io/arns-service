@@ -34,8 +34,8 @@ LoggerFactory.INST.logLevel(
 // use arweave.net for warp for now
 const warpArweave = Arweave.init({
   host: process.env.WARP_GATEWAY_HOST || 'arweave.net',
-  port: 443,
-  protocol: 'https',
+  port: process.env.WARP_GATEWAY_PORT || 443,
+  protocol: process.env.WARP_GATEWAY_PROTOCOL || 'https',
 });
 
 /**
