@@ -22,14 +22,21 @@ import {
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
-import { arweave } from './arweave';
 import { SqliteContractCache } from 'warp-contracts-sqlite';
 import { LmdbCache } from 'warp-contracts-lmdb';
 import path from 'path';
+import Arweave from 'arweave';
 
 LoggerFactory.INST.logLevel(
   (process.env.WARP_LOG_LEVEL as LogLevel) ?? 'fatal',
 );
+
+// use arweave.net for warp for now
+const warpArweave = Arweave.init({
+  host: 'arweave.net',
+  port: 443,
+  protocol: 'https',
+});
 
 /**
  * TODO: consider using warp-contracts-postgres cache for distributed state caching across instances
@@ -39,7 +46,7 @@ export const warp = WarpFactory.forMainnet(
     ...defaultCacheOptions,
   },
   true,
-  arweave,
+  warpArweave,
 )
   .useStateCache(
     new SqliteContractCache(
