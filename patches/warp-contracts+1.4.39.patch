@@ -1,0 +1,14 @@
+diff --git a/node_modules/warp-contracts/lib/cjs/core/modules/impl/ArweaveGQLTxsFetcher.js b/node_modules/warp-contracts/lib/cjs/core/modules/impl/ArweaveGQLTxsFetcher.js
+index b94141d..0e5e6e4 100644
+--- a/node_modules/warp-contracts/lib/cjs/core/modules/impl/ArweaveGQLTxsFetcher.js
++++ b/node_modules/warp-contracts/lib/cjs/core/modules/impl/ArweaveGQLTxsFetcher.js
+@@ -113,6 +113,9 @@ class ArweaveGQLTxsFetcher {
+         return response.edges[0].node;
+     }
+     async transactions(variables, pagesPerBatch, signal) {
++	if (typeof variables === "object" && typeof variables.blockFilter === "object" && variables.blockFilter.min === null) {
++          delete variables.blockFilter.min;
++	}
+         let pageResult = (await this.fetch(TRANSACTIONS_QUERY, variables)).transactions;
+         const edges = [...pageResult.edges];
+         let pagesLoaded = 1;
